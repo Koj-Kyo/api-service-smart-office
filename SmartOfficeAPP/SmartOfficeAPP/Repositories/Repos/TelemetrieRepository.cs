@@ -22,6 +22,18 @@ namespace SmartOfficeAPP.Repositories.Repos
             return telemetrie;
         }
 
+        // Récupère les données historiques de télémétrie dans une plage de dates pour un périphérique donné. GetHistoricalDataAsync
+
+        public async Task<IEnumerable<Telemetrie>> GetHistoricalDataAsync(DateTime startDate, DateTime endDate, int? peripheriqueId = null)
+        {
+            var query = _context.Telemetries.AsQueryable();
+            query = query.Where(t => t.Horodatage >= startDate && t.Horodatage <= endDate);
+            if (peripheriqueId.HasValue)
+            {
+                query = query.Where(t => t.PeripheriqueLogiqueId == peripheriqueId.Value);
+            }
+            return await query.OrderByDescending(t => t.Horodatage).ToListAsync();
+        }
         // Récupère les données de télémétrie pour un périphérique donné.
         public async Task<IEnumerable<Telemetrie>> GetTelemetriesByPeripheriqueIdAsync(int peripheriqueId)
         {

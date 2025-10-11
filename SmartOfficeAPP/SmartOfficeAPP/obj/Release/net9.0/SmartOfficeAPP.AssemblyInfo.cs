@@ -11,12 +11,13 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("SmartOfficeBackend")]
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("74ac5103-a267-4992-b451-ce9111a01e92")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("SmartOfficeAPP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8057057973550ef597bde48b0caab115bf4b8145")]
-[assembly: System.Reflection.AssemblyProductAttribute("SmartOfficeBackend")]
-[assembly: System.Reflection.AssemblyTitleAttribute("SmartOfficeBackend")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+152d7ff3c7683212121cda0247e8af89dd700fc1")]
+[assembly: System.Reflection.AssemblyProductAttribute("SmartOfficeAPP")]
+[assembly: System.Reflection.AssemblyTitleAttribute("SmartOfficeAPP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Généré par la classe MSBuild WriteCodeFragment.

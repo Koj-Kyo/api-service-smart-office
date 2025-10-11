@@ -2,10 +2,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using SmartOfficeAPP.Data;
-using SmartOfficeAPP.Helpers;
 using SmartOfficeAPP.Hubs;
 using SmartOfficeAPP.Models.Identity;
 using SmartOfficeAPP.Repositories.IRepositories;
@@ -70,6 +68,7 @@ builder.Services.AddScoped<IJournalAuditService, JournalAuditService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
+builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
 
 
 // Add services to the container.
