@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartOfficeAPP.DTOs;
 using SmartOfficeAPP.Services.IServices;
+using System.Text.Json;
 
 namespace SmartOfficeAPP.Controllers;
 
@@ -12,11 +13,13 @@ namespace SmartOfficeAPP.Controllers;
 public class DevicesController : ControllerBase
 {
     private readonly IPeripheriqueLogiqueService _peripheriqueService;
+    private readonly IIotHubService _iotHubService;
     private readonly IMapper _mapper;
 
-    public DevicesController(IPeripheriqueLogiqueService peripheriqueService, IMapper mapper)
+    public DevicesController(IPeripheriqueLogiqueService peripheriqueService, IIotHubService iotHubService, IMapper mapper)
     {
         _peripheriqueService = peripheriqueService;
+        _iotHubService = iotHubService;
         _mapper = mapper;
     }
 
@@ -24,8 +27,6 @@ public class DevicesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PeripheriqueLogiqueDto>>> GetDevices()
     {
-        // Note: Nous n'avons pas de GetAllAsync dans le service, nous allons utiliser une méthode par Zone
-        // Pour l'instant, cette méthode pourrait retourner un NotImplemented
         return new ObjectResult("Cette action n'est pas encore implémentée selon le plan.");
     }
 
@@ -79,5 +80,23 @@ public class DevicesController : ControllerBase
             return NotFound();
         }
         return NoContent();
+    }
+
+    // POST: api/devices/{iotDeviceId}/desired
+    // Exemple de body JSON:
+    // {
+    //   "peripherals": [
+    //     { "name":"relay4","type":"relay","gpio":33 },
+    //     { "name":"mq2","type":"smoke","gpio":32 }
+    //   ]
+    // }
+    [HttpPost("{iotDeviceId}/desired")]
+    public async Task<IActionResult> SetDesiredProperties(string iotDeviceId, [FromBody] object desired)
+    {
+        if (desired is null) return BadRequest("Payload manquant.");
+        var desiredJson = JsonSerializer.Serialize(desired);
+        var ok = await _iotHubService.UpdateDesiredPropertiesAsync(iotDeviceId, desiredJson);
+        if (!ok) return StatusCode(500, "Échec de mise à jour des desired properties.");
+        return Ok(new { message = "Desired properties mises à jour." });
     }
 }
