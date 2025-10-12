@@ -2,11 +2,13 @@
 using SmartOfficeAPP.DTOs.Request;
 using SmartOfficeAPP.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace SmartOfficeAPP.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class IncidentTicketsController : ControllerBase
 {
     private readonly IIncidentTicketService _incidentTicketService;
@@ -22,14 +24,13 @@ public class IncidentTicketsController : ControllerBase
     /// <param name="ticketDto">Les données du ticket à créer.</param>
     /// <returns>Le ticket créé avec son ID.</returns>
     [HttpPost]
-    // [Authorize] // Ajouter cet attribut pour sécuriser la méthode
     public async Task<IActionResult> CreateTicket([FromBody] IncidentTicketCreateDto ticketDto)
     {
-        // Note: L'ID de l'utilisateur qui crée le ticket doit être récupéré
-        // du contexte de l'utilisateur authentifié.
-        var createdById = "current-user-id"; // Remplacer par l'ID réel de l'utilisateur
-        var createdTicket = await _incidentTicketService.CreateTicketAsync(ticketDto, createdById);
+        var createdById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(createdById))
+            return Unauthorized();
 
+        var createdTicket = await _incidentTicketService.CreateTicketAsync(ticketDto, createdById);
         return CreatedAtAction(nameof(GetTicketById), new { id = createdTicket.Id }, createdTicket);
     }
 
@@ -80,7 +81,6 @@ public class IncidentTicketsController : ControllerBase
     /// <param name="newStatus">Le nouveau statut.</param>
     /// <returns>Statut de la mise à jour.</returns>
     [HttpPut("{id}/status")]
-    // [Authorize] // Ajouter cet attribut pour sécuriser la méthode
     public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] string newStatus)
     {
         var result = await _incidentTicketService.UpdateTicketStatusAsync(id, newStatus);
@@ -98,7 +98,7 @@ public class IncidentTicketsController : ControllerBase
     /// <param name="assignedToId">L'ID de l'utilisateur à qui le ticket est assigné.</param>
     /// <returns>Statut de l'assignation.</returns>
     [HttpPut("{id}/assign")]
-    // [Authorize(Roles = "Manager, Admin")] // Exemple: Restreindre l'accès à certains rôles
+    [Authorize(Roles = "Manager,Admin")]
     public async Task<IActionResult> AssignTicket(int id, [FromBody] string assignedToId)
     {
         var result = await _incidentTicketService.AssignTicketAsync(id, assignedToId);

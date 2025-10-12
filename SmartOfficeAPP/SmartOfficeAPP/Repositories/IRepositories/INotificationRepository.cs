@@ -18,7 +18,7 @@ public interface INotificationRepository
     /// <returns>A collection of notifications for the specified user.</returns>
     /// 
     //Get notifications by id
-    Task<Notification> GetNotificationsByIdAsync(int id);
+    Task<Notification?> GetNotificationsByIdAsync(int id);
     Task<IEnumerable<Notification>> GetNotificationsByUserIdAsync(string userId);
 
     /// <summary>

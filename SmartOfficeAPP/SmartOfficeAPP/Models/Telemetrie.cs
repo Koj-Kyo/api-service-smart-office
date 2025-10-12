@@ -38,7 +38,7 @@ public class Telemetrie
     public double Valeur { get; set; }
 
     /// <summary>
-    /// Informations supplémentaires en JSON.
+    /// Informations supplémentaires en JSON (nullable pour compatibilité avec migration initiale).
     /// </summary>
-    public string DonneesJson { get; set; }
+    public string? DonneesJson { get; set; }
 }

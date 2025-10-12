@@ -26,18 +26,24 @@ namespace SmartOfficeAPP.Repositories.Repos
 
         public async Task<IEnumerable<Telemetrie>> GetHistoricalDataAsync(DateTime startDate, DateTime endDate, int? peripheriqueId = null)
         {
-            var query = _context.Telemetries.AsQueryable();
-            query = query.Where(t => t.Horodatage >= startDate && t.Horodatage <= endDate);
+            var query = _context.Telemetries
+                                .AsNoTracking()
+                                .Where(t => t.Horodatage >= startDate && t.Horodatage <= endDate);
+
             if (peripheriqueId.HasValue)
             {
                 query = query.Where(t => t.PeripheriqueLogiqueId == peripheriqueId.Value);
             }
-            return await query.OrderByDescending(t => t.Horodatage).ToListAsync();
+
+            return await query
+                .OrderByDescending(t => t.Horodatage)
+                .ToListAsync();
         }
         // Récupère les données de télémétrie pour un périphérique donné.
         public async Task<IEnumerable<Telemetrie>> GetTelemetriesByPeripheriqueIdAsync(int peripheriqueId)
         {
             return await _context.Telemetries
+                                 .AsNoTracking()
                                  .Where(t => t.PeripheriqueLogiqueId == peripheriqueId)
                                  .OrderByDescending(t => t.Horodatage) // Ordonne par la date la plus récente.
                                  .ToListAsync();

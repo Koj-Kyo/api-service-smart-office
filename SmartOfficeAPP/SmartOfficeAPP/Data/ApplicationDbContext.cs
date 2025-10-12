@@ -15,7 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Gardé UNIQUEMENT pour les outils EF si le DI n’a pas configuré le contexte.
+        // Fallback pour les outils EF uniquement (quand le DI n’a pas injecté d’options).
         if (!optionsBuilder.IsConfigured)
         {
             var conn = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
@@ -30,9 +30,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
-        // Index utile pour requêtes temporelles/filtrage par périphérique
+        // Index composite utile pour lectures par périphérique et plage temporelle
         builder.Entity<Telemetrie>()
-               .HasIndex(t => new { t.PeripheriqueLogiqueId, t.Horodatage });
+               .HasIndex(t => new { t.PeripheriqueLogiqueId, t.Horodatage })
+               .HasDatabaseName("IX_Telemetries_PeripheriqueLogiqueId_Horodatage");
     }
 
     public DbSet<Zone> Zones { get; set; }

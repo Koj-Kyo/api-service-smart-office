@@ -505,7 +505,6 @@ namespace SmartOfficeAPP.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DonneesJson")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Horodatage")

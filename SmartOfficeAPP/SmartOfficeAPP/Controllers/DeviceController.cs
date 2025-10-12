@@ -9,7 +9,7 @@ namespace SmartOfficeAPP.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")] // Sécurise toutes les actions pour les administrateurs
+[Authorize(Roles = "Admin")]
 public class DevicesController : ControllerBase
 {
     private readonly IPeripheriqueLogiqueService _peripheriqueService;
@@ -27,7 +27,8 @@ public class DevicesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PeripheriqueLogiqueDto>>> GetDevices()
     {
-        return new ObjectResult("Cette action n'est pas encore implémentée selon le plan.");
+        var devices = await _peripheriqueService.GetAllAsync();
+        return Ok(devices);
     }
 
     // GET: api/Devices/5

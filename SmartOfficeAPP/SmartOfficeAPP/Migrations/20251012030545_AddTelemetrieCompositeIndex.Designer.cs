@@ -12,8 +12,8 @@ using SmartOfficeAPP.Data;
 namespace SmartOfficeAPP.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251012024609_AddIncidentTicketNewFields")]
-    partial class AddIncidentTicketNewFields
+    [Migration("20251012030545_AddTelemetrieCompositeIndex")]
+    partial class AddTelemetrieCompositeIndex
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -508,7 +508,6 @@ namespace SmartOfficeAPP.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DonneesJson")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Horodatage")

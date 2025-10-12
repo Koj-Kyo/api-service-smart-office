@@ -141,7 +141,6 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebasse
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebassets.development.json
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebassets.build.endpoints.json
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\swae.build.ex.cache
-D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOff.3403FEE5.Up2Date
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOfficeAPP.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\refint\SmartOfficeAPP.dll
@@ -162,3 +161,4 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Messagi
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Storage.Blobs.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Storage.Common.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\System.IO.Hashing.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\HealthChecks.NpgSql.dll

@@ -23,7 +23,13 @@ namespace SmartOfficeAPP.Services.ServicesImpl
             return _mapper.Map<IEnumerable<PeripheriqueLogiqueDto>>(peripheriques);
         }
 
-        public async Task<PeripheriqueLogiqueDto> GetByIdAsync(int id)
+        public async Task<IEnumerable<PeripheriqueLogiqueDto>> GetAllAsync()
+        {
+            var peripheriques = await _peripheriqueRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<PeripheriqueLogiqueDto>>(peripheriques);
+        }
+
+        public async Task<PeripheriqueLogiqueDto?> GetByIdAsync(int id)
         {
             var peripherique = await _peripheriqueRepository.GetByIdAsync(id);
             return _mapper.Map<PeripheriqueLogiqueDto>(peripherique);

@@ -14,14 +14,16 @@ public class PeripheriqueLogiqueRepository : IPeripheriqueLogiqueRepository
         _context = context;
     }
 
-    public async Task<PeripheriqueLogique> GetByIdAsync(int id)
+    public async Task<PeripheriqueLogique?> GetByIdAsync(int id)
     {
         return await _context.PeripheriquesLogiques.FindAsync(id);
     }
 
     public async Task<IEnumerable<PeripheriqueLogique>> GetAllAsync()
     {
-        return await _context.PeripheriquesLogiques.ToListAsync();
+        return await _context.PeripheriquesLogiques
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task AddAsync(PeripheriqueLogique peripherique)
@@ -49,12 +51,16 @@ public class PeripheriqueLogiqueRepository : IPeripheriqueLogiqueRepository
 
     public async Task<IEnumerable<PeripheriqueLogique>> GetByZoneIdAsync(int zoneId)
     {
-        return await _context.PeripheriquesLogiques.Where(p => p.ZoneId == zoneId).ToListAsync();
+        return await _context.PeripheriquesLogiques
+            .AsNoTracking()
+            .Where(p => p.ZoneId == zoneId)
+            .ToListAsync();
     }
 
     public async Task<PeripheriqueLogique?> GetByIotDeviceIdAndNameAsync(string iotDeviceId, string name)
     {
         return await _context.PeripheriquesLogiques
+            .AsNoTracking()
             .Where(p => p.IotDeviceId == iotDeviceId && p.Name == name)
             .FirstOrDefaultAsync();
     }

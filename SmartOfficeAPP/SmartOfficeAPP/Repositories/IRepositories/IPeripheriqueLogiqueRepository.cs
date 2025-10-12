@@ -4,7 +4,7 @@ namespace SmartOfficeAPP.Repositories.IRepositories;
 
 public interface IPeripheriqueLogiqueRepository
 {
-    Task<PeripheriqueLogique> GetByIdAsync(int id);
+    Task<PeripheriqueLogique?> GetByIdAsync(int id);
     Task<IEnumerable<PeripheriqueLogique>> GetAllAsync();
     Task AddAsync(PeripheriqueLogique peripherique);
     Task<bool> UpdateAsync(PeripheriqueLogique peripherique);
