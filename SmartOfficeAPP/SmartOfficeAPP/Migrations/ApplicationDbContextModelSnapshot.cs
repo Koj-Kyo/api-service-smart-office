@@ -296,6 +296,76 @@ namespace SmartOfficeAPP.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("SmartOfficeAPP.Models.IncidentTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssignedToId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DateResolution")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("PeripheriqueLogiqueId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Statut")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Sujet")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PeripheriqueLogiqueId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ZoneId");
+
+                    b.ToTable("TicketsIncidents");
+                });
+
             modelBuilder.Entity("SmartOfficeAPP.Models.JournalAudit", b =>
                 {
                     b.Property<int>("Id")
@@ -434,71 +504,28 @@ namespace SmartOfficeAPP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("DonneesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("Horodatage")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("PeripheriqueLogiqueId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("TypeDonnee")
+                    b.Property<string>("TypeEvenement")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Valeur")
-                        .HasColumnType("numeric");
+                    b.Property<double>("Valeur")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PeripheriqueLogiqueId");
 
                     b.ToTable("Telemetries");
-                });
-
-            modelBuilder.Entity("SmartOfficeAPP.Models.TicketIncident", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateCreation")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DateResolution")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("PeripheriqueLogiqueId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Statut")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Sujet")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("ZoneId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PeripheriqueLogiqueId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ZoneId");
-
-                    b.ToTable("TicketsIncidents");
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.Zone", b =>
@@ -604,6 +631,29 @@ namespace SmartOfficeAPP.Migrations
                     b.Navigation("Zone");
                 });
 
+            modelBuilder.Entity("SmartOfficeAPP.Models.IncidentTicket", b =>
+                {
+                    b.HasOne("SmartOfficeAPP.Models.PeripheriqueLogique", "PeripheriqueLogique")
+                        .WithMany()
+                        .HasForeignKey("PeripheriqueLogiqueId");
+
+                    b.HasOne("SmartOfficeAPP.Models.Identity.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartOfficeAPP.Models.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId");
+
+                    b.Navigation("PeripheriqueLogique");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Zone");
+                });
+
             modelBuilder.Entity("SmartOfficeAPP.Models.PeripheriqueLogique", b =>
                 {
                     b.HasOne("SmartOfficeAPP.Models.Zone", "Zone")
@@ -639,29 +689,6 @@ namespace SmartOfficeAPP.Migrations
                         .IsRequired();
 
                     b.Navigation("PeripheriqueLogique");
-                });
-
-            modelBuilder.Entity("SmartOfficeAPP.Models.TicketIncident", b =>
-                {
-                    b.HasOne("SmartOfficeAPP.Models.PeripheriqueLogique", "PeripheriqueLogique")
-                        .WithMany()
-                        .HasForeignKey("PeripheriqueLogiqueId");
-
-                    b.HasOne("SmartOfficeAPP.Models.Identity.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SmartOfficeAPP.Models.Zone", "Zone")
-                        .WithMany()
-                        .HasForeignKey("ZoneId");
-
-                    b.Navigation("PeripheriqueLogique");
-
-                    b.Navigation("User");
-
-                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.PeripheriqueLogique", b =>

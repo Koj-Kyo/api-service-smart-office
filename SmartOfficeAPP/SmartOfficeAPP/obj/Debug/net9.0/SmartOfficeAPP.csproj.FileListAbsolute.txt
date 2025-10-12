@@ -156,3 +156,9 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Microsoft.Res
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Newtonsoft.Json.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\System.ClientModel.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\System.Memory.Data.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Core.Amqp.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Messaging.EventHubs.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Messaging.EventHubs.Processor.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Storage.Blobs.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Azure.Storage.Common.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\System.IO.Hashing.dll

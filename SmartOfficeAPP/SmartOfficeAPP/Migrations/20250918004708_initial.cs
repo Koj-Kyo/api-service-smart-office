@@ -319,8 +319,9 @@ namespace SmartOfficeAPP.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Horodatage = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    TypeDonnee = table.Column<string>(type: "text", nullable: false),
-                    Valeur = table.Column<decimal>(type: "numeric", nullable: false),
+                    TypeEvenement = table.Column<string>(type: "text", nullable: false),
+                    Valeur = table.Column<double>(type: "double precision", nullable: false),
+                    DonneesJson = table.Column<string>(type: "text", nullable: true),
                     PeripheriqueLogiqueId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
