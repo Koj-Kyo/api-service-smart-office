@@ -1,0 +1,37 @@
+### Variables
+@baseUrl = https://localhost:7144
+@adminEmail = adminer@smartoffice.com
+@adminPassword = Admin123!
+
+### Login Admin
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Test Auth (remplacez TOKEN_HERE par le token obtenu du login)
+GET {{baseUrl}}/api/Auth/test-auth
+Authorization: Bearer TOKEN_HERE
+
+### Test Admin (remplacez TOKEN_HERE par le token obtenu du login)
+GET {{baseUrl}}/api/Auth/test-admin
+Authorization: Bearer TOKEN_HERE
+
+### Créer une zone (remplacez TOKEN_HERE par le token obtenu du login)
+POST {{baseUrl}}/api/Zones
+Content-Type: application/json
+Authorization: Bearer TOKEN_HERE
+
+{
+  "nom": "Bureau Test HTTP"
+}
+
+### Health Check (pas d'auth requise)
+GET {{baseUrl}}/health/live
+
+### Statistics (Admin requis - remplacez TOKEN_HERE)
+GET {{baseUrl}}/api/UserManagement/statistics
+Authorization: Bearer TOKEN_HERE
