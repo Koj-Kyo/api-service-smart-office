@@ -256,6 +256,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SmartOfficeAPP.Controllers.DevicesController",
+    "Method": "SetDesiredProperties",
+    "RelativePath": "api/Devices/{iotDeviceId}/desired",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "iotDeviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "desired",
+        "Type": "System.Object",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SmartOfficeAPP.Controllers.IncidentTicketsController",
     "Method": "CreateTicket",
     "RelativePath": "api/IncidentTickets",
@@ -415,6 +436,22 @@
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
+    "Method": "AddTelemetryAsync",
+    "RelativePath": "api/Telemetries/add",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "telemetrie",
+        "Type": "SmartOfficeAPP.Models.Telemetrie",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
     "Method": "GetTelemetriesByPeripheriqueId",
     "RelativePath": "api/Telemetries/by-peripherique/{peripheriqueId}",
     "HttpMethod": "GET",
@@ -424,6 +461,64 @@
       {
         "Name": "peripheriqueId",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
+    "Method": "GetHistoricalDataAsync",
+    "RelativePath": "api/Telemetries/history",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "startDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "endDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "peripheriqueId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
+    "Method": "GetTelemetriesByPeripheriqueIdAsync",
+    "RelativePath": "api/Telemetries/peripherique",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "peripheriqueId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
+    "Method": "StoreAISuggestionAsync",
+    "RelativePath": "api/Telemetries/suggestions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "suggestion",
+        "Type": "SmartOfficeAPP.DTOs.Suggestion",
         "IsRequired": true
       }
     ],

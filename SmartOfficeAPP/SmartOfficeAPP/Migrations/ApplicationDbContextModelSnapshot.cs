@@ -523,7 +523,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PeripheriqueLogiqueId");
+                    b.HasIndex("PeripheriqueLogiqueId", "Horodatage");
 
                     b.ToTable("Telemetries");
                 });

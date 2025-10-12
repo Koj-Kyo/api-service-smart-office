@@ -12,17 +12,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         : base(options)
     {
     }
-    //public ApplicationDbContext()
-    //{
-    //}
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // NOTE: Cette configuration est nécessaire pour que les outils de migration puissent fonctionner.
-        // La chaîne de connexion doit correspondre à celle de votre fichier appsettings.json.
+        // Gardé UNIQUEMENT pour les outils EF si le DI n’a pas configuré le contexte.
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=BureauIntelligentDB;Username=postgres;Password=246824682468");
+            var conn = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            if (!string.IsNullOrWhiteSpace(conn))
+            {
+                optionsBuilder.UseNpgsql(conn);
+            }
         }
     }
 
@@ -30,6 +30,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // Index utile pour requêtes temporelles/filtrage par périphérique
+        builder.Entity<Telemetrie>()
+               .HasIndex(t => new { t.PeripheriqueLogiqueId, t.Horodatage });
     }
 
     public DbSet<Zone> Zones { get; set; }
