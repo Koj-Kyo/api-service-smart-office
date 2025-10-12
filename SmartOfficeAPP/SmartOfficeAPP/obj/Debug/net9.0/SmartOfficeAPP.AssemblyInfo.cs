@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartOfficeAPP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82769e146c33523581284f950d21def2640ef044")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0d3cb45bbabf1dccdcc05b5aac5ceda52eeca122")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartOfficeAPP")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartOfficeAPP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -14,18 +14,26 @@ namespace SmartOfficeAPP.Services.ServicesImpl;
 public class AuthService : IAuthService
 {
     private readonly IAuthRepository _authRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
 
-    public AuthService(IAuthRepository authRepository, IConfiguration configuration)
+    public AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> userManager, IConfiguration configuration)
     {
         _authRepository = authRepository;
+        _userManager = userManager;
         _configuration = configuration;
     }
 
     // Mise à jour pour retourner IdentityResult qui contient des erreurs détaillées
     public async Task<IdentityResult> RegisterAsync(RegisterDto registerDto)
     {
-        var user = new ApplicationUser { UserName = registerDto.Email, Email = registerDto.Email };
+        var user = new ApplicationUser 
+        { 
+            UserName = registerDto.UserName,
+            Email = registerDto.Email,
+            FullName = registerDto.FullName,
+            EmailConfirmed = false // Sera confirmé par email ou Admin
+        };
         var result = await _authRepository.RegisterAsync(user, registerDto.Password);
         return result;
     }
@@ -39,7 +47,7 @@ public class AuthService : IAuthService
         }
 
         // Génération du JWT d'accès et du jeton de rafraîchissement.
-        var authResponse = GenerateAuthTokens(user);
+        var authResponse = await GenerateAuthTokensAsync(user);
 
         // Sauvegarde le jeton de rafraîchissement dans la base de données.
         await _authRepository.SaveRefreshTokenAsync(user, authResponse.RefreshToken, DateTime.UtcNow.AddDays(7));
@@ -47,16 +55,26 @@ public class AuthService : IAuthService
         return authResponse;
     }
 
-    private AuthResponseDto GenerateAuthTokens(ApplicationUser user)
+    private async Task<AuthResponseDto> GenerateAuthTokensAsync(ApplicationUser user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Secret"]);
 
-        var claims = new[]
+        // Récupérer les rôles de l'utilisateur
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var claims = new List<Claim>
         {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email),
-            };
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.Name, user.UserName!)
+        };
+
+        // Ajouter les rôles aux claims
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {

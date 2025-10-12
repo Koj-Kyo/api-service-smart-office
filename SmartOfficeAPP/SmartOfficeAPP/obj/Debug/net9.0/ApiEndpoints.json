@@ -121,6 +121,26 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SmartOfficeAPP.Controllers.AuthController",
+    "Method": "TestAdmin",
+    "RelativePath": "api/Auth/test-admin",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.AuthController",
+    "Method": "TestAuth",
+    "RelativePath": "api/Auth/test-auth",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SmartOfficeAPP.Controllers.CommandesController",
     "Method": "PostCommand",
     "RelativePath": "api/Commandes",
@@ -621,6 +641,354 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetAllRoles",
+    "RelativePath": "api/UserManagement/roles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.RoleDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "CreateRole",
+    "RelativePath": "api/UserManagement/roles",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "createRoleDto",
+        "Type": "SmartOfficeAPP.DTOs.Request.CreateRoleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.RoleDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "DeleteRole",
+    "RelativePath": "api/UserManagement/roles/{roleId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "roleId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetUsersByRole",
+    "RelativePath": "api/UserManagement/roles/{roleName}/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "roleName",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.UserDetailsDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetUserStatistics",
+    "RelativePath": "api/UserManagement/statistics",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.UserStatisticsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/UserManagement/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.UserDetailsDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "CreateUser",
+    "RelativePath": "api/UserManagement/users",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "createUserDto",
+        "Type": "SmartOfficeAPP.DTOs.Request.CreateUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.UserDetailsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetUserById",
+    "RelativePath": "api/UserManagement/users/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.UserDetailsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "UpdateUser",
+    "RelativePath": "api/UserManagement/users/{userId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "updateUserDto",
+        "Type": "SmartOfficeAPP.DTOs.Request.UpdateUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "DeleteUser",
+    "RelativePath": "api/UserManagement/users/{userId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "GetUserRoles",
+    "RelativePath": "api/UserManagement/users/{userId}/roles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "SetUserRoles",
+    "RelativePath": "api/UserManagement/users/{userId}/roles",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "assignRolesDto",
+        "Type": "SmartOfficeAPP.DTOs.Request.AssignRolesDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "AddRoleToUser",
+    "RelativePath": "api/UserManagement/users/{userId}/roles/{roleName}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "roleName",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "RemoveRoleFromUser",
+    "RelativePath": "api/UserManagement/users/{userId}/roles/{roleName}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "roleName",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "ToggleUserStatus",
+    "RelativePath": "api/UserManagement/users/{userId}/toggle-status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.UserManagementController",
+    "Method": "SearchUsers",
+    "RelativePath": "api/UserManagement/users/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "searchTerm",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.UserDetailsDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.ZonesController",

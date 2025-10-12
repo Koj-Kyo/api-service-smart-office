@@ -44,10 +44,23 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)),
+        ClockSkew = TimeSpan.Zero // Supprime la tolérance par défaut de 5 minutes
     };
     options.Events = new JwtBearerEvents
     {
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError(context.Exception, "Échec d'authentification JWT: {Error}", context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("Challenge JWT déclenché: {Error}", context.Error);
+            return Task.CompletedTask;
+        },
         OnMessageReceived = context =>
         {
             // Support JWT pour SignalR (query access_token)
@@ -92,6 +105,8 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>(); // Nouveau service
+builder.Services.AddScoped<DataSeedingService>(); // Ajout du service de seeding
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
 
 builder.Services.AddControllers();
@@ -131,6 +146,13 @@ builder.Services.AddRateLimiter(o => o.GlobalLimiter = System.Threading.RateLimi
 ));
 
 var app = builder.Build();
+
+// Seeding des données initiales
+using (var scope = app.Services.CreateScope())
+{
+    var seedingService = scope.ServiceProvider.GetRequiredService<DataSeedingService>();
+    await seedingService.SeedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SmartOfficeAPP.DTOs.Request;
 using SmartOfficeAPP.DTOs.Response;
 using SmartOfficeAPP.Services.IServices;
+using System.Security.Claims;
 
 
 namespace SmartOfficeAPP.Controllers;
@@ -52,5 +54,39 @@ public class AuthController : ControllerBase
         }
 
         return Ok(authResponse);
+    }
+
+    /// <summary>
+    /// Endpoint de test pour vérifier l'autorisation
+    /// </summary>
+    [HttpGet("test-auth")]
+    [Authorize]
+    public IActionResult TestAuth()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+        var allClaims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+
+        return Ok(new
+        {
+            Message = "Autorisation réussie !",
+            UserId = userId,
+            Email = email,
+            Roles = roles,
+            IsAuthenticated = User.Identity?.IsAuthenticated,
+            AuthenticationType = User.Identity?.AuthenticationType,
+            AllClaims = allClaims
+        });
+    }
+
+    /// <summary>
+    /// Endpoint de test pour vérifier l'autorisation Admin
+    /// </summary>
+    [HttpGet("test-admin")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult TestAdmin()
+    {
+        return Ok(new { Message = "Vous êtes bien Admin !" });
     }
 }
