@@ -69,7 +69,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
-
+builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
 
 // Add services to the container.
 builder.Services.AddControllers();

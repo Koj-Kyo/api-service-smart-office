@@ -10,4 +10,5 @@ public interface IPeripheriqueLogiqueRepository
     Task<bool> UpdateAsync(PeripheriqueLogique peripherique);
     Task<bool> DeleteAsync(int id);
     Task<IEnumerable<PeripheriqueLogique>> GetByZoneIdAsync(int zoneId);
+    Task<PeripheriqueLogique?> GetByIotDeviceIdAndNameAsync(string iotDeviceId, string name);
 }

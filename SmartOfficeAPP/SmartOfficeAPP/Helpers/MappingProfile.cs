@@ -16,6 +16,14 @@ namespace SmartOfficeAPP.Helpers
 
             // DTO de mise à jour de zone vers entité Zone (pour la mise à jour)
             CreateMap<ZoneUpdateDto, Zone>();
+
+            // Entité Telemetrie vers DTO de réponse
+            CreateMap<Telemetrie, TelemetrieDto>()
+                .ForMember(dest => dest.Valeur, opt => opt.MapFrom(src => (decimal)src.Valeur));
+
+            // DTO de création de Telemetrie vers entité Telemetrie
+            CreateMap<TelemetrieDto, Telemetrie>()
+                .ForMember(dest => dest.Valeur, opt => opt.MapFrom(src => (double)src.Valeur));
         }
     }
 }

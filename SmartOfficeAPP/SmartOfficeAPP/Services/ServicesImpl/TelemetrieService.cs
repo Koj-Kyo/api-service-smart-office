@@ -65,7 +65,7 @@ public class TelemetrieService : ITelemetrieService
     /// <param name="suggestion">L'objet Suggestion à stocker.</param>
     public async Task StoreAISuggestionAsync(Suggestion suggestion)
     {
-        var suggestionModel = _mapper.Map<DTOs.Suggestion>(suggestion);
-        await _suggestionRepository.AddAsync(suggestionModel);
+        var suggestionDto = _mapper.Map<DTOs.Suggestion>(suggestion);
+        await _suggestionRepository.AddAsync(suggestionDto);
     }
 }

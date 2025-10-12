@@ -10,7 +10,7 @@ public class PeripheriqueLogique
     // Nom du périphérique (ex: "Lampe de bureau")
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; }
+    public string Name { get; set; } // Nom logique utilisé par le firmware
 
     // Type du périphérique (ex: "Capteur", "Lumière", "Prise connectée")
     [Required]

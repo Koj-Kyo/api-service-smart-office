@@ -51,5 +51,12 @@ public class PeripheriqueLogiqueRepository : IPeripheriqueLogiqueRepository
     {
         return await _context.PeripheriquesLogiques.Where(p => p.ZoneId == zoneId).ToListAsync();
     }
+
+    public async Task<PeripheriqueLogique?> GetByIotDeviceIdAndNameAsync(string iotDeviceId, string name)
+    {
+        return await _context.PeripheriquesLogiques
+            .Where(p => p.IotDeviceId == iotDeviceId && p.Name == name)
+            .FirstOrDefaultAsync();
+    }
 }
 
