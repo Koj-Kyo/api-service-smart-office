@@ -1,9 +1,14 @@
 ﻿using SmartOfficeAPP.Services.IServices;
 using Microsoft.Azure.Devices;
+<<<<<<< HEAD
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Devices.Common.Exceptions;
 using System.Text;
 using System.Text.Json;
+=======
+using Microsoft.Azure.Devices.Shared; // pour Twin si besoin
+using System.Text;
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
 
 namespace SmartOfficeAPP.Services.ServicesImpl;
 
@@ -11,6 +16,7 @@ public class IotHubService : IIotHubService
 {
     private readonly ServiceClient _serviceClient;
     private readonly RegistryManager _registryManager;
+<<<<<<< HEAD
     private readonly ILogger<IotHubService> _logger;
     private readonly ISignalRService _signalRService;
 
@@ -18,6 +24,11 @@ public class IotHubService : IIotHubService
         IConfiguration configuration, 
         ILogger<IotHubService> logger,
         ISignalRService signalRService)
+=======
+
+    // La chaîne de connexion doit être ajoutée dans appsettings.json (IotHubConnectionString).
+    public IotHubService(IConfiguration configuration)
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     {
         var iotHubConnectionString = configuration["IotHubConnectionString"];
         
@@ -29,8 +40,11 @@ public class IotHubService : IIotHubService
 
         _serviceClient = ServiceClient.CreateFromConnectionString(iotHubConnectionString);
         _registryManager = RegistryManager.CreateFromConnectionString(iotHubConnectionString);
+<<<<<<< HEAD
         _logger = logger;
         _signalRService = signalRService;
+=======
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     }
 
     /// <summary>
@@ -54,6 +68,7 @@ public class IotHubService : IIotHubService
             _logger.LogInformation("Invocation de la méthode {MethodName} sur le device {DeviceId}", methodName, deviceId);
 
             var result = await _serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
+<<<<<<< HEAD
             
             var success = result.Status == 200;
             var responsePayload = result.GetPayloadAsJson();
@@ -79,6 +94,31 @@ public class IotHubService : IIotHubService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de l'invocation de la méthode {MethodName} sur {DeviceId}", methodName, deviceId);
+=======
+            return result.Status == 200;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur InvokeDeviceMethodAsync : {ex.Message}");
+            return false;
+        }
+    }
+
+    // Met à jour les desired properties du Device Twin avec le fragment JSON fourni.
+    public async Task<bool> UpdateDesiredPropertiesAsync(string deviceId, string desiredJson)
+    {
+        try
+        {
+            var twin = await _registryManager.GetTwinAsync(deviceId);
+            // Construit un patch JSON valide pour UpdateTwinAsync
+            var patch = $"{{ \"properties\": {{ \"desired\": {desiredJson} }} }}";
+            await _registryManager.UpdateTwinAsync(deviceId, patch, twin.ETag);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur UpdateDesiredPropertiesAsync : {ex.Message}");
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
             return false;
         }
     }

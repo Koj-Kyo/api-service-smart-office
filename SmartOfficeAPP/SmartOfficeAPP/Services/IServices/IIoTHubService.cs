@@ -9,6 +9,7 @@ namespace SmartOfficeAPP.Services.IServices
         /// </summary>
         Task<bool> InvokeDeviceMethodAsync(string deviceId, string methodName, string payload);
 
+<<<<<<< HEAD
         /// <summary>
         /// Met à jour les desired properties (Device Twin) d'un appareil
         /// </summary>
@@ -38,5 +39,10 @@ namespace SmartOfficeAPP.Services.IServices
         /// Obtient le statut de connexion de plusieurs devices
         /// </summary>
         Task<IEnumerable<DeviceConnectionInfo>> GetDevicesConnectionStatusAsync(IEnumerable<string> deviceIds);
+=======
+        // Met à jour les desired properties (Device Twin) d'un appareil.
+        // 'desiredJson' est un fragment JSON qui sera placé sous properties.desired.
+        Task<bool> UpdateDesiredPropertiesAsync(string deviceId, string desiredJson);
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     }
 }

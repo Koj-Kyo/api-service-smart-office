@@ -116,8 +116,11 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
+<<<<<<< HEAD
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<DataSeedingService>();
+=======
+>>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
 
 // Nouveau service SignalR
 builder.Services.AddScoped<ISignalRService, SignalRService>();
