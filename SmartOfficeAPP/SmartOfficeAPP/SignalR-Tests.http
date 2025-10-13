@@ -1,0 +1,99 @@
+### Test SignalR Endpoints
+### Variables
+@baseUrl = https://localhost:7020/api
+@token = YOUR_JWT_TOKEN_HERE
+
+### Test notification utilisateur
+POST {{baseUrl}}/SignalRTest/test-user-notification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "userId": "user-id-test",
+    "title": "Test Notification",
+    "message": "Ceci est une notification de test envoyée à un utilisateur spécifique"
+}
+
+### Test notification broadcast
+POST {{baseUrl}}/SignalRTest/test-broadcast
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Message Global",
+    "message": "Ceci est un message broadcast pour tous les utilisateurs connectés"
+}
+
+### Test mise à jour de périphérique
+POST {{baseUrl}}/SignalRTest/test-device-update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "peripheriqueId": 1,
+    "status": "online",
+    "data": {
+        "temperature": 22.5,
+        "humidity": 45.2,
+        "lastUpdate": "2024-01-15T10:30:00Z"
+    }
+}
+
+### Test alerte d'incident
+POST {{baseUrl}}/SignalRTest/test-incident-alert
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "incidentId": 1,
+    "title": "Panne de système",
+    "description": "Le système de climatisation de la zone 2 est en panne",
+    "priority": "High"
+}
+
+### Test mise à jour télémétrie
+POST {{baseUrl}}/SignalRTest/test-telemetry-update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "peripheriqueId": 1,
+    "data": {
+        "temperature": 23.1,
+        "pressure": 1013.25,
+        "timestamp": "2024-01-15T10:35:00Z",
+        "batteryLevel": 85
+    }
+}
+
+### Test résultat de commande
+POST {{baseUrl}}/SignalRTest/test-command-result
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "commandId": 1,
+    "peripheriqueId": 1,
+    "status": "Success",
+    "result": "Commande exécutée avec succès - Lumière allumée"
+}
+
+### Test notification de zone
+POST {{baseUrl}}/SignalRTest/test-zone-notification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "zoneId": 1,
+    "title": "Maintenance programmée",
+    "message": "Une maintenance est programmée dans cette zone demain de 14h à 16h"
+}
+
+### Test authentification (pour obtenir un token)
+POST {{baseUrl}}/Auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "Admin123!"
+}

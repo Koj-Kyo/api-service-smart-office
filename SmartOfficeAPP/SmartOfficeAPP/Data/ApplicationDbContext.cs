@@ -34,6 +34,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Telemetrie>()
                .HasIndex(t => new { t.PeripheriqueLogiqueId, t.Horodatage })
                .HasDatabaseName("IX_Telemetries_PeripheriqueLogiqueId_Horodatage");
+
+        // Index pour les lectures par statut de ticket
+        builder.Entity<IncidentTicket>()
+               .HasIndex(t => t.Statut)
+               .HasDatabaseName("IX_TicketsIncidents_Statut");
     }
 
     public DbSet<Zone> Zones { get; set; }

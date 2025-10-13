@@ -1,0 +1,208 @@
+### Tests Azure IoT Hub et Statistiques de Consommation
+### Variables
+@baseUrl = https://localhost:7020/api
+@token = YOUR_JWT_TOKEN_HERE
+
+### Authentification pour obtenir un token
+POST {{baseUrl}}/Auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "Admin123!"
+}
+
+### ========== TESTS IoT Hub ==========
+
+### Invoquer une méthode directe sur un device
+POST {{baseUrl}}/IoTHub/device/device001/method/setState
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "payload": "{\"state\": 1}"
+}
+
+### Mettre à jour les desired properties d'un device twin
+PUT {{baseUrl}}/IoTHub/device/device001/twin/desired
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "desiredProperties": "{\"targetTemperature\": 22.5, \"mode\": \"auto\"}"
+}
+
+### Récupérer les informations du device twin
+GET {{baseUrl}}/IoTHub/device/device001/twin
+Authorization: Bearer {{token}}
+
+### Envoyer un message Cloud-to-Device
+POST {{baseUrl}}/IoTHub/device/device001/message
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "message": "Maintenance programmée demain à 14h",
+    "properties": {
+        "messageType": "maintenance",
+        "priority": "normal"
+    }
+}
+
+### Commandes smart prédéfinies - Allumer un périphérique
+POST {{baseUrl}}/IoTHub/device/device001/smart-commands/turn-on
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Commandes smart prédéfinies - Éteindre un périphérique
+POST {{baseUrl}}/IoTHub/device/device001/smart-commands/turn-off
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Commandes smart prédéfinies - Régler la luminosité
+POST {{baseUrl}}/IoTHub/device/device001/smart-commands/set-brightness
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "value": 75
+}
+
+### Obtenir le statut de connexion de plusieurs devices
+POST {{baseUrl}}/IoTHub/devices/connection-status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "deviceIds": ["device001", "device002", "device003"]
+}
+
+### Créer/Mettre à jour un device (Admin uniquement)
+POST {{baseUrl}}/IoTHub/device/new-device-001
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "enabled": true
+}
+
+### ========== TESTS STATISTIQUES DE CONSOMMATION ==========
+
+### Statistiques de consommation pour un périphérique
+GET {{baseUrl}}/ConsommationStats/peripherique/1?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{token}}
+
+### Statistiques de consommation pour une zone
+GET {{baseUrl}}/ConsommationStats/zone/1?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{token}}
+
+### Données de consommation horaire
+GET {{baseUrl}}/ConsommationStats/peripherique/1/horaire?date=2024-01-15
+Authorization: Bearer {{token}}
+
+### Tendances de consommation sur 30 jours
+GET {{baseUrl}}/ConsommationStats/peripherique/1/tendances?nombreJours=30
+Authorization: Bearer {{token}}
+
+### Détection d'anomalies de consommation
+GET {{baseUrl}}/ConsommationStats/peripherique/1/anomalies?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{token}}
+
+### Génération d'un rapport de consommation pour une zone
+GET {{baseUrl}}/ConsommationStats/rapport?zoneId=1&startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{token}}
+
+### Génération d'un rapport de consommation global (toutes zones)
+GET {{baseUrl}}/ConsommationStats/rapport?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer {{token}}
+
+### Calcul du coût énergétique (tarif 0.15€/kWh)
+GET {{baseUrl}}/ConsommationStats/peripherique/1/cout?startDate=2024-01-01&endDate=2024-01-31&tarifKwh=0.15
+Authorization: Bearer {{token}}
+
+### Top 10 des consommateurs pour une zone
+GET {{baseUrl}}/ConsommationStats/top-consommateurs?zoneId=1&startDate=2024-01-01&endDate=2024-01-31&top=10
+Authorization: Bearer {{token}}
+
+### Top 5 des consommateurs globaux
+GET {{baseUrl}}/ConsommationStats/top-consommateurs?startDate=2024-01-01&endDate=2024-01-31&top=5
+Authorization: Bearer {{token}}
+
+### Comparaison de consommation entre deux périodes
+GET {{baseUrl}}/ConsommationStats/peripherique/1/comparaison?startDate1=2024-01-01&endDate1=2024-01-15&startDate2=2024-01-16&endDate2=2024-01-31
+Authorization: Bearer {{token}}
+
+### ========== TESTS TÉLÉMÉTRIE AVANCÉS ==========
+
+### Récupérer la télémétrie d'un périphérique
+GET {{baseUrl}}/Telemetrie/peripherique/1
+Authorization: Bearer {{token}}
+
+### Données historiques avec filtrage par date
+GET {{baseUrl}}/Telemetrie/historical?startDate=2024-01-01&endDate=2024-01-31&peripheriqueId=1
+Authorization: Bearer {{token}}
+
+### ========== TESTS CONTRÔLE DE PÉRIPHÉRIQUES ==========
+
+### Envoyer une commande à un périphérique via API
+POST {{baseUrl}}/Commande/send
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "peripheriqueLogiqueId": 1,
+    "nomCommande": "setState",
+    "valeur": "1"
+}
+
+### ========== TESTS SIGNALR ==========
+
+### Test de notification à un utilisateur via SignalR
+POST {{baseUrl}}/SignalRTest/test-user-notification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "userId": "user-id-test",
+    "title": "Test IoT",
+    "message": "Notification de test pour les fonctionnalités IoT"
+}
+
+### Test de mise à jour de périphérique via SignalR
+POST {{baseUrl}}/SignalRTest/test-device-update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "peripheriqueId": 1,
+    "status": "connected",
+    "data": {
+        "temperature": 23.5,
+        "energy_mwh": 1250,
+        "power_mw": 85,
+        "state": 1,
+        "lastUpdate": "2024-01-15T14:30:00Z"
+    }
+}
+
+### Test de télémétrie temps réel via SignalR
+POST {{baseUrl}}/SignalRTest/test-telemetry-update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "peripheriqueId": 1,
+    "data": {
+        "timestamp": "2024-01-15T14:35:00Z",
+        "measurements": {
+            "power_mw": 87,
+            "energy_mwh": 1255,
+            "temperature": 23.2,
+            "state": 1
+        }
+    }
+}

@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using SmartOfficeAPP.DTOs;
+using SmartOfficeAPP.DTOs.Request;
+using SmartOfficeAPP.DTOs.Response;
 using SmartOfficeAPP.Models;
 
 namespace SmartOfficeAPP.Helpers
@@ -8,31 +10,37 @@ namespace SmartOfficeAPP.Helpers
     {
         public MappingProfile()
         {
-            // Entité Zone vers DTO de réponse
-            CreateMap<Zone, ZoneDto>();
+            // Zone ↔ DTOs
+            CreateMap<Zone, ZoneDto>()
+                .ForMember(dest => dest.Nom, opt => opt.MapFrom(src => src.Name));
 
-            // DTO de création de zone vers entité Zone
-            CreateMap<ZoneCreationDto, Zone>();
+            CreateMap<ZoneCreationDto, Zone>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Nom));
 
-            // DTO de mise à jour de zone vers entité Zone (pour la mise à jour)
-            CreateMap<ZoneUpdateDto, Zone>();
+            CreateMap<ZoneUpdateDto, Zone>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Nom));
 
-            // Entité PeripheriqueLogique vers DTO de réponse
+            // Périphériques
             CreateMap<PeripheriqueLogique, PeripheriqueLogiqueDto>();
-
-            // DTO de création vers entité PeripheriqueLogique
             CreateMap<PeripheriqueLogiqueCreationDto, PeripheriqueLogique>();
-
-            // DTO de mise à jour vers entité PeripheriqueLogique
             CreateMap<PeripheriqueLogiqueUpdateDto, PeripheriqueLogique>();
 
-            // Entité Telemetrie vers DTO de réponse
+            // Télémétrie
             CreateMap<Telemetrie, TelemetrieDto>()
                 .ForMember(dest => dest.Valeur, opt => opt.MapFrom(src => (decimal)src.Valeur));
-
-            // DTO de création de Telemetrie vers entité Telemetrie
             CreateMap<TelemetrieDto, Telemetrie>()
                 .ForMember(dest => dest.Valeur, opt => opt.MapFrom(src => (double)src.Valeur));
+
+            // IncidentTicket ↔ DTOs
+            CreateMap<IncidentTicket, IncidentTicketDto>();
+            CreateMap<IncidentTicketCreateDto, IncidentTicket>()
+                .ForMember(dest => dest.DateCreation, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.DateResolution, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Zone, opt => opt.Ignore())
+                .ForMember(dest => dest.PeripheriqueLogique, opt => opt.Ignore());
         }
     }
 }

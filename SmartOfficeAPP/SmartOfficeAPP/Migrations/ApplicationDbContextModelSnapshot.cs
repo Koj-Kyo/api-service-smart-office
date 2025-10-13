@@ -304,17 +304,6 @@ namespace SmartOfficeAPP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssignedToId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedById")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("DateCreation")
                         .HasColumnType("timestamp with time zone");
 
@@ -328,23 +317,11 @@ namespace SmartOfficeAPP.Migrations
                     b.Property<int?>("PeripheriqueLogiqueId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Statut")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Sujet")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -358,6 +335,9 @@ namespace SmartOfficeAPP.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PeripheriqueLogiqueId");
+
+                    b.HasIndex("Statut")
+                        .HasDatabaseName("IX_TicketsIncidents_Statut");
 
                     b.HasIndex("UserId");
 
@@ -522,7 +502,8 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PeripheriqueLogiqueId", "Horodatage");
+                    b.HasIndex("PeripheriqueLogiqueId", "Horodatage")
+                        .HasDatabaseName("IX_Telemetries_PeripheriqueLogiqueId_Horodatage");
 
                     b.ToTable("Telemetries");
                 });

@@ -10,11 +10,11 @@ public class Zone
     // Nom de la zone (ex: "Salle de réunion", "Bureau 1")
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     // Collection des périphériques de cette zone (relation 1-à-plusieurs)
-    public ICollection<PeripheriqueLogique> Peripheriques { get; set; }
+    public ICollection<PeripheriqueLogique> Peripheriques { get; set; } = new List<PeripheriqueLogique>();
 
     // Collection des droits d'accès à cette zone (relation plusieurs-à-plusieurs)
-    public ICollection<DroitAcces> DroitsAcces { get; set; }
+    public ICollection<DroitAcces> DroitsAcces { get; set; } = new List<DroitAcces>();
 }

@@ -12,20 +12,21 @@ public class Commande
 
     // Type de la commande (ex: "allumer", "éteindre", "régler_température")
     [Required]
-    public string NomCommande { get; set; }
+    public required string NomCommande { get; set; }
 
     // Valeur de la commande (ex: "true", "false", "22.5")
-    public string Valeur { get; set; }
+    [Required]
+    public required string Valeur { get; set; }
 
     // Clé étrangère vers le périphérique ciblé
     public int PeripheriqueLogiqueId { get; set; }
-    public PeripheriqueLogique PeripheriqueLogique { get; set; }
+    public PeripheriqueLogique? PeripheriqueLogique { get; set; }
 
     // Statut de la commande (ex: "En attente", "Succès", "Échec")
     [Required]
-    public string Statut { get; set; }
+    public required string Statut { get; set; }
 
     // Clé étrangère vers l'utilisateur qui a envoyé la commande
     [Required]
-    public string UserId { get; set; }
+    public required string UserId { get; set; }
 }

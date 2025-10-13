@@ -18,7 +18,7 @@ public class Telemetrie
     /// Réfèrence vers l'objet PeripheriqueLogique.
     /// </summary>
     [ForeignKey("PeripheriqueLogiqueId")]
-    public PeripheriqueLogique PeripheriqueLogique { get; set; }
+    public PeripheriqueLogique? PeripheriqueLogique { get; set; }
 
     /// <summary>
     /// Date et heure de l'événement. Un index sera créé sur cette colonne.
@@ -30,7 +30,7 @@ public class Telemetrie
     /// Type d'événement (par exemple, "Impression", "Scan", "Activation", "Consommation_Energie").
     /// </summary>
     [Required]
-    public string TypeEvenement { get; set; }
+    public required string TypeEvenement { get; set; }
 
     /// <summary>
     /// Valeur associée à l'événement (par exemple, nombre de pages imprimées, kWh consommés).

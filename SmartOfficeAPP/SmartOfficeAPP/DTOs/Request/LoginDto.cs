@@ -6,10 +6,10 @@ namespace SmartOfficeAPP.DTOs.Request
     {
         [Required(ErrorMessage = "L'adresse e-mail est requise.")]
         [EmailAddress(ErrorMessage = "L'adresse e-mail n'est pas valide.")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Le mot de passe est requis.")]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 }

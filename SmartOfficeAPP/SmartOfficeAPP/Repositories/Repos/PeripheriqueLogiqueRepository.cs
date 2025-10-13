@@ -64,5 +64,25 @@ public class PeripheriqueLogiqueRepository : IPeripheriqueLogiqueRepository
             .Where(p => p.IotDeviceId == iotDeviceId && p.Name == name)
             .FirstOrDefaultAsync();
     }
+
+    /// <summary>
+    /// Récupère un périphérique par son ID IoT Hub
+    /// </summary>
+    public async Task<PeripheriqueLogique?> GetByIotDeviceIdAsync(string iotDeviceId)
+    {
+        return await _context.PeripheriquesLogiques
+            .Include(p => p.Zone)
+            .FirstOrDefaultAsync(p => p.IotDeviceId == iotDeviceId);
+    }
+    
+    /// <summary>
+    /// Récupère tous les périphériques avec leurs données de zone
+    /// </summary>
+    public async Task<IEnumerable<PeripheriqueLogique>> GetAllWithZoneAsync()
+    {
+        return await _context.PeripheriquesLogiques
+            .Include(p => p.Zone)
+            .ToListAsync();
+    }
 }
 

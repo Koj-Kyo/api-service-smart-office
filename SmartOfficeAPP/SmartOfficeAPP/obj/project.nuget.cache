@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "vyB+au9u6d0=",
+  "dgSpecHash": "/MI9ezE4lXc=",
   "success": true,
   "projectFilePath": "D:\\Memoire\\ApiSmart\\SmartOfficeAPP\\SmartOfficeAPP\\SmartOfficeAPP.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\aspnetcore.healthchecks.npgsql\\9.0.0\\aspnetcore.healthchecks.npgsql.9.0.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\automapper\\15.0.1\\automapper.15.0.1.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\azure.core\\1.46.2\\azure.core.1.46.2.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\azure.core.amqp\\1.3.1\\azure.core.amqp.1.3.1.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\azure.messaging.eventhubs\\5.12.2\\azure.messaging.eventhubs.5.12.2.nupkg.sha512",
@@ -108,18 +107,5 @@
     "C:\\Users\\HP\\.nuget\\packages\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.threading.tasks\\4.3.0\\system.threading.tasks.4.3.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1608",
-      "level": "Warning",
-      "message": "Version du package détectée en dehors de la contrainte de dépendance\u00A0: AutoMapper.Extensions.Microsoft.DependencyInjection 12.0.1 nécessite AutoMapper (= 12.0.1) alors que la version AutoMapper 15.0.1 a été résolue.",
-      "projectPath": "D:\\Memoire\\ApiSmart\\SmartOfficeAPP\\SmartOfficeAPP\\SmartOfficeAPP.csproj",
-      "warningLevel": 1,
-      "filePath": "D:\\Memoire\\ApiSmart\\SmartOfficeAPP\\SmartOfficeAPP\\SmartOfficeAPP.csproj",
-      "libraryId": "AutoMapper",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    }
-  ]
+  "logs": []
 }

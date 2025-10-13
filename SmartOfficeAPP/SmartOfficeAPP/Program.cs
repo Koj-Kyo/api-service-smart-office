@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SmartOfficeAPP.Data;
 using SmartOfficeAPP.Hubs;
+using SmartOfficeAPP.Helpers;
 using SmartOfficeAPP.Models.Identity;
 using SmartOfficeAPP.Repositories.IRepositories;
 using SmartOfficeAPP.Repositories.Repos;
@@ -26,9 +27,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSignalR();
+// SignalR avec configuration avancée
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+    options.MaximumReceiveMessageSize = 64 * 1024; // 64KB
+});
 
-// Auth JWT
+// Auth JWT avec support SignalR
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -45,8 +54,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)),
-        ClockSkew = TimeSpan.Zero // Supprime la tolérance par défaut de 5 minutes
+        ClockSkew = TimeSpan.Zero
     };
+    
+    // Configuration pour SignalR
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -75,14 +86,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// CORS
+// CORS avec support SignalR
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("AllowFrontend", p => p
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .WithOrigins("https://localhost:5173", "http://localhost:5173") // adapter si besoin
-        .AllowCredentials());
+        .WithOrigins("https://localhost:5173", "http://localhost:5173", "http://localhost:3000", "https://localhost:3000") // Ajouter d'autres origins si nécessaire
+        .AllowCredentials()); // Important pour SignalR
 });
 
 // Repos & services
@@ -105,12 +116,21 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
-builder.Services.AddScoped<IUserManagementService, UserManagementService>(); // Nouveau service
-builder.Services.AddScoped<DataSeedingService>(); // Ajout du service de seeding
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<DataSeedingService>();
+
+// Nouveau service SignalR
+builder.Services.AddScoped<ISignalRService, SignalRService>();
+
+// Nouveau service de statistiques de consommation
+builder.Services.AddScoped<IConsommationStatsService, ConsommationStatsService>();
+
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
 
 builder.Services.AddControllers();
-builder.Services.AddAutoMapper(typeof(Program));
+
+// Configuration d'AutoMapper
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -139,7 +159,7 @@ builder.Services.AddHealthChecks().AddNpgSql(connectionString);
 builder.Services.AddRateLimiter(o => o.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(
     _ => System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter("global", _ => new()
     {
-        PermitLimit = 100, // 100 req / 10s
+        PermitLimit = 100,
         Window = TimeSpan.FromSeconds(10),
         QueueLimit = 0
     })
@@ -162,10 +182,12 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/error"); // ajouter un endpoint ProblemDetails si souhaité
+    app.UseExceptionHandler("/error");
 }
 
 app.UseCors("AllowFrontend");
+
+// Mapping du hub SignalR
 app.MapHub<NotificationHub>("/notificationhub");
 
 app.UseHttpsRedirection();
