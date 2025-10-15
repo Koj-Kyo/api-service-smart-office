@@ -26,27 +26,27 @@ namespace SmartOfficeAPP.Repositories.Repos
 
         public async Task<IEnumerable<Telemetrie>> GetHistoricalDataAsync(DateTime startDate, DateTime endDate, int? peripheriqueId = null)
         {
-<<<<<<< HEAD
+            // Assurer que les dates sont en UTC pour la compatibilité avec PostgreSQL
+            var startDateUtc = startDate.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(startDate, DateTimeKind.Utc) 
+                : startDate.ToUniversalTime();
+            
+            var endDateUtc = endDate.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(endDate, DateTimeKind.Utc) 
+                : endDate.ToUniversalTime();
+
             var query = _context.Telemetries
                                 .AsNoTracking()
-                                .Where(t => t.Horodatage >= startDate && t.Horodatage <= endDate);
+                                .Where(t => t.Horodatage >= startDateUtc && t.Horodatage <= endDateUtc);
 
-=======
-            var query = _context.Telemetries.AsQueryable();
-            query = query.Where(t => t.Horodatage >= startDate && t.Horodatage <= endDate);
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
             if (peripheriqueId.HasValue)
             {
                 query = query.Where(t => t.PeripheriqueLogiqueId == peripheriqueId.Value);
             }
-<<<<<<< HEAD
 
             return await query
                 .OrderByDescending(t => t.Horodatage)
                 .ToListAsync();
-=======
-            return await query.OrderByDescending(t => t.Horodatage).ToListAsync();
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
         }
         // Récupère les données de télémétrie pour un périphérique donné.
         public async Task<IEnumerable<Telemetrie>> GetTelemetriesByPeripheriqueIdAsync(int peripheriqueId)

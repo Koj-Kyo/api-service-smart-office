@@ -1,0 +1,277 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ========================================
+### SIGNALR CONNECTION TESTS
+### ========================================
+
+### Note: SignalR utilise WebSockets, ces tests sont pour démonstration
+### Pour tester SignalR, utilisez un client JavaScript ou .NET SignalR
+
+### 1. Test SignalR connection (JavaScript example)
+# Cette requête simule ce qui se passerait côté client
+# const connection = new signalR.HubConnectionBuilder()
+#     .withUrl("{{baseUrl}}/hubs/notification", {
+#         accessTokenFactory: () => "{{userToken}}"
+#     })
+#     .build();
+
+### 2. Test SignalR group subscription (JavaScript example)
+# await connection.invoke("JoinGroup", "zone_1");
+
+### 3. Test SignalR leave group (JavaScript example)
+# await connection.invoke("LeaveGroup", "zone_1");
+
+### ========================================
+### WEATHER FORECAST TESTS (Example API)
+### ========================================
+
+### 4. Get weather forecast
+GET {{baseUrl}}/api/weatherforecast
+Authorization: Bearer {{userToken}}
+
+### 5. Test unauthorized access to weather
+GET {{baseUrl}}/api/weatherforecast
+
+### ========================================
+### SYSTEM HEALTH CHECKS
+### ========================================
+
+### 6. Application health check (if implemented)
+GET {{baseUrl}}/health
+
+### 7. Database connectivity check (if implemented)
+GET {{baseUrl}}/health/database
+
+### ========================================
+### SWAGGER DOCUMENTATION
+### ========================================
+
+### 8. Access Swagger UI (browser only)
+# GET {{baseUrl}}/swagger
+
+### 9. Get OpenAPI specification
+GET {{baseUrl}}/swagger/v1/swagger.json
+
+### ========================================
+### COMPREHENSIVE INTEGRATION TESTS
+### ========================================
+
+### 10. Complete workflow test - User registration to device control
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "integration.test@smartoffice.com",
+  "password": "IntegrationTest123!",
+  "confirmPassword": "IntegrationTest123!",
+  "fullName": "Integration Test User"
+}
+
+### 11. Login with the new user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "integration.test@smartoffice.com",
+  "password": "IntegrationTest123!"
+}
+
+### 12. Create zone (Admin only)
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Integration Test Zone"
+}
+
+### 13. Create device in the zone
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Integration Test Device",
+  "type": "TestDevice",
+  "iotDeviceId": "integration-device-001",
+  "zoneId": 1
+}
+
+### 14. Grant access rights to user
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "integration-user-id",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": null,
+  "type": 1
+}
+
+### 15. User sends command to device
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "TurnOn",
+  "valeur": "true"
+}
+
+### 16. Add telemetry data for the device
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "{{$timestamp}}",
+  "typeEvenement": "Integration_Test",
+  "valeur": 1.0,
+  "donneesJson": "{\"test\": true, \"integration\": \"success\"}"
+}
+
+### 17. Get telemetry data back
+GET {{baseUrl}}/api/telemetries/by-peripherique/1
+Authorization: Bearer {{userToken}}
+
+### 18. Create incident ticket
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "Integration Test Issue",
+  "description": "This is a test incident created during integration testing",
+  "peripheriqueLogiqueId": 1,
+  "zoneId": 1
+}
+
+### 19. Get consumption stats
+GET {{baseUrl}}/api/consommationstats/peripherique/1?startDate=2024-01-01T00:00:00Z&endDate={{$timestamp}}
+Authorization: Bearer {{userToken}}
+
+### 20. IoT Hub device method call
+POST {{baseUrl}}/api/iothub/device/integration-device-001/smart-commands/get-status
+Authorization: Bearer {{userToken}}
+
+### ========================================
+### LOAD TESTING SCENARIOS
+### ========================================
+
+### 21. Rapid telemetry insertion (simulate high load)
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "{{$timestamp}}",
+  "typeEvenement": "Load_Test_{{$randomInt}}",
+  "valeur": {{$randomInt}},
+  "donneesJson": "{\"load_test\": true, \"batch_id\": \"{{$guid}}\"}"
+}
+
+### 22. Multiple device status queries
+GET {{baseUrl}}/api/devices/1
+Authorization: Bearer {{adminToken}}
+
+### 23. Bulk user queries
+GET {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### SECURITY PENETRATION TESTS
+### ========================================
+
+### 24. Test SQL injection attempt (should be blocked)
+GET {{baseUrl}}/api/devices/1'; DROP TABLE devices; --
+Authorization: Bearer {{adminToken}}
+
+### 25. Test XSS attempt (should be sanitized)
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "<script>alert('XSS')</script>",
+  "description": "Test XSS prevention",
+  "peripheriqueLogiqueId": 1
+}
+
+### 26. Test oversized payload (should be rejected)
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "{{$timestamp}}",
+  "typeEvenement": "Oversized_Test",
+  "valeur": 1.0,
+  "donneesJson": "{'data': '{{$randomString}}'.repeat(10000)}"
+}
+
+### ========================================
+### ERROR HANDLING TESTS
+### ========================================
+
+### 27. Test malformed JSON
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "invalid-date-format",
+  "typeEvenement": "Error_Test"
+  // Missing comma and closing bracket
+
+### 28. Test invalid content type
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: text/plain
+
+This is plain text, not JSON
+
+### 29. Test extremely long URL
+GET {{baseUrl}}/api/devices/{'a'.repeat(1000)}
+Authorization: Bearer {{adminToken}}
+
+### 30. Test concurrent access to same resource
+PUT {{baseUrl}}/api/zones/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Concurrent Update Test 1"
+}
+
+### ========================================
+### PERFORMANCE BENCHMARKS
+### ========================================
+
+### 31. Measure telemetry query performance
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01T00:00:00Z&endDate={{$timestamp}}
+Authorization: Bearer {{userToken}}
+
+### 32. Measure device listing performance
+GET {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+
+### 33. Measure user management performance
+GET {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+
+### 34. Measure zone query performance
+GET {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+
+### 35. Measure consumption analytics performance
+GET {{baseUrl}}/api/consommationstats/rapport?startDate=2024-01-01T00:00:00Z&endDate={{$timestamp}}
+Authorization: Bearer {{userToken}}

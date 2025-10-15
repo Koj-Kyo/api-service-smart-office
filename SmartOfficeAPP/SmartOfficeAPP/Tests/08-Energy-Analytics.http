@@ -1,0 +1,175 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ========================================
+### ENERGY CONSUMPTION ANALYTICS TESTS
+### ========================================
+
+### 1. Get consumption stats for device (last 7 days)
+GET {{baseUrl}}/api/consommationstats/peripherique/1?startDate=2024-01-01T00:00:00Z&endDate=2024-01-08T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 2. Get consumption stats for device (last month)
+GET {{baseUrl}}/api/consommationstats/peripherique/1?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 3. Get consumption stats for zone
+GET {{baseUrl}}/api/consommationstats/zone/1?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 4. Get consumption stats for all zones
+GET {{baseUrl}}/api/consommationstats/zone/2?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 5. Get hourly consumption data for device
+GET {{baseUrl}}/api/consommationstats/peripherique/1/horaire?date=2024-01-15
+Authorization: Bearer {{userToken}}
+
+### 6. Get hourly consumption data for today
+GET {{baseUrl}}/api/consommationstats/peripherique/1/horaire?date={{$datetime iso8601}}
+Authorization: Bearer {{userToken}}
+
+### 7. Get consumption trends (last 30 days)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=30
+Authorization: Bearer {{userToken}}
+
+### 8. Get consumption trends (last 7 days)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=7
+Authorization: Bearer {{userToken}}
+
+### 9. Get consumption trends (last 90 days)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=90
+Authorization: Bearer {{userToken}}
+
+### 10. Detect consumption anomalies
+GET {{baseUrl}}/api/consommationstats/peripherique/1/anomalies?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 11. Generate consumption report for zone
+GET {{baseUrl}}/api/consommationstats/rapport?zoneId=1&startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 12. Generate consumption report for all zones
+GET {{baseUrl}}/api/consommationstats/rapport?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 13. Calculate energy cost (French tariff example)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&tarifKwh=0.15
+Authorization: Bearer {{userToken}}
+
+### 14. Calculate energy cost (high tariff)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&tarifKwh=0.25
+Authorization: Bearer {{userToken}}
+
+### 15. Get top 10 energy consumers
+GET {{baseUrl}}/api/consommationstats/top-consommateurs?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&top=10
+Authorization: Bearer {{userToken}}
+
+### 16. Get top 5 energy consumers in specific zone
+GET {{baseUrl}}/api/consommationstats/top-consommateurs?zoneId=1&startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&top=5
+Authorization: Bearer {{userToken}}
+
+### 17. Compare consumption between two periods
+GET {{baseUrl}}/api/consommationstats/peripherique/1/comparaison?startDate1=2024-01-01T00:00:00Z&endDate1=2024-01-15T23:59:59Z&startDate2=2024-01-16T00:00:00Z&endDate2=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 18. Compare monthly consumption (Jan vs Feb)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/comparaison?startDate1=2024-01-01T00:00:00Z&endDate1=2024-01-31T23:59:59Z&startDate2=2024-02-01T00:00:00Z&endDate2=2024-02-29T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### ========================================
+### ERROR SCENARIOS
+### ========================================
+
+### 19. Test unauthorized access
+GET {{baseUrl}}/api/consommationstats/peripherique/1?startDate=2024-01-01T00:00:00Z&endDate=2024-01-08T23:59:59Z
+
+### 20. Test invalid date range (start > end)
+GET {{baseUrl}}/api/consommationstats/peripherique/1?startDate=2024-01-31T00:00:00Z&endDate=2024-01-01T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 21. Test non-existent device
+GET {{baseUrl}}/api/consommationstats/peripherique/999?startDate=2024-01-01T00:00:00Z&endDate=2024-01-08T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 22. Test non-existent zone
+GET {{baseUrl}}/api/consommationstats/zone/999?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 23. Test invalid trend days (too high)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=500
+Authorization: Bearer {{userToken}}
+
+### 24. Test invalid trend days (zero)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=0
+Authorization: Bearer {{userToken}}
+
+### 25. Test negative energy tariff
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&tarifKwh=-0.15
+Authorization: Bearer {{userToken}}
+
+### 26. Test zero energy tariff
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&tarifKwh=0
+Authorization: Bearer {{userToken}}
+
+### 27. Test invalid top parameter (too high)
+GET {{baseUrl}}/api/consommationstats/top-consommateurs?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&top=200
+Authorization: Bearer {{userToken}}
+
+### 28. Test invalid top parameter (zero)
+GET {{baseUrl}}/api/consommationstats/top-consommateurs?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&top=0
+Authorization: Bearer {{userToken}}
+
+### 29. Test invalid comparison dates (period 1)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/comparaison?startDate1=2024-01-31T00:00:00Z&endDate1=2024-01-01T23:59:59Z&startDate2=2024-02-01T00:00:00Z&endDate2=2024-02-15T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 30. Test invalid comparison dates (period 2)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/comparaison?startDate1=2024-01-01T00:00:00Z&endDate1=2024-01-15T23:59:59Z&startDate2=2024-02-15T00:00:00Z&endDate2=2024-02-01T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### ========================================
+### ADVANCED ANALYTICS TESTS
+### ========================================
+
+### 31. Get consumption stats for different device types
+GET {{baseUrl}}/api/consommationstats/peripherique/2?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 32. Get weekend vs weekday consumption
+GET {{baseUrl}}/api/consommationstats/peripherique/1/horaire?date=2024-01-13
+Authorization: Bearer {{userToken}}
+
+### 33. Get hourly consumption for weekend
+GET {{baseUrl}}/api/consommationstats/peripherique/1/horaire?date=2024-01-14
+Authorization: Bearer {{userToken}}
+
+### 34. Long-term trend analysis (6 months)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/tendances?nombreJours=180
+Authorization: Bearer {{userToken}}
+
+### 35. Short-term anomaly detection (last week)
+GET {{baseUrl}}/api/consommationstats/peripherique/1/anomalies?startDate=2024-01-22T00:00:00Z&endDate=2024-01-29T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 36. Quarterly consumption report
+GET {{baseUrl}}/api/consommationstats/rapport?startDate=2024-01-01T00:00:00Z&endDate=2024-03-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 37. Peak hour cost calculation
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-15T08:00:00Z&endDate=2024-01-15T18:00:00Z&tarifKwh=0.20
+Authorization: Bearer {{userToken}}
+
+### 38. Off-peak hour cost calculation
+GET {{baseUrl}}/api/consommationstats/peripherique/1/cout?startDate=2024-01-15T18:00:00Z&endDate=2024-01-16T08:00:00Z&tarifKwh=0.12
+Authorization: Bearer {{userToken}}
+
+### 39. Year-over-year comparison
+GET {{baseUrl}}/api/consommationstats/peripherique/1/comparaison?startDate1=2023-01-01T00:00:00Z&endDate1=2023-01-31T23:59:59Z&startDate2=2024-01-01T00:00:00Z&endDate2=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 40. Get top 3 consumers with zone filter
+GET {{baseUrl}}/api/consommationstats/top-consommateurs?zoneId=2&startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z&top=3
+Authorization: Bearer {{userToken}}

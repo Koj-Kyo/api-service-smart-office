@@ -14,10 +14,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
         private readonly IPeripheriqueLogiqueRepository _peripheriqueRepository;
         private readonly IIotHubService _iotHubService;
         private readonly IDroitAccesRepository _droitAccesRepository;
-<<<<<<< HEAD
         private readonly ISignalRService _signalRService;
-=======
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
         private readonly IMapper _mapper;
         private readonly ILogger<CommandeService> _logger;
 
@@ -26,50 +23,22 @@ namespace SmartOfficeAPP.Services.ServicesImpl
             IPeripheriqueLogiqueRepository peripheriqueRepository,
             IIotHubService iotHubService,
             IDroitAccesRepository droitAccesRepository,
-<<<<<<< HEAD
             ISignalRService signalRService,
             IMapper mapper,
             ILogger<CommandeService> logger)
-=======
-            IMapper mapper)
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
         {
             _commandeRepository = commandeRepository;
             _peripheriqueRepository = peripheriqueRepository;
             _iotHubService = iotHubService;
             _droitAccesRepository = droitAccesRepository;
-<<<<<<< HEAD
             _signalRService = signalRService;
-=======
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
             _mapper = mapper;
             _logger = logger;
         }
 
         public async Task<CommandeResponseDto> SendCommandAsync(string userId, CommandeRequestDto requestDto)
         {
-<<<<<<< HEAD
             try
-=======
-            // 0. Vérifier les droits de l'utilisateur sur le périphérique (doit avoir "Controle")
-            var droits = await _droitAccesRepository.GetDroitsAccesByUserPeripheriquesAsync(userId);
-            var canControl = droits.Any(d =>
-                d.PeripheriqueLogiqueId == requestDto.PeripheriqueLogiqueId &&
-                d.Type == DroitAccesType.Controle);
-
-            if (!canControl)
-            {
-                return new CommandeResponseDto
-                {
-                    IsSuccess = false,
-                    Message = "Accès refusé : vous n'avez pas le droit de contrôler ce périphérique."
-                };
-            }
-
-            // 1. Chercher le périphérique pour obtenir son IotDeviceId
-            var peripherique = await _peripheriqueRepository.GetByIdAsync(requestDto.PeripheriqueLogiqueId);
-            if (peripherique == null)
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
             {
                 // 0. Vérifier les droits de l'utilisateur sur le périphérique (doit avoir "Controle")
                 var droits = await _droitAccesRepository.GetDroitsAccesByUserPeripheriquesAsync(userId);

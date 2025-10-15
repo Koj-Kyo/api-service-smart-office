@@ -1,0 +1,195 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ========================================
+### COMMAND TESTS
+### ========================================
+
+### 1. Send command to turn on light
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 2,
+  "nomCommande": "TurnOn",
+  "valeur": "true"
+}
+
+### 2. Send command to adjust light brightness
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 2,
+  "nomCommande": "SetBrightness",
+  "valeur": "75"
+}
+
+### 3. Send command to set HVAC temperature
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 3,
+  "nomCommande": "SetTemperature",
+  "valeur": "22.5"
+}
+
+### 4. Send command to start printer
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "StartPrint",
+  "valeur": "{\"document\":\"rapport.pdf\", \"copies\":2, \"quality\":\"high\"}"
+}
+
+### 5. Send command to turn off device
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 2,
+  "nomCommande": "TurnOff",
+  "valeur": "true"
+}
+
+### 6. Send command to reset device
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 4,
+  "nomCommande": "Reset",
+  "valeur": "soft"
+}
+
+### 7. Send complex JSON command
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 3,
+  "nomCommande": "SetSchedule",
+  "valeur": "{\"weekday\":{\"start\":\"08:00\",\"end\":\"18:00\",\"temperature\":22},\"weekend\":{\"start\":\"10:00\",\"end\":\"16:00\",\"temperature\":20}}"
+}
+
+### 8. Send command to update sensor configuration
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 5,
+  "nomCommande": "ConfigureSensor",
+  "valeur": "{\"sampling_rate\":30,\"threshold_temp\":25,\"threshold_humidity\":60,\"alerts\":true}"
+}
+
+### 9. Send emergency shutdown command
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "EmergencyShutdown",
+  "valeur": "immediate"
+}
+
+### 10. Send maintenance mode command
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "MaintenanceMode",
+  "valeur": "{\"enabled\":true,\"duration\":3600,\"reason\":\"scheduled_cleaning\"}"
+}
+
+### 11. Test unauthorized access (no token)
+POST {{baseUrl}}/api/commandes
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "TurnOn",
+  "valeur": "true"
+}
+
+### 12. Test command with invalid device ID
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 999,
+  "nomCommande": "TurnOn",
+  "valeur": "true"
+}
+
+### 13. Test command with missing data
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1
+}
+
+### 14. Test command with empty command name
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "",
+  "valeur": "true"
+}
+
+### 15. Test command with null request body
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+### ========================================
+### NOTIFICATION TESTS
+### ========================================
+
+### 16. Get all notifications for user
+GET {{baseUrl}}/api/notification
+Authorization: Bearer {{userToken}}
+
+### 17. Get all notifications for admin
+GET {{baseUrl}}/api/notification
+Authorization: Bearer {{adminToken}}
+
+### 18. Mark notification as read
+PUT {{baseUrl}}/api/notification/1
+Authorization: Bearer {{userToken}}
+
+### 19. Mark another notification as read
+PUT {{baseUrl}}/api/notification/2
+Authorization: Bearer {{userToken}}
+
+### 20. Test unauthorized access to notifications
+GET {{baseUrl}}/api/notification
+
+### 21. Test mark non-existent notification as read
+PUT {{baseUrl}}/api/notification/999
+Authorization: Bearer {{userToken}}
+
+### 22. Test mark notification as read (different user)
+PUT {{baseUrl}}/api/notification/1
+Authorization: Bearer {{adminToken}}

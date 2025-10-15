@@ -1,0 +1,192 @@
+### Variables globales
+@baseUrl = https://localhost:7144
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MDQ1Mzc3MCwiZXhwIjoxNzYwNDU0NjcwLCJpYXQiOjE3NjA0NTM3NzAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.ZIxaQU5w-CT53fu3LrNAv0R-6i6mC3c5p2ansUPvPwI
+
+### ========================================
+### DEVICE MANAGEMENT TESTS (Admin Only)
+### ========================================
+
+### 1. Get all devices
+GET {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+
+### 2. Get device by ID
+GET {{baseUrl}}/api/devices/1
+Authorization: Bearer {{adminToken}}
+
+### 3. Get devices by zone
+GET {{baseUrl}}/api/zones/1/devices
+Authorization: Bearer {{adminToken}}
+
+### 4. Create new printer device
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Imprimante HP LaserJet",
+  "type": "Printer",
+  "iotDeviceId": "device-printer-001",
+  "zoneId": 1
+}
+
+### 5. Create new smart light device
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Éclairage Intelligent Bureau",
+  "type": "SmartLight",
+  "iotDeviceId": "device-light-001",
+  "zoneId": 1
+}
+
+### 6. Create new HVAC device
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Climatisation Salle Réunion",
+  "type": "HVAC",
+  "iotDeviceId": "device-hvac-001",
+  "zoneId": 2
+}
+
+### 7. Create new sensor device
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Capteur Température/Humidité",
+  "type": "TempHumiditySensor",
+  "iotDeviceId": "device-sensor-001",
+  "zoneId": 1
+}
+
+### 8. Update device
+PUT {{baseUrl}}/api/devices/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Imprimante HP LaserJet Pro",
+  "type": "Printer",
+  "iotDeviceId": "device-printer-001-updated",
+  "zoneId": 1
+}
+
+### 9. Delete device
+DELETE {{baseUrl}}/api/devices/4
+Authorization: Bearer {{adminToken}}
+
+### 10. Set desired properties for IoT device
+POST {{baseUrl}}/api/devices/device-light-001/desired
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "brightness": 75,
+  "color": {
+    "r": 255,
+    "g": 255,
+    "b": 255
+  },
+  "schedule": {
+    "enabled": true,
+    "on_time": "08:00",
+    "off_time": "18:00"
+  }
+}
+
+### 11. Set desired properties for HVAC device
+POST {{baseUrl}}/api/devices/device-hvac-001/desired
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "temperature": 22.5,
+  "mode": "auto",
+  "fan_speed": "medium",
+  "schedule": {
+    "weekday": {
+      "start": "07:00",
+      "end": "19:00",
+      "temperature": 22
+    },
+    "weekend": {
+      "start": "09:00",
+      "end": "17:00",
+      "temperature": 20
+    }
+  }
+}
+
+### 12. Set desired properties for printer device
+POST {{baseUrl}}/api/devices/device-printer-001/desired
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "power_save_mode": true,
+  "default_quality": "high",
+  "maintenance": {
+    "auto_clean": true,
+    "clean_interval": 100
+  }
+}
+
+### 13. Test unauthorized access (no token)
+GET {{baseUrl}}/api/devices
+
+### 14. Test get non-existent device
+GET {{baseUrl}}/api/devices/999
+Authorization: Bearer {{adminToken}}
+
+### 15. Test get devices for non-existent zone
+GET {{baseUrl}}/api/zones/999/devices
+Authorization: Bearer {{adminToken}}
+
+### 16. Test update non-existent device
+PUT {{baseUrl}}/api/devices/999
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Device Inexistant",
+  "type": "Unknown",
+  "iotDeviceId": "device-999",
+  "zoneId": 1
+}
+
+### 17. Test delete non-existent device
+DELETE {{baseUrl}}/api/devices/999
+Authorization: Bearer {{adminToken}}
+
+### 18. Test create device with invalid data
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "type": "",
+  "iotDeviceId": "",
+  "zoneId": 999
+}
+
+### 19. Test set desired properties for non-existent device
+POST {{baseUrl}}/api/devices/non-existent-device/desired
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "test": "value"
+}
+
+### 20. Test set desired properties with empty payload
+POST {{baseUrl}}/api/devices/device-light-001/desired
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json

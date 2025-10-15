@@ -1,0 +1,243 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@managerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userId = user-123-456-789
+
+### ========================================
+### ACCESS RIGHTS TESTS (Admin)
+### ========================================
+
+### 1. Get all access rights (Admin only)
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+
+### 2. Get access right by ID
+GET {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{adminToken}}
+
+### 3. Create zone access right
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": null,
+  "type": 1
+}
+
+### 4. Create device access right
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zoneId": null,
+  "peripheriqueLogiqueId": 1,
+  "type": 2
+}
+
+### 5. Create full access right
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zoneId": 2,
+  "peripheriqueLogiqueId": 2,
+  "type": 3
+}
+
+### 6. Update access right
+PUT {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": 1,
+  "type": 3
+}
+
+### 7. Delete access right
+DELETE {{baseUrl}}/api/admin/access-rights/3
+Authorization: Bearer {{adminToken}}
+
+### 8. Test unauthorized access (user trying to access admin endpoint)
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{userToken}}
+
+### 9. Test non-existent access right
+GET {{baseUrl}}/api/admin/access-rights/999
+Authorization: Bearer {{adminToken}}
+
+### 10. Test create access right with invalid data
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "",
+  "type": 0
+}
+
+### ========================================
+### USER ACCESS RIGHTS TESTS
+### ========================================
+
+### 11. Get user zone access rights
+GET {{baseUrl}}/api/user/access-rights/zones
+Authorization: Bearer {{userToken}}
+
+### 12. Get user device access rights
+GET {{baseUrl}}/api/user/access-rights/peripheriques
+Authorization: Bearer {{userToken}}
+
+### 13. Test unauthorized access to user access rights
+GET {{baseUrl}}/api/user/access-rights/zones
+
+### ========================================
+### INCIDENT TICKETS TESTS
+### ========================================
+
+### 14. Create incident ticket
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "Imprimante en panne",
+  "description": "L'imprimante HP LaserJet ne répond plus et affiche un message d'erreur",
+  "peripheriqueLogiqueId": 1,
+  "zoneId": 1
+}
+
+### 15. Create ticket for zone issue
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "Problème de climatisation",
+  "description": "La température dans la salle de réunion est trop élevée",
+  "peripheriqueLogiqueId": null,
+  "zoneId": 2
+}
+
+### 16. Create urgent ticket
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "Panne électrique partielle",
+  "description": "Plusieurs appareils ne fonctionnent plus dans le bureau principal",
+  "peripheriqueLogiqueId": null,
+  "zoneId": 1
+}
+
+### 17. Get ticket by ID
+GET {{baseUrl}}/api/incidenttickets/1
+Authorization: Bearer {{userToken}}
+
+### 18. Get tickets by status - Open
+GET {{baseUrl}}/api/incidenttickets/status/Ouvert
+Authorization: Bearer {{userToken}}
+
+### 19. Get tickets by status - In Progress
+GET {{baseUrl}}/api/incidenttickets/status/En cours
+Authorization: Bearer {{userToken}}
+
+### 20. Get tickets by status - Closed
+GET {{baseUrl}}/api/incidenttickets/status/Fermé
+Authorization: Bearer {{userToken}}
+
+### 21. Get tickets by user ID
+GET {{baseUrl}}/api/incidenttickets/user/{{userId}}
+Authorization: Bearer {{userToken}}
+
+### 22. Update ticket status to In Progress
+PUT {{baseUrl}}/api/incidenttickets/1/status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+"En cours"
+
+### 23. Update ticket status to Resolved
+PUT {{baseUrl}}/api/incidenttickets/1/status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+"Résolu"
+
+### 24. Update ticket status to Closed
+PUT {{baseUrl}}/api/incidenttickets/1/status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+"Fermé"
+
+### 25. Assign ticket to another user (Manager/Admin only)
+PUT {{baseUrl}}/api/incidenttickets/2/assign
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+"manager-user-id-123"
+
+### 26. Assign ticket to admin (Manager/Admin only)
+PUT {{baseUrl}}/api/incidenttickets/2/assign
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+"admin-user-id-456"
+
+### 27. Delete ticket (Admin only)
+DELETE {{baseUrl}}/api/incidenttickets/3
+Authorization: Bearer {{adminToken}}
+
+### 28. Test unauthorized access to ticket creation
+POST {{baseUrl}}/api/incidenttickets
+Content-Type: application/json
+
+{
+  "sujet": "Test sans auth",
+  "description": "Test description"
+}
+
+### 29. Test get non-existent ticket
+GET {{baseUrl}}/api/incidenttickets/999
+Authorization: Bearer {{userToken}}
+
+### 30. Test update non-existent ticket status
+PUT {{baseUrl}}/api/incidenttickets/999/status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+"En cours"
+
+### 31. Test assign ticket without proper role
+PUT {{baseUrl}}/api/incidenttickets/1/assign
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+"some-user-id"
+
+### 32. Test delete ticket without admin role
+DELETE {{baseUrl}}/api/incidenttickets/1
+Authorization: Bearer {{userToken}}
+
+### 33. Test create ticket with invalid data
+POST {{baseUrl}}/api/incidenttickets
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "sujet": "",
+  "description": ""
+}

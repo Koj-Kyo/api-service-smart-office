@@ -1,0 +1,94 @@
+### Variables globales
+@baseUrl = https://localhost:7144
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MDQ1Mzc3MCwiZXhwIjoxNzYwNDU0NjcwLCJpYXQiOjE3NjA0NTM3NzAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.ZIxaQU5w-CT53fu3LrNAv0R-6i6mC3c5p2ansUPvPwI
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhMjFiNjM1Mi1lOGMyLTQ5ZjctOTY0OS1jZmUzNzlmYjc3OWMiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwidW5pcXVlX25hbWUiOiJqYWtlIiwibmJmIjoxNzYwNDUzNTk1LCJleHAiOjE3NjA0NTQ0OTUsImlhdCI6MTc2MDQ1MzU5NSwiaXNzIjoiU21hcnRPZmZpY2VBUEkiLCJhdWQiOiJTbWFydE9mZmljZUNsaWVudCJ9.f-CspDKc1zflCjsjYDxhsuPHcznCasNJRz8kGV0Q5Wc
+
+### ========================================
+### AUTHENTICATION TESTS
+### ========================================
+
+### 1. Register new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "TestPassword123!",
+  "confirmPassword": "TestPassword123!",
+  "Username" : "jake",
+  "fullName": "Test User"
+}
+
+### 2. Register new admin user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "adminator@smartoffice.com",
+  "password": "AdminPassword123!",
+  "confirmPassword": "AdminPassword123!",
+  "Username" : "GoatAdmin",
+  "fullName": "Admin User"
+}
+
+### 3. Login user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "TestPassword123!"
+}
+
+### 4. Login admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+### 5. Test authentication (requires valid token)
+GET {{baseUrl}}/api/auth/test-auth
+Authorization: Bearer {{userToken}}
+
+### 6. Test admin authorization (requires admin token)
+GET {{baseUrl}}/api/auth/test-admin
+Authorization: Bearer {{adminToken}}
+
+### 7. Test invalid token
+GET {{baseUrl}}/api/auth/test-auth
+Authorization: Bearer invalid_token_here
+
+### 8. Test register with invalid data
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalidemail",
+  "password": "weak",
+  "confirmPassword": "different",
+  "fullName": ""
+}
+
+### 9. Test login with invalid credentials
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "WrongPassword123!"
+}
+
+### 10. Test register with existing email
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "AnotherPassword123!",
+  "confirmPassword": "AnotherPassword123!",
+  "UserName": "jake",
+  "fullName": "Another User"
+}

@@ -1,0 +1,175 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ========================================
+### TELEMETRY TESTS
+### ========================================
+
+### 1. Get telemetry by device ID (query param)
+GET {{baseUrl}}/api/telemetries/peripherique?peripheriqueId=1
+Authorization: Bearer {{userToken}}
+
+### 2. Get telemetry by device ID (path param)
+GET {{baseUrl}}/api/telemetries/by-peripherique/1
+Authorization: Bearer {{userToken}}
+
+### 3. Get historical telemetry data (last 7 days)
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01T00:00:00Z&endDate=2024-01-08T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 4. Get historical telemetry data for specific device
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01T00:00:00Z&endDate=2024-01-08T23:59:59Z&peripheriqueId=1
+Authorization: Bearer {{userToken}}
+
+### 5. Get historical telemetry data (last month)
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 6. Add new telemetry data - Printer usage
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "2024-01-15T10:30:00Z",
+  "typeEvenement": "Impression",
+  "valeur": 25.0,
+  "donneesJson": "{\"pages\": 25, \"user\": \"john.doe\", \"document\": \"rapport_mensuel.pdf\"}"
+}
+
+### 7. Add new telemetry data - Energy consumption
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 2,
+  "horodatage": "2024-01-15T10:35:00Z",
+  "typeEvenement": "Consommation_Energie",
+  "valeur": 1.5,
+  "donneesJson": "{\"kwh\": 1.5, \"peak_power\": 250, \"avg_power\": 180}"
+}
+
+### 8. Add new telemetry data - Temperature sensor
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 3,
+  "horodatage": "2024-01-15T10:40:00Z",
+  "typeEvenement": "Mesure_Temperature",
+  "valeur": 22.5,
+  "donneesJson": "{\"temperature\": 22.5, \"humidity\": 45.2, \"location\": \"bureau_principal\"}"
+}
+
+### 9. Add new telemetry data - Motion detection
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 4,
+  "horodatage": "2024-01-15T10:45:00Z",
+  "typeEvenement": "Detection_Mouvement",
+  "valeur": 1.0,
+  "donneesJson": "{\"motion_detected\": true, \"confidence\": 0.95, \"duration\": 30}"
+}
+
+### 10. Add new telemetry data - Light usage
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 5,
+  "horodatage": "2024-01-15T10:50:00Z",
+  "typeEvenement": "Utilisation_Eclairage",
+  "valeur": 75.0,
+  "donneesJson": "{\"brightness\": 75, \"color_temp\": 4000, \"energy_usage\": 12.5}"
+}
+
+### 11. Store AI suggestion
+POST {{baseUrl}}/api/telemetries/suggestions
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "contenuSuggestion": "Réduire l'éclairage de 20% dans le bureau principal pour économiser l'énergie",
+  "typeSuggestion": "Economie_Energie",
+  "peripheriqueLogiqueId": 5,
+  "dateCreation": "2024-01-15T11:00:00Z",
+  "priorite": "Moyenne"
+}
+
+### 12. Store AI suggestion - Maintenance
+POST {{baseUrl}}/api/telemetries/suggestions
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "contenuSuggestion": "L'imprimante HP LaserJet nécessite un nettoyage préventif basé sur son utilisation intensive",
+  "typeSuggestion": "Maintenance_Preventive",
+  "peripheriqueLogiqueId": 1,
+  "dateCreation": "2024-01-15T11:05:00Z",
+  "priorite": "Haute"
+}
+
+### 13. Test unauthorized access (no token)
+GET {{baseUrl}}/api/telemetries/peripherique?peripheriqueId=1
+
+### 14. Test get telemetry for non-existent device
+GET {{baseUrl}}/api/telemetries/by-peripherique/999
+Authorization: Bearer {{userToken}}
+
+### 15. Test add telemetry with invalid data
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 0,
+  "horodatage": "invalid-date",
+  "typeEvenement": "",
+  "valeur": -1
+}
+
+### 16. Test add telemetry with null data
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+### 17. Test add AI suggestion with invalid data
+POST {{baseUrl}}/api/telemetries/suggestions
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "contenuSuggestion": "",
+  "typeSuggestion": "",
+  "peripheriqueLogiqueId": 0
+}
+
+### 18. Test historical data with invalid date range
+GET {{baseUrl}}/api/telemetries/history?startDate=invalid-date&endDate=2024-01-08T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 19. Test historical data with future dates
+GET {{baseUrl}}/api/telemetries/history?startDate=2025-01-01T00:00:00Z&endDate=2025-12-31T23:59:59Z
+Authorization: Bearer {{userToken}}
+
+### 20. Add telemetry with current timestamp
+POST {{baseUrl}}/api/telemetries/add
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "horodatage": "{{$timestamp}}",
+  "typeEvenement": "Test_Event",
+  "valeur": 100.0,
+  "donneesJson": "{\"test\": true, \"timestamp\": \"{{$timestamp}}\"}"
+}

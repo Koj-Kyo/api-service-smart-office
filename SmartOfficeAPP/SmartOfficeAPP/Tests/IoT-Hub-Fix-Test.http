@@ -1,0 +1,176 @@
+### Test Azure IoT Hub - Configuration Cloud Réelle
+@baseUrl = https://localhost:7144
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhMjFiNjM1Mi1lOGMyLTQ5ZjctOTY0OS1jZmUzNzlmYjc3OWMiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwidW5pcXVlX25hbWUiOiJqYWtlIiwibmJmIjoxNzYwNDU4NDYxLCJleHAiOjE3NjA0NTkzNjEsImlhdCI6MTc2MDQ1ODQ2MSwiaXNzIjoiU21hcnRPZmZpY2VBUEkiLCJhdWQiOiJTbWFydE9mZmljZUNsaWVudCJ9.iXvmWhMKJ87VxY6TJ9Hbw7SDgh2Va--HtzVeBXdM3Dc
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MDQ1ODQ4NSwiZXhwIjoxNzYwNDU5Mzg1LCJpYXQiOjE3NjA0NTg0ODUsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.8s94wehY7rv9dPMR7P8j7D1TuXX6vMDR0CzkTZ1_7VA
+
+### IMPORTANT: Ces tests nécessitent une configuration Azure IoT Hub réelle
+### Configurez vos User Secrets d'abord avec: dotnet user-secrets set "IotHubConnectionString" "votre-chaine-ici"
+
+### Test 1: Créer un device réel dans Azure IoT Hub (Admin uniquement)
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+### Test 2: Obtenir les informations du device twin depuis Azure
+GET {{baseUrl}}/api/iothub/device/smartoffice-device-001/twin
+Authorization: Bearer {{userToken}}
+
+### Test 3: Mettre à jour les desired properties dans Azure IoT Hub
+PUT {{baseUrl}}/api/iothub/device/smartoffice-device-001/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"temperature\": 22.5, \"brightness\": 75, \"enabled\": true, \"schedule\": {\"on\": \"08:00\", \"off\": \"18:00\"}}"
+}
+
+### Test 4: Envoyer une méthode directe au device réel
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/method/getStatus
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"requestId\": \"{{$guid}}\"}"
+}
+
+### Test 5: Envoyer une commande pour allumer le device
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/method/setState
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"state\": 1, \"timestamp\": \"{{$timestamp}}\"}"
+}
+
+### Test 6: Envoyer un message cloud-to-device
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/message
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "Configuration mise à jour depuis Smart Office API",
+  "properties": {
+    "messageType": "config_update",
+    "priority": "normal",
+    "source": "smart_office_api",
+    "timestamp": "{{$timestamp}}"
+  }
+}
+
+### Test 7: Obtenir le statut de connexion de plusieurs devices
+POST {{baseUrl}}/api/iothub/devices/connection-status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "deviceIds": ["smartoffice-device-001", "smartoffice-device-002", "smartoffice-device-003"]
+}
+
+### Test 8: Utiliser les commandes intelligentes prédéfinies
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/smart-commands/turn-on
+Authorization: Bearer {{userToken}}
+
+### Test 9: Régler la luminosité via commande intelligente
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/smart-commands/set-brightness
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "value": 85
+}
+
+### Test 10: Régler la température via commande intelligente
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/smart-commands/set-temperature
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "value": 23.5
+}
+
+### Test 11: Créer un second device pour les tests
+POST {{baseUrl}}/api/iothub/device/smartoffice-sensor-001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+### Test 12: Configurer le capteur avec des desired properties
+PUT {{baseUrl}}/api/iothub/device/smartoffice-sensor-001/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"sampling_rate\": 30, \"thresholds\": {\"temperature\": {\"min\": 18, \"max\": 26}, \"humidity\": {\"min\": 40, \"max\": 60}}, \"alerts_enabled\": true}"
+}
+
+### Test 13: Envoyer une commande de calibration au capteur
+POST {{baseUrl}}/api/iothub/device/smartoffice-sensor-001/method/calibrate
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"type\": \"full_calibration\", \"reference_values\": {\"temperature\": 20.0, \"humidity\": 50.0}}"
+}
+
+### Test 14: Test de méthode avec timeout personnalisé
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/method/longRunningTask
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"task\": \"full_diagnostic\", \"timeout\": 60}"
+}
+
+### Test 15: Supprimer un device de test (Admin uniquement)
+DELETE {{baseUrl}}/api/iothub/device/smartoffice-device-002
+Authorization: Bearer {{adminToken}}
+
+### TESTS D'ERREURS RÉELLES
+
+### Test 16: Tenter d'accéder à un device inexistant
+GET {{baseUrl}}/api/iothub/device/device-inexistant-999/twin
+Authorization: Bearer {{userToken}}
+
+### Test 17: Envoyer une méthode à un device inexistant
+POST {{baseUrl}}/api/iothub/device/device-inexistant-999/method/getStatus
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+### Test 18: Mettre à jour les desired properties d'un device inexistant
+PUT {{baseUrl}}/api/iothub/device/device-inexistant-999/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"test\": true}"
+}
+
+### TESTS DE PERFORMANCE
+
+### Test 19: Envoyer plusieurs commandes en parallèle
+POST {{baseUrl}}/api/iothub/device/smartoffice-device-001/smart-commands/get-status
+Authorization: Bearer {{userToken}}
+
+### Test 20: Obtenir le statut de nombreux devices
+POST {{baseUrl}}/api/iothub/devices/connection-status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "deviceIds": ["smartoffice-device-001", "smartoffice-sensor-001", "device-inexistant-001", "device-inexistant-002", "device-inexistant-003"]
+}
+
+### Note: Ces tests interagissent avec votre Azure IoT Hub réel
+### Assurez-vous d'avoir configuré correctement vos User Secrets
+### Les devices seront créés dans votre IoT Hub Azure si les tests de création réussissent

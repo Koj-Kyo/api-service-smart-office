@@ -27,12 +27,8 @@ public class DevicesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PeripheriqueLogiqueDto>>> GetDevices()
     {
-<<<<<<< HEAD
         var devices = await _peripheriqueService.GetAllAsync();
         return Ok(devices);
-=======
-        return new ObjectResult("Cette action n'est pas encore implémentée selon le plan.");
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     }
 
     // GET: api/Devices/5

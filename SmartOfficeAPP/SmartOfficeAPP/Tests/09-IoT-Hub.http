@@ -1,0 +1,307 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@deviceId = device-printer-001
+@lightDeviceId = device-light-001
+@hvacDeviceId = device-hvac-001
+
+### ========================================
+### IOT HUB DEVICE METHODS TESTS
+### ========================================
+
+### 1. Invoke device method - Get Status
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/method/getStatus
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+### 2. Invoke device method - Turn On
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/method/setState
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"state\": 1}"
+}
+
+### 3. Invoke device method - Turn Off
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/method/setState
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"state\": 0}"
+}
+
+### 4. Invoke device method - Set Brightness
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/method/setBrightness
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"brightness\": 75}"
+}
+
+### 5. Invoke device method - Set Temperature
+POST {{baseUrl}}/api/iothub/device/{{hvacDeviceId}}/method/setTemperature
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"temperature\": 22.5}"
+}
+
+### 6. Invoke device method - Reset Device
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/method/reset
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{\"type\": \"soft\"}"
+}
+
+### ========================================
+### IOT HUB DEVICE TWIN TESTS
+### ========================================
+
+### 7. Update desired properties - Light configuration
+PUT {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"brightness\": 80, \"color\": {\"r\": 255, \"g\": 255, \"b\": 255}, \"schedule\": {\"enabled\": true}}"
+}
+
+### 8. Update desired properties - HVAC configuration
+PUT {{baseUrl}}/api/iothub/device/{{hvacDeviceId}}/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"temperature\": 23, \"mode\": \"auto\", \"fan_speed\": \"medium\"}"
+}
+
+### 9. Update desired properties - Printer configuration
+PUT {{baseUrl}}/api/iothub/device/{{deviceId}}/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "{\"power_save\": true, \"default_quality\": \"high\", \"maintenance_interval\": 100}"
+}
+
+### 10. Get device twin information
+GET {{baseUrl}}/api/iothub/device/{{deviceId}}/twin
+Authorization: Bearer {{userToken}}
+
+### 11. Get light device twin
+GET {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/twin
+Authorization: Bearer {{userToken}}
+
+### 12. Get HVAC device twin
+GET {{baseUrl}}/api/iothub/device/{{hvacDeviceId}}/twin
+Authorization: Bearer {{userToken}}
+
+### ========================================
+### CLOUD-TO-DEVICE MESSAGES
+### ========================================
+
+### 13. Send cloud-to-device message - Alert
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/message
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "Maintenance préventive programmée dans 2 heures",
+  "properties": {
+    "alertType": "maintenance",
+    "priority": "medium",
+    "scheduledTime": "2024-01-15T14:00:00Z"
+  }
+}
+
+### 14. Send cloud-to-device message - Configuration Update
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/message
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "Configuration mise à jour: nouveau planning d'éclairage",
+  "properties": {
+    "messageType": "config_update",
+    "priority": "low"
+  }
+}
+
+### 15. Send cloud-to-device message - Emergency
+POST {{baseUrl}}/api/iothub/device/{{hvacDeviceId}}/message
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "Arrêt d'urgence demandé",
+  "properties": {
+    "alertType": "emergency",
+    "priority": "high",
+    "action": "shutdown"
+  }
+}
+
+### ========================================
+### DEVICE MANAGEMENT (Admin Only)
+### ========================================
+
+### 16. Create or update device
+POST {{baseUrl}}/api/iothub/device/new-device-001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+### 17. Create disabled device
+POST {{baseUrl}}/api/iothub/device/test-device-002
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "enabled": false
+}
+
+### 18. Delete device
+DELETE {{baseUrl}}/api/iothub/device/test-device-002
+Authorization: Bearer {{adminToken}}
+
+### 19. Test unauthorized device creation (user trying admin operation)
+POST {{baseUrl}}/api/iothub/device/unauthorized-device
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+### ========================================
+### DEVICE CONNECTION STATUS
+### ========================================
+
+### 20. Get connection status for multiple devices
+POST {{baseUrl}}/api/iothub/devices/connection-status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "deviceIds": ["{{deviceId}}", "{{lightDeviceId}}", "{{hvacDeviceId}}"]
+}
+
+### 21. Get connection status for single device
+POST {{baseUrl}}/api/iothub/devices/connection-status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "deviceIds": ["{{deviceId}}"]
+}
+
+### ========================================
+### SMART COMMANDS (Predefined)
+### ========================================
+
+### 22. Smart command - Turn on light
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/smart-commands/turn-on
+Authorization: Bearer {{userToken}}
+
+### 23. Smart command - Turn off light
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/smart-commands/turn-off
+Authorization: Bearer {{userToken}}
+
+### 24. Smart command - Set brightness
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/smart-commands/set-brightness
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "value": 65
+}
+
+### 25. Smart command - Set temperature
+POST {{baseUrl}}/api/iothub/device/{{hvacDeviceId}}/smart-commands/set-temperature
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "value": 21.5
+}
+
+### 26. Smart command - Get device status
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/smart-commands/get-status
+Authorization: Bearer {{userToken}}
+
+### 27. Smart command - Reset device
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/smart-commands/reset
+Authorization: Bearer {{userToken}}
+
+### ========================================
+### ERROR SCENARIOS
+### ========================================
+
+### 28. Test unauthorized access
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/method/getStatus
+
+### 29. Test non-existent device method
+POST {{baseUrl}}/api/iothub/device/non-existent-device/method/getStatus
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+### 30. Test non-existent device twin
+GET {{baseUrl}}/api/iothub/device/non-existent-device/twin
+Authorization: Bearer {{userToken}}
+
+### 31. Test invalid smart command
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/smart-commands/invalid-command
+Authorization: Bearer {{userToken}}
+
+### 32. Test smart command without required value
+POST {{baseUrl}}/api/iothub/device/{{lightDeviceId}}/smart-commands/set-brightness
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{}
+
+### 33. Test empty device IDs for connection status
+POST {{baseUrl}}/api/iothub/devices/connection-status
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "deviceIds": []
+}
+
+### 34. Test invalid desired properties JSON
+PUT {{baseUrl}}/api/iothub/device/{{deviceId}}/twin/desired
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "desiredProperties": "invalid json {{"
+}
+
+### 35. Test cloud message without content
+POST {{baseUrl}}/api/iothub/device/{{deviceId}}/message
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "",
+  "properties": {}
+}

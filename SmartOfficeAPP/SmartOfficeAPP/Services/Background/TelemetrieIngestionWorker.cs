@@ -17,6 +17,7 @@ public class TelemetrieIngestionWorker : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly EventProcessorClient? _processor;
     private readonly string _consumerGroup;
+    private readonly bool _isEventHubEnabled;
 
     public TelemetrieIngestionWorker(
         ILogger<TelemetrieIngestionWorker> logger,
@@ -26,45 +27,95 @@ public class TelemetrieIngestionWorker : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _consumerGroup = "$Default";
+        _isEventHubEnabled = false;
 
         var ehConn = configuration["IotHubEventHub:ConnectionString"];
         var ehName = configuration["IotHubEventHub:Name"];
         var blobConn = configuration["IotHubEventHub:BlobConnectionString"];
         var blobContainer = configuration["IotHubEventHub:BlobContainer"];
+        
+        // Option pour désactiver Event Hub temporairement
+        var eventHubEnabled = configuration.GetValue<bool>("IotHubEventHub:Enabled", true);
+        
+        if (!eventHubEnabled)
+        {
+            _logger.LogInformation("Service d'ingestion télémétrie Event Hub désactivé par configuration (IotHubEventHub:Enabled = false).");
+            return;
+        }
 
+        // Vérifier si la configuration Event Hub est complète
         if (string.IsNullOrWhiteSpace(ehConn) || string.IsNullOrWhiteSpace(ehName) ||
             string.IsNullOrWhiteSpace(blobConn) || string.IsNullOrWhiteSpace(blobContainer))
         {
-            _logger.LogWarning("Ingestion IoT Hub désactivée: configuration IotHubEventHub incomplète.");
+            _logger.LogInformation("Service d'ingestion télémétrie Event Hub désactivé : configuration IoT Hub Event Hub non définie dans les User Secrets.");
+            _logger.LogInformation("Pour activer l'ingestion en temps réel :");
+            _logger.LogInformation("  dotnet user-secrets set \"IotHubEventHub:ConnectionString\" \"votre-event-hub-connection-string\"");
+            _logger.LogInformation("  dotnet user-secrets set \"IotHubEventHub:Name\" \"votre-event-hub-name\"");
+            _logger.LogInformation("  dotnet user-secrets set \"IotHubEventHub:BlobConnectionString\" \"votre-blob-storage-connection-string\"");
+            _logger.LogInformation("  dotnet user-secrets set \"IotHubEventHub:BlobContainer\" \"iothub-checkpoints\"");
+            _logger.LogInformation("??  L'application fonctionne normalement sans Event Hub. La télémétrie peut être ajoutée manuellement via l'API.");
             return;
         }
 
         try
         {
+            // Valider la chaîne de connexion Blob Storage
             var storageClient = new BlobContainerClient(blobConn, blobContainer);
-            storageClient.CreateIfNotExists();
+            
+            // Tester la connexion sans créer le conteneur automatiquement
+            if (!storageClient.Exists())
+            {
+                _logger.LogInformation("Création du conteneur de checkpoints : {ContainerName}", blobContainer);
+                storageClient.CreateIfNotExists();
+            }
             
             _processor = new EventProcessorClient(storageClient, _consumerGroup, ehConn, ehName);
             _processor.ProcessEventAsync += ProcessEventHandler;
             _processor.ProcessErrorAsync += ProcessErrorHandler;
             
-            _logger.LogInformation("EventProcessorClient initialisé pour IoT Hub: {EventHubName}", ehName);
+            _isEventHubEnabled = true;
+            _logger.LogInformation("Service d'ingestion télémétrie Event Hub initialisé avec succès pour : {EventHubName}", ehName);
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogError("Erreur de configuration Azure Storage : conteneur ou compte de stockage introuvable. Vérifiez votre chaîne de connexion Blob Storage.");
+            _logger.LogError("Détails : {ErrorMessage}", ex.Message);
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 401 || ex.Status == 403)
+        {
+            _logger.LogError("Erreur d'authentification Azure : vérifiez vos clés d'accès et permissions.");
+            _logger.LogError("Détails : {ErrorMessage}", ex.Message);
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogError(ex, "Erreur Azure lors de l'initialisation du service d'ingestion télémétrie (Status: {Status})", ex.Status);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de l'initialisation de l'EventProcessorClient");
+            _logger.LogError(ex, "Erreur lors de l'initialisation du service d'ingestion télémétrie Event Hub");
         }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (_processor is null)
+        if (!_isEventHubEnabled || _processor is null)
         {
-            _logger.LogWarning("EventProcessorClient non initialisé (config manquante).");
+            _logger.LogInformation("Service d'ingestion télémétrie Event Hub désactivé (configuration manquante).");
+            _logger.LogInformation("L'application fonctionnera normalement, mais sans ingestion automatique de télémétrie depuis Event Hub.");
+            
+            // Attendre l'arrêt sans faire de traitement
+            try
+            {
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Arrêt du service d'ingestion télémétrie (était désactivé).");
+            }
             return;
         }
 
-        _logger.LogInformation("Démarrage de l'ingestion IoT Hub...");
+        _logger.LogInformation("Démarrage de l'ingestion télémétrie Event Hub...");
         
         try
         {
@@ -77,22 +128,29 @@ public class TelemetrieIngestionWorker : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Arrêt de l'ingestion IoT Hub demandé.");
+            _logger.LogInformation("Arrêt de l'ingestion télémétrie Event Hub demandé.");
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogError(ex, "Erreur Azure durant l'ingestion télémétrie Event Hub (Status: {Status})", ex.Status);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur durant l'exécution de l'ingestion IoT Hub");
+            _logger.LogError(ex, "Erreur durant l'exécution de l'ingestion télémétrie Event Hub");
         }
         finally
         {
-            _logger.LogInformation("Arrêt de l'ingestion IoT Hub...");
-            try
+            if (_processor != null)
             {
-                await _processor.StopProcessingAsync(CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de l'arrêt de l'EventProcessorClient");
+                _logger.LogInformation("Arrêt de l'ingestion télémétrie Event Hub...");
+                try
+                {
+                    await _processor.StopProcessingAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erreur lors de l'arrêt de l'EventProcessorClient");
+                }
             }
         }
     }
@@ -100,7 +158,7 @@ public class TelemetrieIngestionWorker : BackgroundService
     private Task ProcessErrorHandler(ProcessErrorEventArgs args)
     {
         _logger.LogError(args.Exception, 
-            "Erreur EventHub - Partition: {PartitionId}, Operation: {Operation}", 
+            "Erreur Event Hub - Partition: {PartitionId}, Operation: {Operation}", 
             args.PartitionId, args.Operation);
         return Task.CompletedTask;
     }
@@ -164,6 +222,36 @@ public class TelemetrieIngestionWorker : BackgroundService
             stopwatch.Stop();
             _logger.LogDebug("Événement traité en {ElapsedMs}ms pour {DeviceId}", 
                 stopwatch.ElapsedMilliseconds, deviceId);
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogError(ex, "Erreur Azure lors du traitement d'un événement IoT Hub - Partition: {PartitionId}, Status: {Status}", 
+                args.Partition.PartitionId, ex.Status);
+            
+            // En cas d'erreur Azure, on fait quand même le checkpoint pour éviter de bloquer
+            try
+            {
+                await args.UpdateCheckpointAsync();
+            }
+            catch (Exception checkpointEx)
+            {
+                _logger.LogError(checkpointEx, "Erreur lors du checkpoint après échec Azure");
+            }
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("disposed") || ex.Message.Contains("scope"))
+        {
+            _logger.LogError(ex, "Erreur de scope lors du traitement d'un événement IoT Hub - Partition: {PartitionId}", 
+                args.Partition.PartitionId);
+            
+            // Pour les erreurs de scope, on fait le checkpoint
+            try
+            {
+                await args.UpdateCheckpointAsync();
+            }
+            catch (Exception checkpointEx)
+            {
+                _logger.LogError(checkpointEx, "Erreur lors du checkpoint après erreur de scope");
+            }
         }
         catch (Exception ex)
         {
@@ -414,13 +502,16 @@ public class TelemetrieIngestionWorker : BackgroundService
 
     public override void Dispose()
     {
-        try
+        if (_processor != null)
         {
-            _processor?.StopProcessingAsync(CancellationToken.None).GetAwaiter().GetResult();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erreur lors de l'arrêt de l'EventProcessorClient");
+            try
+            {
+                _processor.StopProcessingAsync(CancellationToken.None).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de l'arrêt de l'EventProcessorClient");
+            }
         }
         base.Dispose();
     }

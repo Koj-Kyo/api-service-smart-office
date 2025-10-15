@@ -17,7 +17,6 @@ public class TelemetrieService : ITelemetrieService
     /// <summary>
     /// Constructeur avec injection de dépendances pour les dépôts et le mapper.
     /// </summary>
-<<<<<<< HEAD
     public TelemetrieService(
         ITelemetrieRepository telemetrieRepository,
         IPeripheriqueLogiqueRepository peripheriqueRepository,
@@ -25,12 +24,6 @@ public class TelemetrieService : ITelemetrieService
         IMapper mapper,
         ISignalRService signalRService,
         ILogger<TelemetrieService> logger)
-=======
-    public TelemetrieService(ITelemetrieRepository telemetrieRepository,
-                             IPeripheriqueLogiqueRepository peripheriqueRepository,
-                             ISuggestionRepository suggestionRepository,
-                             IMapper mapper)
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     {
         _telemetrieRepository = telemetrieRepository;
         _peripheriqueRepository = peripheriqueRepository;
@@ -46,9 +39,18 @@ public class TelemetrieService : ITelemetrieService
     /// <param name="telemetrie">L'objet Telemetrie à ajouter.</param>
     public async Task AddTelemetryAsync(Telemetrie telemetrie)
     {
-<<<<<<< HEAD
         try
         {
+            // Assurer que la date est en UTC pour la compatibilité avec PostgreSQL
+            if (telemetrie.Horodatage.Kind == DateTimeKind.Unspecified)
+            {
+                telemetrie.Horodatage = DateTime.SpecifyKind(telemetrie.Horodatage, DateTimeKind.Utc);
+            }
+            else if (telemetrie.Horodatage.Kind == DateTimeKind.Local)
+            {
+                telemetrie.Horodatage = telemetrie.Horodatage.ToUniversalTime();
+            }
+
             await _telemetrieRepository.AddTelemetrieAsync(telemetrie);
             
             // Envoyer une mise à jour en temps réel via SignalR
@@ -62,9 +64,6 @@ public class TelemetrieService : ITelemetrieService
             _logger.LogError(ex, "Erreur lors de l'ajout de télémétrie pour le périphérique {PeripheriqueId}", telemetrie.PeripheriqueLogiqueId);
             throw;
         }
-=======
-        await _telemetrieRepository.AddTelemetrieAsync(telemetrie);
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     }
 
     /// <summary>
@@ -97,7 +96,6 @@ public class TelemetrieService : ITelemetrieService
     /// <param name="suggestion">L'objet Suggestion à stocker.</param>
     public async Task StoreAISuggestionAsync(Suggestion suggestion)
     {
-<<<<<<< HEAD
         try
         {
             var suggestionDto = _mapper.Map<DTOs.Suggestion>(suggestion);
@@ -113,9 +111,5 @@ public class TelemetrieService : ITelemetrieService
             _logger.LogError(ex, "Erreur lors du stockage de la suggestion IA");
             throw;
         }
-=======
-        var suggestionModel = _mapper.Map<DTOs.Suggestion>(suggestion);
-        await _suggestionRepository.AddAsync(suggestionModel);
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     }
 }

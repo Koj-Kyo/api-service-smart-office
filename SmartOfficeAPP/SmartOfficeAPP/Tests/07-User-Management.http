@@ -1,0 +1,241 @@
+### Variables globales
+@baseUrl = https://localhost:7242
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+@userId = user-123-456-789
+
+### ========================================
+### USER PROFILE TESTS
+### ========================================
+
+### 1. Get user profile
+GET {{baseUrl}}/api/user/profile
+Authorization: Bearer {{userToken}}
+
+### 2. Update user profile
+PUT {{baseUrl}}/api/user/profile
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "email": "newemail@example.com",
+  "fullName": "Updated Full Name"
+}
+
+### 3. Assign role to user (Admin only)
+POST {{baseUrl}}/api/user/admin/users/{{userId}}/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "Manager"
+}
+
+### 4. Remove role from user (Admin only)
+DELETE {{baseUrl}}/api/user/admin/users/{{userId}}/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "Manager"
+}
+
+### 5. Test unauthorized access to profile
+GET {{baseUrl}}/api/user/profile
+
+### 6. Test update profile with invalid data
+PUT {{baseUrl}}/api/user/profile
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "email": "invalid-email-format"
+}
+
+### ========================================
+### USER MANAGEMENT TESTS (Admin Only)
+### ========================================
+
+### 7. Get all users
+GET {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+
+### 8. Get user by ID
+GET {{baseUrl}}/api/usermanagement/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### 9. Search users
+GET {{baseUrl}}/api/usermanagement/users/search?searchTerm=test
+Authorization: Bearer {{adminToken}}
+
+### 10. Create new user
+POST {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "newuser@smartoffice.com",
+  "password": "NewUserPassword123!",
+  "fullName": "New Test User",
+  "roleNames": ["User"]
+}
+
+### 11. Create new manager user
+POST {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "manager@smartoffice.com",
+  "password": "ManagerPassword123!",
+  "fullName": "Manager User",
+  "roleNames": ["Manager", "User"]
+}
+
+### 12. Update user
+PUT {{baseUrl}}/api/usermanagement/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "updated.user@smartoffice.com",
+  "fullName": "Updated User Name"
+}
+
+### 13. Toggle user status (activate/deactivate)
+PATCH {{baseUrl}}/api/usermanagement/users/{{userId}}/toggle-status
+Authorization: Bearer {{adminToken}}
+
+### 14. Delete user
+DELETE {{baseUrl}}/api/usermanagement/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### ROLE MANAGEMENT TESTS (Admin Only)
+### ========================================
+
+### 15. Get all roles
+GET {{baseUrl}}/api/usermanagement/roles
+Authorization: Bearer {{adminToken}}
+
+### 16. Create new role
+POST {{baseUrl}}/api/usermanagement/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Technician",
+  "description": "Technical support role"
+}
+
+### 17. Delete role
+DELETE {{baseUrl}}/api/usermanagement/roles/role-id-to-delete
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### USER-ROLE ASSOCIATION TESTS
+### ========================================
+
+### 18. Get user roles
+GET {{baseUrl}}/api/usermanagement/users/{{userId}}/roles
+Authorization: Bearer {{adminToken}}
+
+### 19. Set user roles (replace all existing roles)
+PUT {{baseUrl}}/api/usermanagement/users/{{userId}}/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "roleNames": ["User", "Manager"]
+}
+
+### 20. Add specific role to user
+POST {{baseUrl}}/api/usermanagement/users/{{userId}}/roles/Admin
+Authorization: Bearer {{adminToken}}
+
+### 21. Remove specific role from user
+DELETE {{baseUrl}}/api/usermanagement/users/{{userId}}/roles/Admin
+Authorization: Bearer {{adminToken}}
+
+### 22. Get users by role
+GET {{baseUrl}}/api/usermanagement/roles/Admin/users
+Authorization: Bearer {{adminToken}}
+
+### 23. Get users with Manager role
+GET {{baseUrl}}/api/usermanagement/roles/Manager/users
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### STATISTICS TESTS
+### ========================================
+
+### 24. Get user statistics
+GET {{baseUrl}}/api/usermanagement/statistics
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### ERROR TESTS
+### ========================================
+
+### 25. Test unauthorized access to user management
+GET {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{userToken}}
+
+### 26. Test get non-existent user
+GET {{baseUrl}}/api/usermanagement/users/non-existent-user-id
+Authorization: Bearer {{adminToken}}
+
+### 27. Test search with empty term
+GET {{baseUrl}}/api/usermanagement/users/search?searchTerm=
+Authorization: Bearer {{adminToken}}
+
+### 28. Test create user with duplicate email
+POST {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Password123!",
+  "fullName": "Duplicate User",
+  "roleNames": ["User"]
+}
+
+### 29. Test create user with invalid password
+POST {{baseUrl}}/api/usermanagement/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "weakpassword@smartoffice.com",
+  "password": "weak",
+  "fullName": "Weak Password User",
+  "roleNames": ["User"]
+}
+
+### 30. Test create role with existing name
+POST {{baseUrl}}/api/usermanagement/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Admin",
+  "description": "Duplicate admin role"
+}
+
+### 31. Test delete non-existent role
+DELETE {{baseUrl}}/api/usermanagement/roles/non-existent-role-id
+Authorization: Bearer {{adminToken}}
+
+### 32. Test assign non-existent role to user
+POST {{baseUrl}}/api/usermanagement/users/{{userId}}/roles/NonExistentRole
+Authorization: Bearer {{adminToken}}
+
+### 33. Test admin trying to delete own account
+DELETE {{baseUrl}}/api/usermanagement/users/current-admin-user-id
+Authorization: Bearer {{adminToken}}
+
+### 34. Test admin trying to deactivate own account
+PATCH {{baseUrl}}/api/usermanagement/users/current-admin-user-id/toggle-status
+Authorization: Bearer {{adminToken}}

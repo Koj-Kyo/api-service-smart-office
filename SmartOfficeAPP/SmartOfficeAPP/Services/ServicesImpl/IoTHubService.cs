@@ -1,22 +1,16 @@
 ﻿using SmartOfficeAPP.Services.IServices;
 using Microsoft.Azure.Devices;
-<<<<<<< HEAD
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Devices.Common.Exceptions;
 using System.Text;
 using System.Text.Json;
-=======
-using Microsoft.Azure.Devices.Shared; // pour Twin si besoin
-using System.Text;
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
 
 namespace SmartOfficeAPP.Services.ServicesImpl;
 
-public class IotHubService : IIotHubService
+public class IotHubService : IIotHubService, IDisposable
 {
     private readonly ServiceClient _serviceClient;
     private readonly RegistryManager _registryManager;
-<<<<<<< HEAD
     private readonly ILogger<IotHubService> _logger;
     private readonly ISignalRService _signalRService;
 
@@ -24,27 +18,29 @@ public class IotHubService : IIotHubService
         IConfiguration configuration, 
         ILogger<IotHubService> logger,
         ISignalRService signalRService)
-=======
-
-    // La chaîne de connexion doit être ajoutée dans appsettings.json (IotHubConnectionString).
-    public IotHubService(IConfiguration configuration)
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
     {
+        _logger = logger;
+        _signalRService = signalRService;
+        
         var iotHubConnectionString = configuration["IotHubConnectionString"];
         
         if (string.IsNullOrWhiteSpace(iotHubConnectionString))
         {
-            _logger?.LogWarning("IotHubConnectionString n'est pas configuré");
-            throw new InvalidOperationException("IotHubConnectionString est requis");
+            _logger.LogError("IotHubConnectionString n'est pas configuré. Veuillez configurer la chaîne de connexion dans les User Secrets.");
+            throw new InvalidOperationException("IotHubConnectionString est requis. Configurez-le dans les User Secrets avec : dotnet user-secrets set \"IotHubConnectionString\" \"votre-chaine-de-connexion\"");
         }
 
-        _serviceClient = ServiceClient.CreateFromConnectionString(iotHubConnectionString);
-        _registryManager = RegistryManager.CreateFromConnectionString(iotHubConnectionString);
-<<<<<<< HEAD
-        _logger = logger;
-        _signalRService = signalRService;
-=======
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
+        try
+        {
+            _serviceClient = ServiceClient.CreateFromConnectionString(iotHubConnectionString);
+            _registryManager = RegistryManager.CreateFromConnectionString(iotHubConnectionString);
+            _logger.LogInformation("Service IoT Hub initialisé avec succès avec Azure Cloud");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'initialisation du service IoT Hub. Vérifiez votre chaîne de connexion.");
+            throw;
+        }
     }
 
     /// <summary>
@@ -52,6 +48,18 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<bool> InvokeDeviceMethodAsync(string deviceId, string methodName, string payload)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(methodName))
+        {
+            _logger.LogError("MethodName ne peut pas être null ou vide");
+            return false;
+        }
+
         try
         {
             var methodInvocation = new CloudToDeviceMethod(methodName) 
@@ -68,8 +76,13 @@ public class IotHubService : IIotHubService
             _logger.LogInformation("Invocation de la méthode {MethodName} sur le device {DeviceId}", methodName, deviceId);
 
             var result = await _serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
-<<<<<<< HEAD
             
+            if (result == null)
+            {
+                _logger.LogError("Résultat null reçu d'Azure IoT Hub pour la méthode {MethodName} sur {DeviceId}", methodName, deviceId);
+                return false;
+            }
+
             var success = result.Status == 200;
             var responsePayload = result.GetPayloadAsJson();
 
@@ -88,37 +101,17 @@ public class IotHubService : IIotHubService
         }
         catch (DeviceNotFoundException)
         {
-            _logger.LogError("Device {DeviceId} non trouvé", deviceId);
+            _logger.LogError("Device {DeviceId} non trouvé dans Azure IoT Hub", deviceId);
+            return false;
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de l'invocation de la méthode {MethodName} sur {DeviceId}", methodName, deviceId);
             return false;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de l'invocation de la méthode {MethodName} sur {DeviceId}", methodName, deviceId);
-=======
-            return result.Status == 200;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur InvokeDeviceMethodAsync : {ex.Message}");
-            return false;
-        }
-    }
-
-    // Met à jour les desired properties du Device Twin avec le fragment JSON fourni.
-    public async Task<bool> UpdateDesiredPropertiesAsync(string deviceId, string desiredJson)
-    {
-        try
-        {
-            var twin = await _registryManager.GetTwinAsync(deviceId);
-            // Construit un patch JSON valide pour UpdateTwinAsync
-            var patch = $"{{ \"properties\": {{ \"desired\": {desiredJson} }} }}";
-            await _registryManager.UpdateTwinAsync(deviceId, patch, twin.ETag);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur UpdateDesiredPropertiesAsync : {ex.Message}");
->>>>>>> ff4d8ffaaee34962fcb64b6be9f90c74f9ba03e0
             return false;
         }
     }
@@ -128,9 +121,28 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<bool> UpdateDesiredPropertiesAsync(string deviceId, string desiredJson)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(desiredJson))
+        {
+            _logger.LogError("DesiredJson ne peut pas être null ou vide");
+            return false;
+        }
+
         try
         {
             var twin = await _registryManager.GetTwinAsync(deviceId);
+            
+            if (twin == null)
+            {
+                _logger.LogError("Twin null reçu pour le device {DeviceId}", deviceId);
+                return false;
+            }
+
             var patch = $"{{ \"properties\": {{ \"desired\": {desiredJson} }} }}";
             
             await _registryManager.UpdateTwinAsync(deviceId, patch, twin.ETag);
@@ -141,7 +153,12 @@ public class IotHubService : IIotHubService
         }
         catch (DeviceNotFoundException)
         {
-            _logger.LogError("Device {DeviceId} non trouvé pour mise à jour des desired properties", deviceId);
+            _logger.LogError("Device {DeviceId} non trouvé dans Azure IoT Hub pour mise à jour des desired properties", deviceId);
+            return false;
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de la mise à jour des desired properties pour {DeviceId}", deviceId);
             return false;
         }
         catch (Exception ex)
@@ -156,24 +173,41 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<DeviceTwinInfo?> GetDeviceTwinAsync(string deviceId)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return null;
+        }
+
         try
         {
             var twin = await _registryManager.GetTwinAsync(deviceId);
             
+            if (twin == null)
+            {
+                _logger.LogError("Twin null reçu pour le device {DeviceId}", deviceId);
+                return null;
+            }
+
             return new DeviceTwinInfo
             {
                 DeviceId = deviceId,
                 Status = twin.Status?.ToString(),
                 ConnectionState = twin.ConnectionState?.ToString(),
                 LastActivityTime = twin.LastActivityTime,
-                ReportedProperties = twin.Properties.Reported.ToJson(),
-                DesiredProperties = twin.Properties.Desired.ToJson(),
+                ReportedProperties = twin.Properties?.Reported?.ToJson() ?? "{}",
+                DesiredProperties = twin.Properties?.Desired?.ToJson() ?? "{}",
                 Version = twin.Version ?? 0
             };
         }
         catch (DeviceNotFoundException)
         {
-            _logger.LogError("Device {DeviceId} non trouvé", deviceId);
+            _logger.LogError("Device {DeviceId} non trouvé dans Azure IoT Hub", deviceId);
+            return null;
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de la récupération du twin pour {DeviceId}", deviceId);
             return null;
         }
         catch (Exception ex)
@@ -188,6 +222,18 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<bool> SendCloudToDeviceMessageAsync(string deviceId, string message, Dictionary<string, string>? properties = null)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            _logger.LogError("Message ne peut pas être null ou vide");
+            return false;
+        }
+
         try
         {
             var commandMessage = new Message(Encoding.UTF8.GetBytes(message));
@@ -196,7 +242,10 @@ public class IotHubService : IIotHubService
             {
                 foreach (var prop in properties)
                 {
-                    commandMessage.Properties.Add(prop.Key, prop.Value);
+                    if (prop.Key != null && prop.Value != null)
+                    {
+                        commandMessage.Properties.Add(prop.Key, prop.Value);
+                    }
                 }
             }
 
@@ -205,6 +254,11 @@ public class IotHubService : IIotHubService
             _logger.LogInformation("Message Cloud-to-Device envoyé à {DeviceId}: {Message}", deviceId, message);
             
             return true;
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de l'envoi du message Cloud-to-Device à {DeviceId}", deviceId);
+            return false;
         }
         catch (Exception ex)
         {
@@ -218,6 +272,12 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<bool> CreateOrUpdateDeviceAsync(string deviceId, bool enabled = true)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return false;
+        }
+
         try
         {
             var device = new Device(deviceId)
@@ -226,7 +286,7 @@ public class IotHubService : IIotHubService
             };
 
             await _registryManager.AddDeviceAsync(device);
-            _logger.LogInformation("Device {DeviceId} créé avec succès", deviceId);
+            _logger.LogInformation("Device {DeviceId} créé avec succès dans Azure IoT Hub", deviceId);
             
             return true;
         }
@@ -236,11 +296,18 @@ public class IotHubService : IIotHubService
             try
             {
                 var existingDevice = await _registryManager.GetDeviceAsync(deviceId);
+                
+                if (existingDevice == null)
+                {
+                    _logger.LogError("Device existant null pour {DeviceId}", deviceId);
+                    return false;
+                }
+
                 if (existingDevice.Status != (enabled ? DeviceStatus.Enabled : DeviceStatus.Disabled))
                 {
                     existingDevice.Status = enabled ? DeviceStatus.Enabled : DeviceStatus.Disabled;
                     await _registryManager.UpdateDeviceAsync(existingDevice);
-                    _logger.LogInformation("Device {DeviceId} mis à jour", deviceId);
+                    _logger.LogInformation("Device {DeviceId} mis à jour dans Azure IoT Hub", deviceId);
                 }
                 return true;
             }
@@ -249,6 +316,11 @@ public class IotHubService : IIotHubService
                 _logger.LogError(ex, "Erreur lors de la mise à jour du device {DeviceId}", deviceId);
                 return false;
             }
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de la création du device {DeviceId}", deviceId);
+            return false;
         }
         catch (Exception ex)
         {
@@ -262,16 +334,27 @@ public class IotHubService : IIotHubService
     /// </summary>
     public async Task<bool> DeleteDeviceAsync(string deviceId)
     {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            _logger.LogError("DeviceId ne peut pas être null ou vide");
+            return false;
+        }
+
         try
         {
             await _registryManager.RemoveDeviceAsync(deviceId);
-            _logger.LogInformation("Device {DeviceId} supprimé avec succès", deviceId);
+            _logger.LogInformation("Device {DeviceId} supprimé avec succès d'Azure IoT Hub", deviceId);
             return true;
         }
         catch (DeviceNotFoundException)
         {
-            _logger.LogWarning("Device {DeviceId} non trouvé pour suppression", deviceId);
+            _logger.LogWarning("Device {DeviceId} non trouvé dans Azure IoT Hub pour suppression", deviceId);
             return true; // Considéré comme succès si déjà supprimé
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Argument null lors de la suppression du device {DeviceId}", deviceId);
+            return false;
         }
         catch (Exception ex)
         {
@@ -287,21 +370,69 @@ public class IotHubService : IIotHubService
     {
         var result = new List<DeviceConnectionInfo>();
 
+        if (deviceIds == null)
+        {
+            _logger.LogError("DeviceIds ne peut pas être null");
+            return result;
+        }
+
         foreach (var deviceId in deviceIds)
         {
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                _logger.LogWarning("DeviceId null ou vide ignoré dans la liste");
+                continue;
+            }
+
             try
             {
                 var device = await _registryManager.GetDeviceAsync(deviceId);
                 var twin = await _registryManager.GetTwinAsync(deviceId);
 
+                if (device != null)
+                {
+                    result.Add(new DeviceConnectionInfo
+                    {
+                        DeviceId = deviceId,
+                        Status = device.Status.ToString(),
+                        ConnectionState = device.ConnectionState.ToString(),
+                        LastActivityTime = device.LastActivityTime,
+                        IsConnected = device.ConnectionState == DeviceConnectionState.Connected,
+                        TwinVersion = twin?.Version ?? 0
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Device null reçu pour {DeviceId}", deviceId);
+                    result.Add(new DeviceConnectionInfo
+                    {
+                        DeviceId = deviceId,
+                        Status = "Unknown",
+                        ConnectionState = "Unknown",
+                        IsConnected = false
+                    });
+                }
+            }
+            catch (DeviceNotFoundException)
+            {
+                _logger.LogWarning("Device {DeviceId} non trouvé dans Azure IoT Hub", deviceId);
                 result.Add(new DeviceConnectionInfo
                 {
                     DeviceId = deviceId,
-                    Status = device.Status.ToString(),
-                    ConnectionState = device.ConnectionState.ToString(),
-                    LastActivityTime = device.LastActivityTime,
-                    IsConnected = device.ConnectionState == DeviceConnectionState.Connected,
-                    TwinVersion = twin.Version ?? 0
+                    Status = "NotFound",
+                    ConnectionState = "Disconnected",
+                    IsConnected = false
+                });
+            }
+            catch (ArgumentNullException ex)
+            {
+                _logger.LogWarning(ex, "Argument null pour le device {DeviceId}", deviceId);
+                result.Add(new DeviceConnectionInfo
+                {
+                    DeviceId = deviceId,
+                    Status = "Error",
+                    ConnectionState = "Unknown",
+                    IsConnected = false
                 });
             }
             catch (Exception ex)
@@ -322,8 +453,15 @@ public class IotHubService : IIotHubService
 
     public void Dispose()
     {
-        _serviceClient?.Dispose();
-        _registryManager?.Dispose();
+        try
+        {
+            _serviceClient?.Dispose();
+            _registryManager?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la libération des ressources IoT Hub");
+        }
     }
 }
 

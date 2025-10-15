@@ -1,0 +1,95 @@
+### Variables globales
+@baseUrl = https://localhost:7144
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MDQ1Mzc3MCwiZXhwIjoxNzYwNDU0NjcwLCJpYXQiOjE3NjA0NTM3NzAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.ZIxaQU5w-CT53fu3LrNAv0R-6i6mC3c5p2ansUPvPwI
+
+### ========================================
+### ZONE MANAGEMENT TESTS (Admin Only)
+### ========================================
+
+### 1. Get all zones
+GET {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+
+### 2. Get zone by ID
+GET {{baseUrl}}/api/zones/1
+Authorization: Bearer {{adminToken}}
+
+### 3. Create new zone
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Nom": "Bureau Principal"
+}
+
+### 4. Create another zone
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Nom": "Salle de Réunion A"
+}
+
+### 5. Create zone - Meeting Room
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Nom": "Salle de Conférence"
+}
+
+### 6. Update zone
+PUT {{baseUrl}}/api/zones/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Nom": "Bureau Principal - Étage 1"
+}
+
+### 7. Delete zone
+DELETE {{baseUrl}}/api/zones/3
+Authorization: Bearer {{adminToken}}
+
+### 8. Test unauthorized access (no token)
+GET {{baseUrl}}/api/zones
+
+### 9. Test unauthorized access (user token instead of admin)
+GET {{baseUrl}}/api/zones
+Authorization: Bearer invalid_user_token
+
+### 10. Test get non-existent zone
+GET {{baseUrl}}/api/zones/999
+Authorization: Bearer {{adminToken}}
+
+### 11. Test update non-existent zone
+PUT {{baseUrl}}/api/zones/999
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Nom": "Zone Inexistante"
+}
+
+### 12. Test delete non-existent zone
+DELETE {{baseUrl}}/api/zones/999
+Authorization: Bearer {{adminToken}}
+
+### 13. Test create zone with invalid data
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "Name": ""
+}
+
+### 14. Test create zone with missing name
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{}

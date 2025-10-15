@@ -63,6 +63,17 @@ public class TelemetriesController : ControllerBase
         {
             return BadRequest("Les données de télémétrie sont invalides.");
         }
+
+        // Assurer que la date est en UTC pour la compatibilité avec PostgreSQL
+        if (telemetrie.Horodatage.Kind == DateTimeKind.Unspecified)
+        {
+            telemetrie.Horodatage = DateTime.SpecifyKind(telemetrie.Horodatage, DateTimeKind.Utc);
+        }
+        else if (telemetrie.Horodatage.Kind == DateTimeKind.Local)
+        {
+            telemetrie.Horodatage = telemetrie.Horodatage.ToUniversalTime();
+        }
+
         await _telemetrieService.AddTelemetryAsync(telemetrie);
         return CreatedAtAction(nameof(GetTelemetriesByPeripheriqueIdAsync), new { peripheriqueId = telemetrie.PeripheriqueLogiqueId }, telemetrie);
     }
@@ -81,7 +92,16 @@ public class TelemetriesController : ControllerBase
         [FromQuery] DateTime endDate,
         [FromQuery] int? peripheriqueId)
     {
-        var historicalData = await _telemetrieService.GetHistoricalDataAsync(startDate, endDate, peripheriqueId);
+        // Convertir les dates en UTC pour la compatibilité avec PostgreSQL
+        var startDateUtc = startDate.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(startDate, DateTimeKind.Utc) 
+            : startDate.ToUniversalTime();
+        
+        var endDateUtc = endDate.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(endDate, DateTimeKind.Utc) 
+            : endDate.ToUniversalTime();
+
+        var historicalData = await _telemetrieService.GetHistoricalDataAsync(startDateUtc, endDateUtc, peripheriqueId);
         return Ok(historicalData);
     }
 
