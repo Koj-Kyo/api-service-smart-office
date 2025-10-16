@@ -205,15 +205,37 @@ public class TelemetrieIngestionWorker : BackgroundService
             {
                 var root = doc.RootElement;
 
-                // Schéma v2 du firmware: contient "peripherals":[{ name,type,gpio,state,p_mw,e_mwh }, ...]
-                if (root.TryGetProperty("peripherals", out var peripherals) && peripherals.ValueKind == JsonValueKind.Array)
+                try
                 {
-                    await ProcessPeripheralsDataAsync(peripherals, deviceId, enqueued, telemetrieRepository, periphRepo, signalRService);
+                    // Cas 1: Le JSON root est déjà un array de périphériques
+                    if (root.ValueKind == JsonValueKind.Array)
+                    {
+                        _logger.LogDebug("JSON reçu est un array de périphériques pour device {DeviceId}", deviceId);
+                        await ProcessPeripheralsDataAsync(root, deviceId, enqueued, telemetrieRepository, periphRepo, signalRService);
+                    }
+                    // Cas 2: Le JSON est un objet avec la propriété "peripherals"
+                    else if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("peripherals", out var peripherals) && peripherals.ValueKind == JsonValueKind.Array)
+                    {
+                        _logger.LogDebug("JSON reçu a une propriété 'peripherals' pour device {DeviceId}", deviceId);
+                        await ProcessPeripheralsDataAsync(peripherals, deviceId, enqueued, telemetrieRepository, periphRepo, signalRService);
+                    }
+                    // Cas 3: Schéma v1 ou données directes (objet simple)
+                    else if (root.ValueKind == JsonValueKind.Object)
+                    {
+                        _logger.LogDebug("JSON reçu est un objet direct pour device {DeviceId}", deviceId);
+                        await ProcessDirectDataAsync(root, deviceId, enqueued, telemetrieRepository, periphRepo, signalRService);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Format JSON non reconnu pour device {DeviceId}. ValueKind: {ValueKind}, Body: {Body}", 
+                            deviceId, root.ValueKind, body);
+                    }
                 }
-                // Schéma v1 ou données directes
-                else
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Array") || ex.Message.Contains("Object"))
                 {
-                    await ProcessDirectDataAsync(root, deviceId, enqueued, telemetrieRepository, periphRepo, signalRService);
+                    _logger.LogError(ex, "Erreur de parsing JSON pour device {DeviceId}. JSON body: {Body}", deviceId, body);
+                    // Log détaillé pour comprendre le format reçu
+                    _logger.LogDebug("Root element ValueKind: {ValueKind}", root.ValueKind);
                 }
             }
 

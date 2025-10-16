@@ -39,4 +39,9 @@ public interface ISignalRService
     /// Envoie une notification à tous les utilisateurs connectés
     /// </summary>
     Task SendBroadcastNotificationAsync(string title, string message);
+
+    /// <summary>
+    /// Envoie une alerte de log (error/warn) depuis un device
+    /// </summary>
+    Task SendLogAlertAsync(object logData);
 }

@@ -163,4 +163,19 @@ public class SignalRService : ISignalRService
             _logger.LogError(ex, "Erreur lors de l'envoi de notification broadcast");
         }
     }
+
+    /// <inheritdoc/>
+    public async Task SendLogAlertAsync(object logData)
+    {
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("LogAlert", logData);
+            
+            _logger.LogDebug("Alerte log envoyée via SignalR");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'envoi d'alerte log via SignalR");
+        }
+    }
 }

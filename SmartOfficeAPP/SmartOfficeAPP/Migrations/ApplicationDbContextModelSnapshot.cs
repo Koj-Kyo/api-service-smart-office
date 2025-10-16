@@ -191,6 +191,135 @@ namespace SmartOfficeAPP.Migrations
                     b.ToTable("Commandes");
                 });
 
+            modelBuilder.Entity("SmartOfficeAPP.Models.DeviceLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Context")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Peripheral")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Level")
+                        .HasDatabaseName("IX_DeviceLogs_Level");
+
+                    b.HasIndex("Peripheral")
+                        .HasDatabaseName("IX_DeviceLogs_Peripheral");
+
+                    b.HasIndex("DeviceId", "Timestamp")
+                        .HasDatabaseName("IX_DeviceLogs_DeviceId_Timestamp");
+
+                    b.ToTable("DeviceLogs");
+                });
+
+            modelBuilder.Entity("SmartOfficeAPP.Models.DevicePeripheral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Gpio")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("InstalledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IotDeviceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("LastKnownState")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastUpdateReceived")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("PeripheriqueLogiqueId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WiringDiagram")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PeripheriqueLogiqueId");
+
+                    b.HasIndex("IotDeviceId", "Gpio")
+                        .HasDatabaseName("IX_DevicePeripherals_IotDeviceId_Gpio");
+
+                    b.HasIndex("IotDeviceId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_DevicePeripherals_IotDeviceId_Name");
+
+                    b.ToTable("DevicePeripherals");
+                });
+
             modelBuilder.Entity("SmartOfficeAPP.Models.DroitAcces", b =>
                 {
                     b.Property<int>("Id")
@@ -584,6 +713,15 @@ namespace SmartOfficeAPP.Migrations
                         .HasForeignKey("PeripheriqueLogiqueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("PeripheriqueLogique");
+                });
+
+            modelBuilder.Entity("SmartOfficeAPP.Models.DevicePeripheral", b =>
+                {
+                    b.HasOne("SmartOfficeAPP.Models.PeripheriqueLogique", "PeripheriqueLogique")
+                        .WithMany()
+                        .HasForeignKey("PeripheriqueLogiqueId");
 
                     b.Navigation("PeripheriqueLogique");
                 });

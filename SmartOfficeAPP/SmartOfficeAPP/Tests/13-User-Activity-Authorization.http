@@ -1,0 +1,125 @@
+### Tests pour l'historique d'activité utilisateur
+### Prérequis: avoir un utilisateur connecté et des commandes exécutées
+
+@baseUrl = https://localhost:7152
+@token = {{login.response.body.accessToken}}
+
+### 1. Login pour obtenir un token
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+### 2. Récupérer l'historique d'activité (dernières 20 activités)
+GET {{baseUrl}}/api/user/activity/history
+Authorization: Bearer {{token}}
+
+### 3. Récupérer l'historique avec pagination
+GET {{baseUrl}}/api/user/activity/history?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### 4. Filtrer par type d'activité (Commande uniquement)
+GET {{baseUrl}}/api/user/activity/history?activityType=Commande
+Authorization: Bearer {{token}}
+
+### 5. Filtrer par plage de dates (dernière semaine)
+GET {{baseUrl}}/api/user/activity/history?startDate=2025-01-08&endDate=2025-01-15
+Authorization: Bearer {{token}}
+
+### 6. Récupérer les statistiques d'activité (30 derniers jours)
+GET {{baseUrl}}/api/user/activity/stats
+Authorization: Bearer {{token}}
+
+### 7. Récupérer les statistiques pour une période spécifique
+GET {{baseUrl}}/api/user/activity/stats?startDate=2025-01-01&endDate=2025-01-15
+Authorization: Bearer {{token}}
+
+### 8. Récupérer les activités récentes (dernières 24h)
+GET {{baseUrl}}/api/user/activity/recent
+Authorization: Bearer {{token}}
+
+### 9. Exécuter une commande pour tester (créer une activité)
+POST {{baseUrl}}/api/Commandes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "turn_on",
+  "valeur": "1"
+}
+
+### 10. Re-vérifier l'historique après la commande
+GET {{baseUrl}}/api/user/activity/recent
+Authorization: Bearer {{token}}
+
+### 11. Pagination avancée - page 2
+GET {{baseUrl}}/api/user/activity/history?pageNumber=2&pageSize=5
+Authorization: Bearer {{token}}
+
+### 12. Test sans token (doit échouer avec 401)
+GET {{baseUrl}}/api/user/activity/history
+
+### 13. Statistiques détaillées (graphique activités par jour)
+GET {{baseUrl}}/api/user/activity/stats
+Authorization: Bearer {{token}}
+
+###############################################
+# Tests d'autorisation basée sur les ressources
+###############################################
+
+### 14. Tenter d'accéder à la télémétrie d'un périphérique sans droit
+# (doit échouer avec 403 Forbidden si l'utilisateur n'a pas de DroitAcces sur ce périphérique)
+GET {{baseUrl}}/api/Telemetries/peripherique?peripheriqueId=999
+Authorization: Bearer {{token}}
+
+### 15. Accéder à la télémétrie d'un périphérique avec droit en Lecture
+# (doit réussir si l'utilisateur a DroitAcces.Lecture ou Controle)
+GET {{baseUrl}}/api/Telemetries/peripherique?peripheriqueId=1
+Authorization: Bearer {{token}}
+
+### 16. Créer un droit d'accès en lecture pour un utilisateur sur un périphérique
+# (Admin uniquement)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-here",
+  "peripheriqueLogiqueId": 1,
+  "type": "Lecture"
+}
+
+### 17. Vérifier que l'utilisateur peut maintenant consulter la télémétrie
+GET {{baseUrl}}/api/Telemetries/peripherique?peripheriqueId=1
+Authorization: Bearer {{token}}
+
+### 18. Vérifier les droits d'accès de l'utilisateur
+GET {{baseUrl}}/api/user/access-rights/peripheriques
+Authorization: Bearer {{token}}
+
+### 19. Tester le fallback par zone: créer un droit sur une zone
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-here",
+  "zoneId": 1,
+  "type": "Controle"
+}
+
+### 20. Vérifier que l'utilisateur peut contrôler tous les périphériques de cette zone
+POST {{baseUrl}}/api/Commandes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "turn_on",
+  "valeur": "1"
+}

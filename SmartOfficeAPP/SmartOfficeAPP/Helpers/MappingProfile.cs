@@ -25,6 +25,12 @@ namespace SmartOfficeAPP.Helpers
             CreateMap<PeripheriqueLogiqueCreationDto, PeripheriqueLogique>();
             CreateMap<PeripheriqueLogiqueUpdateDto, PeripheriqueLogique>();
 
+            // DevicePeripheral (périphériques physiques)
+            CreateMap<DevicePeripheral, DevicePeripheralDto>();
+            CreateMap<DevicePeripheralCreationDto, DevicePeripheral>();
+            CreateMap<DevicePeripheralUpdateDto, DevicePeripheral>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
             // Télémétrie
             CreateMap<Telemetrie, TelemetrieDto>()
                 .ForMember(dest => dest.Valeur, opt => opt.MapFrom(src => (decimal)src.Valeur));
@@ -41,6 +47,10 @@ namespace SmartOfficeAPP.Helpers
                 .ForMember(dest => dest.User, opt => opt.Ignore())
                 .ForMember(dest => dest.Zone, opt => opt.Ignore())
                 .ForMember(dest => dest.PeripheriqueLogique, opt => opt.Ignore());
+
+            // DeviceLog ↔ DTOs
+            CreateMap<DeviceLog, DeviceLogDto>();
+            CreateMap<DeviceLogDto, DeviceLog>();
         }
     }
 }

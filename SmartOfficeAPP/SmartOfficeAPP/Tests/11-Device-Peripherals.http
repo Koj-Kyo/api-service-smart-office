@@ -1,0 +1,333 @@
+# =========================================
+# Tests API - Gestion des Périphériques Physiques
+# =========================================
+# Ce fichier teste les nouveaux endpoints pour gérer les capteurs/actionneurs
+# branchés physiquement sur les devices IoT (ESP32, etc.)
+
+@baseUrl = https://localhost:7152
+@deviceId = esp32-office-101
+
+### Variables (à remplir après authentification)
+@token = eyJhbGci...
+@peripheralId = 1
+
+# =========================================
+# 1. AUTHENTICATION (copier le token)
+# =========================================
+
+### Login Admin
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "username": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+# =========================================
+# 2. DEVICE PERIPHERALS - CRUD en DB
+# =========================================
+
+### 2.1 Créer un périphérique physique (Relay)
+POST {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "relay_lights_office",
+  "type": "relay",
+  "gpio": 33,
+  "iotDeviceId": "{{deviceId}}",
+  "notes": "Relais pour éclairage principal - Bornier A1",
+  "unit": null,
+  "wiringDiagram": "https://docs.example.com/wiring/relay-gpio33.png",
+  "installedAt": "2025-01-15T10:30:00Z",
+  "peripheriqueLogiqueId": null
+}
+
+### 2.2 Créer un capteur de température (DHT22)
+POST {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "temp_sensor_room",
+  "type": "temperature",
+  "gpio": 32,
+  "iotDeviceId": "{{deviceId}}",
+  "notes": "Capteur DHT22 - Angle nord-est du bureau",
+  "unit": "°C",
+  "wiringDiagram": null,
+  "installedAt": "2025-01-15T10:45:00Z"
+}
+
+### 2.3 Créer un détecteur de fumée (MQ-2)
+POST {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "smoke_detector_main",
+  "type": "smoke",
+  "gpio": 35,
+  "iotDeviceId": "{{deviceId}}",
+  "notes": "MQ-2 Gas Sensor - Plafond zone stockage",
+  "unit": "ppm",
+  "wiringDiagram": null,
+  "installedAt": "2025-01-15T11:00:00Z"
+}
+
+### 2.4 Récupérer tous les périphériques physiques
+GET {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+
+### 2.5 Récupérer les périphériques d'un device IoT spécifique
+GET {{baseUrl}}/api/DevicePeripherals/device/{{deviceId}}
+Authorization: Bearer {{token}}
+
+### 2.6 Récupérer un périphérique par ID
+GET {{baseUrl}}/api/DevicePeripherals/{{peripheralId}}
+Authorization: Bearer {{token}}
+
+### 2.7 Récupérer un périphérique par nom sur un device
+GET {{baseUrl}}/api/DevicePeripherals/device/{{deviceId}}/name/relay_lights_office
+Authorization: Bearer {{token}}
+
+### 2.8 Mettre à jour un périphérique
+PUT {{baseUrl}}/api/DevicePeripherals/{{peripheralId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "notes": "Relais pour éclairage principal - Bornier A1 - Vérifié le 2025-01-20",
+  "status": "active",
+  "wiringDiagram": "https://docs.example.com/wiring/relay-gpio33-v2.png"
+}
+
+### 2.9 Supprimer un périphérique
+DELETE {{baseUrl}}/api/DevicePeripherals/{{peripheralId}}
+Authorization: Bearer {{token}}
+
+### 2.10 Synchroniser les périphériques avec IoT Hub (desired properties)
+POST {{baseUrl}}/api/DevicePeripherals/device/{{deviceId}}/sync
+Authorization: Bearer {{token}}
+
+# =========================================
+# 3. GESTION DES PÉRIPHÉRIQUES VIA DEVICE TWIN
+# =========================================
+
+### 3.1 Récupérer tous les périphériques (depuis Twin - reported prioritaire)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+### 3.2 Récupérer un périphérique spécifique (depuis Twin)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay_lights_office
+Authorization: Bearer {{token}}
+
+### 3.3 Ajouter un périphérique dans desired properties
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "motion_sensor_entrance",
+  "type": "motion",
+  "gpio": 34,
+  "notes": "PIR sensor - Entrée principale",
+  "unit": "boolean"
+}
+
+### 3.4 Remplacer tous les périphériques dans desired properties
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "relay_lights_office",
+      "type": "relay",
+      "gpio": 33,
+      "notes": "Relais éclairage"
+    },
+    {
+      "name": "temp_sensor_room",
+      "type": "temperature",
+      "gpio": 32,
+      "unit": "°C"
+    }
+  ]
+}
+
+### 3.5 Supprimer un périphérique des desired properties
+DELETE {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/motion_sensor_entrance
+Authorization: Bearer {{token}}
+
+### 3.6 Vue fusionnée d'un périphérique (desired + reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay_lights_office/merged
+Authorization: Bearer {{token}}
+
+### 3.7 Récupérer le twin complet avec métadonnées
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+# =========================================
+# 4. COMMANDES VERS PÉRIPHÉRIQUES
+# =========================================
+
+### 4.1 Allumer un relais
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay_lights_office/commands/on
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### 4.2 Éteindre un relais
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay_lights_office/commands/off
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### 4.3 Lire la valeur d'un capteur
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/temp_sensor_room/commands/read
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### 4.4 Commande avec paramètres (ex: set brightness)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay_lights_office/commands/setBrightness
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parameters": {
+    "level": 75,
+    "transition": 500
+  }
+}
+
+### 4.5 Réinitialiser un périphérique
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/smoke_detector_main/commands/reset
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+# =========================================
+# 5. TESTS D'INTÉGRATION COMPLETS
+# =========================================
+
+### 5.1 Scénario complet: Ajouter un périphérique et synchroniser
+# Étape 1: Créer en DB
+POST {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "led_strip_desk",
+  "type": "led",
+  "gpio": 25,
+  "iotDeviceId": "{{deviceId}}",
+  "notes": "LED strip RGB sous bureau",
+  "unit": null
+}
+
+# Étape 2: Synchroniser avec IoT Hub
+POST {{baseUrl}}/api/DevicePeripherals/device/{{deviceId}}/sync
+Authorization: Bearer {{token}}
+
+# Étape 3: Vérifier dans le twin
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+# Étape 4: Tester une commande
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_strip_desk/commands/setColor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parameters": {
+    "r": 255,
+    "g": 0,
+    "b": 0
+  }
+}
+
+### 5.2 Vérifier la synchronisation desired ? reported
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_strip_desk/merged
+Authorization: Bearer {{token}}
+
+# =========================================
+# 6. GESTION DES ERREURS
+# =========================================
+
+### 6.1 Tenter de créer un périphérique en double (doit renvoyer 409 Conflict)
+POST {{baseUrl}}/api/DevicePeripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "relay_lights_office",
+  "type": "relay",
+  "gpio": 33,
+  "iotDeviceId": "{{deviceId}}"
+}
+
+### 6.2 Récupérer un périphérique inexistant (doit renvoyer 404)
+GET {{baseUrl}}/api/DevicePeripherals/99999
+Authorization: Bearer {{token}}
+
+### 6.3 Commande sur un périphérique inexistant
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/non_existent_device/commands/on
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+# =========================================
+# NOTES FIRMWARE ESP32
+# =========================================
+# 
+# Le firmware ESP32 doit:
+# 
+# 1. Écouter les mises à jour de desired.peripherals
+# 2. Configurer dynamiquement les GPIO selon le type
+# 3. Publier en reported.peripherals l'état réel:
+#    {
+#      "peripherals": [
+#        {
+#          "name": "relay_lights_office",
+#          "type": "relay",
+#          "gpio": 33,
+#          "state": "on",
+#          "lastChange": "2025-01-15T14:30:00Z"
+#        }
+#      ]
+#    }
+# 
+# 4. Implémenter la méthode directe "peripheralCommand":
+#    Payload: { "name": "relay_lights_office", "command": "on", "parameters": {} }
+#    
+# 5. Publier télémétrie périodique:
+#    {
+#      "deviceId": "esp32-office-101",
+#      "peripheral": "temp_sensor_room",
+#      "metric": "temperature",
+#      "value": 23.5,
+#      "unit": "°C",
+#      "timestamp": "2025-01-15T14:30:00Z"
+#    }
+#    Propriété message: type=telemetry
+#
+# 6. Publier logs applicatifs:
+#    {
+#      "level": "info",
+#      "source": "peripheral",
+#      "peripheral": "relay_lights_office",
+#      "message": "State changed to ON",
+#      "timestamp": "2025-01-15T14:30:00Z"
+#    }
+#    Propriété message: type=log
+#

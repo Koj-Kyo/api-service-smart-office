@@ -1,0 +1,199 @@
+### Test des Endpoints DeviceLogs
+### Prérequis: Être authentifié avec un token JWT
+
+@baseUrl = https://localhost:7152
+@token = {{login.response.body.token}}
+
+### 1. Login Admin
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### 2. Récupérer les 50 logs les plus récents
+GET {{baseUrl}}/api/DeviceLogs/recent?limit=50
+Authorization: Bearer {{token}}
+
+### 3. Récupérer les 100 logs d'un device spécifique
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101?limit=100
+Authorization: Bearer {{token}}
+
+### 4. Récupérer les logs par niveau - ERROR
+GET {{baseUrl}}/api/DeviceLogs/level/error?limit=100
+Authorization: Bearer {{token}}
+
+### 5. Récupérer les logs par niveau - WARN
+GET {{baseUrl}}/api/DeviceLogs/level/warn?limit=100
+Authorization: Bearer {{token}}
+
+### 6. Récupérer les logs par niveau - INFO
+GET {{baseUrl}}/api/DeviceLogs/level/info?limit=100
+Authorization: Bearer {{token}}
+
+### 7. Récupérer les logs d'un périphérique spécifique
+GET {{baseUrl}}/api/DeviceLogs/peripheral/relay_lights_office?limit=50
+Authorization: Bearer {{token}}
+
+### 8. Récupérer les logs par plage de dates
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101/range?startDate=2025-01-01T00:00:00Z&endDate=2025-01-31T23:59:59Z
+Authorization: Bearer {{token}}
+
+### 9. Ajouter un log manuellement (Admin only) - INFO
+POST {{baseUrl}}/api/DeviceLogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceId": "esp32-office-101",
+  "peripheral": "temp_sensor_room",
+  "level": "info",
+  "source": "firmware",
+  "message": "Sensor initialized successfully",
+  "timestamp": "2025-01-15T10:00:00Z",
+  "context": "{\"version\": \"1.0.0\", \"heap_free\": 123456}"
+}
+
+### 10. Ajouter un log manuellement - WARNING
+POST {{baseUrl}}/api/DeviceLogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceId": "esp32-office-101",
+  "peripheral": "relay_lights_office",
+  "level": "warn",
+  "source": "peripheral",
+  "message": "High temperature detected on relay",
+  "timestamp": "2025-01-15T11:30:00Z",
+  "context": "{\"temperature_c\": 65, \"threshold\": 60}"
+}
+
+### 11. Ajouter un log manuellement - ERROR
+POST {{baseUrl}}/api/DeviceLogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceId": "esp32-office-101",
+  "peripheral": "relay_lights_office",
+  "level": "error",
+  "source": "peripheral",
+  "message": "Failed to set GPIO state",
+  "timestamp": "2025-01-15T12:00:00Z",
+  "context": "{\"errorCode\": \"GPIO_ERROR\", \"gpio\": 33, \"attemptCount\": 3}"
+}
+
+### 12. Ajouter un log système (pas de périphérique)
+POST {{baseUrl}}/api/DeviceLogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceId": "esp32-office-101",
+  "level": "info",
+  "source": "firmware",
+  "message": "WiFi connected successfully",
+  "timestamp": "2025-01-15T09:00:00Z",
+  "context": "{\"ssid\": \"SmartOffice_Network\", \"rssi\": -58, \"ip\": \"192.168.1.100\"}"
+}
+
+### 13. Ajouter un log réseau
+POST {{baseUrl}}/api/DeviceLogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceId": "esp32-office-102",
+  "level": "error",
+  "source": "network",
+  "message": "Failed to connect to IoT Hub",
+  "timestamp": "2025-01-15T13:00:00Z",
+  "context": "{\"errorCode\": \"CONN_TIMEOUT\", \"retryAttempt\": 5, \"nextRetryIn\": 60}"
+}
+
+### 14. Test avec limite invalide (devrait retourner 400)
+GET {{baseUrl}}/api/DeviceLogs/recent?limit=0
+Authorization: Bearer {{token}}
+
+### 15. Test avec limite trop grande (devrait retourner 400)
+GET {{baseUrl}}/api/DeviceLogs/recent?limit=5000
+Authorization: Bearer {{token}}
+
+### 16. Test avec niveau de log invalide (devrait retourner 400)
+GET {{baseUrl}}/api/DeviceLogs/level/invalid?limit=100
+Authorization: Bearer {{token}}
+
+### 17. Test avec dates invalides (start après end) (devrait retourner 400)
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101/range?startDate=2025-01-31T23:59:59Z&endDate=2025-01-01T00:00:00Z
+Authorization: Bearer {{token}}
+
+###############################################
+### Tests Intégration avec Telemetry Worker
+###############################################
+
+### 18. Vérifier les logs après ingestion D2C
+# Après avoir envoyé des messages depuis ESP32, vérifier qu'ils apparaissent ici
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101?limit=10
+Authorization: Bearer {{token}}
+
+### 19. Vérifier les logs d'erreur uniquement
+GET {{baseUrl}}/api/DeviceLogs/level/error?limit=20
+Authorization: Bearer {{token}}
+
+### 20. Vérifier les logs d'un périphérique spécifique après test
+GET {{baseUrl}}/api/DeviceLogs/peripheral/mq2_smoke_sensor?limit=10
+Authorization: Bearer {{token}}
+
+###############################################
+### Tests SignalR (à exécuter dans le navigateur)
+###############################################
+
+### Client JavaScript pour écouter les alertes de logs:
+###
+### const connection = new signalR.HubConnectionBuilder()
+###     .withUrl("https://localhost:7152/notificationhub", {
+###         accessTokenFactory: () => "YOUR_JWT_TOKEN"
+###     })
+###     .withAutomaticReconnect()
+###     .build();
+###
+### connection.on("LogAlert", (logData) => {
+###     console.log("?? Alerte Log:", logData);
+###     // Afficher une notification dans l'interface
+### });
+###
+### connection.start()
+###     .then(() => console.log("? Connecté à SignalR"))
+###     .catch(err => console.error("? Erreur SignalR:", err));
+
+###############################################
+### Tests Performance & Pagination
+###############################################
+
+### 21. Récupérer un grand nombre de logs
+GET {{baseUrl}}/api/DeviceLogs/recent?limit=1000
+Authorization: Bearer {{token}}
+
+### 22. Logs sur une longue période
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101/range?startDate=2024-01-01T00:00:00Z&endDate=2025-12-31T23:59:59Z
+Authorization: Bearer {{token}}
+
+###############################################
+### Tests Multi-Device
+###############################################
+
+### 23. Logs device 1
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-101?limit=50
+Authorization: Bearer {{token}}
+
+### 24. Logs device 2
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-office-102?limit=50
+Authorization: Bearer {{token}}
+
+### 25. Logs device 3
+GET {{baseUrl}}/api/DeviceLogs/device/esp32-meeting-room?limit=50
+Authorization: Bearer {{token}}

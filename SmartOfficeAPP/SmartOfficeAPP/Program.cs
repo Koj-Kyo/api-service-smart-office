@@ -1,8 +1,10 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SmartOfficeAPP.Authorization;
 using SmartOfficeAPP.Data;
 using SmartOfficeAPP.Hubs;
 using SmartOfficeAPP.Helpers;
@@ -96,6 +98,10 @@ builder.Services.AddCors(opt =>
         .AllowCredentials()); // Important pour SignalR
 });
 
+// Enregistrement Authorization avec handlers
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<IAuthorizationHandler, ResourceAccessHandler>();
+
 // Repos & services
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -103,6 +109,10 @@ builder.Services.AddScoped<IZoneService, ZoneService>();
 builder.Services.AddScoped<IZoneRepository, ZoneRepository>();
 builder.Services.AddScoped<IPeripheriqueLogiqueService, PeripheriqueLogiqueService>();
 builder.Services.AddScoped<IPeripheriqueLogiqueRepository, PeripheriqueLogiqueRepository>();
+builder.Services.AddScoped<IDevicePeripheralRepository, DevicePeripheralRepository>();
+builder.Services.AddScoped<IDevicePeripheralService, DevicePeripheralService>();
+builder.Services.AddScoped<IDeviceLogRepository, DeviceLogRepository>();
+builder.Services.AddScoped<IDeviceLogService, DeviceLogService>();
 builder.Services.AddScoped<ICommandeRepository, CommandeRepository>();
 builder.Services.AddScoped<ICommandeService, CommandeService>();
 builder.Services.AddScoped<IIotHubService, IotHubService>();
@@ -117,6 +127,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IIncidentTicketService, IncidentTicketService>();
 builder.Services.AddScoped<ISuggestionRepository, SuggestionRepository>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IUserActivityService, UserActivityService>();
 builder.Services.AddScoped<DataSeedingService>();
 
 // Nouveau service SignalR
@@ -126,11 +137,19 @@ builder.Services.AddScoped<ISignalRService, SignalRService>();
 builder.Services.AddScoped<IConsommationStatsService, ConsommationStatsService>();
 
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
+builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.LogIngestionWorker>();
 
 builder.Services.AddControllers();
 
-// Configuration d'AutoMapper
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+// Configuration d'AutoMapper avec licence
+var autoMapperLicenseKey = builder.Configuration["AutoMapper:LicenseKey"];
+if (!string.IsNullOrEmpty(autoMapperLicenseKey))
+{
+    // Configuration d'AutoMapper avec licence LuckyPennySoftware
+    Environment.SetEnvironmentVariable("AUTOMAPPER_LICENSE_KEY", autoMapperLicenseKey);
+}
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();

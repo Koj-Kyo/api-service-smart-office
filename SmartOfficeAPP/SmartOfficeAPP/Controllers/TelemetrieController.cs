@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartOfficeAPP.Authorization;
+using SmartOfficeAPP.Enums;
+using SmartOfficeAPP.Extensions;
 using SmartOfficeAPP.Models;
 using SmartOfficeAPP.DTOs;
 using SmartOfficeAPP.Services.IServices;
+using System.Security.Claims;
 
 namespace SmartOfficeAPP.Controllers;
 
@@ -12,35 +16,70 @@ namespace SmartOfficeAPP.Controllers;
 public class TelemetriesController : ControllerBase
 {
     private readonly ITelemetrieService _telemetrieService;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly ILogger<TelemetriesController> _logger;
 
-    public TelemetriesController(ITelemetrieService telemetrieService)
+    public TelemetriesController(
+        ITelemetrieService telemetrieService,
+        IAuthorizationService authorizationService,
+        ILogger<TelemetriesController> logger)
     {
         _telemetrieService = telemetrieService;
+        _authorizationService = authorizationService;
+        _logger = logger;
     }
 
 
     /// <summary>
     /// Récupère les données de télémétrie pour un périphérique logique spécifique.
-    /// Exemple de requête : GET /api/telemetrie/peripherique?peripheriqueId=1
+    /// Vérifie les droits d'accès en lecture sur le périphérique.
     /// </summary>
-    /// <param name="peripheriqueId">L'ID du périphérique.</param>
-    /// <returns>Une collection de données de télémétrie.</returns>
     [HttpGet("peripherique")]
     public async Task<IActionResult> GetTelemetriesByPeripheriqueIdAsync([FromQuery] int peripheriqueId)
     {
+        // Vérification des droits d'accès en lecture
+        var hasAccess = await _authorizationService.CheckPeripheriqueAccessAsync(
+            User,
+            peripheriqueId,
+            DroitAccesType.Lecture);
+
+        if (!hasAccess)
+        {
+            _logger.LogWarning(
+                "Accès refusé à la télémétrie pour périphérique {PeripheriqueId} par userId={UserId}",
+                peripheriqueId,
+                User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            return Forbid();
+        }
+
         var telemetries = await _telemetrieService.GetTelemetriesByPeripheriqueIdAsync(peripheriqueId);
         return Ok(telemetries);
     }
 
-    // GET: api/Telemetries/by-peripherique/{peripheriqueId}
     /// <summary>
     /// Récupère les données de télémétrie pour un périphérique spécifique.
+    /// Vérifie les droits d'accès en lecture sur le périphérique.
     /// </summary>
-    /// <param name="peripheriqueId">L'ID du périphérique.</param>
-    /// <returns>Une liste de données de télémétrie.</returns>
     [HttpGet("by-peripherique/{peripheriqueId}")]
     public async Task<IActionResult> GetTelemetriesByPeripheriqueId(int peripheriqueId)
     {
+        // Vérification des droits d'accès en lecture
+        var hasAccess = await _authorizationService.CheckPeripheriqueAccessAsync(
+            User,
+            peripheriqueId,
+            DroitAccesType.Lecture);
+
+        if (!hasAccess)
+        {
+            _logger.LogWarning(
+                "Accès refusé à la télémétrie pour périphérique {PeripheriqueId} par userId={UserId}",
+                peripheriqueId,
+                User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            return Forbid();
+        }
+
         var telemetries = await _telemetrieService.GetTelemetriesByPeripheriqueIdAsync(peripheriqueId);
 
         if (telemetries == null)
