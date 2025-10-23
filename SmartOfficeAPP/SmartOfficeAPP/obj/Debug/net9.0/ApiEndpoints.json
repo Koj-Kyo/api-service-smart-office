@@ -1167,6 +1167,48 @@
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DevicesController",
+    "Method": "GetPeripheralsEnergy",
+    "RelativePath": "api/Devices/{iotDeviceId}/peripherals/energy",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "iotDeviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.Controllers.PeripheralEnergyStatsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DevicesController",
+    "Method": "ResetPeripheralsEnergy",
+    "RelativePath": "api/Devices/{iotDeviceId}/peripherals/energy/reset",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "iotDeviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DevicesController",
     "Method": "GetFullTwin",
     "RelativePath": "api/Devices/{iotDeviceId}/twin/full",
     "HttpMethod": "GET",
@@ -1472,6 +1514,48 @@
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.IoTHubController",
+    "Method": "SyncPeripheralsFromIoTHub",
+    "RelativePath": "api/IoTHub/device/{iotDeviceId}/peripherals/sync",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "iotDeviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubController",
+    "Method": "ListDevices",
+    "RelativePath": "api/IoTHub/devices",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "max",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Services.ServicesImpl.IoTHubDeviceSummary, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubController",
     "Method": "GetDevicesConnectionStatus",
     "RelativePath": "api/IoTHub/devices/connection-status",
     "HttpMethod": "POST",
@@ -1495,6 +1579,26 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubController",
+    "Method": "SyncDevicesFromIoTHub",
+    "RelativePath": "api/IoTHub/devices/sync",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubController",
+    "Method": "SyncAllPeripheralsFromIoTHub",
+    "RelativePath": "api/IoTHub/peripherals/sync-all",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.NotificationController",

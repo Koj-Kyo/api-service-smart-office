@@ -1,0 +1,360 @@
+### ====================================
+### ?? Tests Compatibilité Firmware v1.3.0
+### Backend .NET 9 - DeviceController
+### ====================================
+
+@baseUrl = https://localhost:7169
+@deviceId = mon-esp32
+@peripheralName = relay4
+
+### ====================================
+### ?? 1. Authentification (obtenir le token)
+### ====================================
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+###
+@token = {{login.response.body.$.token}}
+
+### ====================================
+### ?? 2. Récupérer tous les périphériques
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 3. Récupérer un périphérique spécifique
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/{{peripheralName}}
+Authorization: Bearer {{token}}
+
+### ====================================
+### ? 4. Ajouter un nouveau périphérique
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "relay5",
+  "type": "relay",
+  "gpio": 26,
+  "notes": "Nouveau relais pour éclairage secondaire",
+  "unit": "W",
+  "metering": "estimated",
+  "ratedWatt": 75,
+  "isOutput": true,
+  "activeHigh": true
+}
+
+### ====================================
+### ?? 5. Remplacer tous les périphériques (Configuration complète)
+### ====================================
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "relay4",
+      "type": "relay",
+      "gpio": 33,
+      "notes": "Relais principal - Éclairage RDC",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 100,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "name": "mq2",
+      "type": "smoke",
+      "gpio": 32,
+      "notes": "Capteur de fumée MQ-2",
+      "unit": "ppm",
+      "metering": "none",
+      "isOutput": false,
+      "activeHigh": false
+    },
+    {
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 14,
+      "notes": "LED indicateur RDC",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    }
+  ]
+}
+
+### ====================================
+### ??? 6. Supprimer un périphérique
+### ====================================
+DELETE {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/relay5
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 7. Commandes - Allumer un relais
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/{{peripheralName}}/commands/on
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 8. Commandes - Éteindre un relais
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/{{peripheralName}}/commands/off
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 9. Commandes - Basculer l'état (toggle)
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/{{peripheralName}}/commands/toggle
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 10. Commandes - Régler la luminosité (dimmer/led)
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/setBrightness
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parameters": {
+    "level": 75
+  }
+}
+
+### ====================================
+### ?? 11. Commandes - Changer couleur RGB
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/rgb_strip/commands/setColor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parameters": {
+    "red": 255,
+    "green": 128,
+    "blue": 0
+  }
+}
+
+### ====================================
+### ?? 12. Vue fusionnée d'un périphérique (desired + reported)
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/{{peripheralName}}/merged
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 13. Device Twin complet
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+### ====================================
+### ? 14. Statistiques énergétiques (NOUVEAU)
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 15. Réinitialiser les compteurs énergétiques (NOUVEAU)
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy/reset
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 16. Vérifier le statut global du device
+### ====================================
+# Cette commande utilise une méthode directe du firmware
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "getStatus",
+  "payload": {}
+}
+
+### ====================================
+### ?? 17. Redémarrer le device (firmware)
+### ====================================
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "reboot",
+  "payload": {}
+}
+
+### ====================================
+### ?? 18. Modifier l'intervalle de télémétrie
+### ====================================
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "setTelemetryInterval",
+  "payload": {
+    "intervalSec": 5
+  }
+}
+
+### ====================================
+### ?? 19. Ouvrir la porte (commande firmware spécifique)
+### ====================================
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "openDoor",
+  "payload": {}
+}
+
+### ====================================
+### ?? 20. Activer l'alarme manuellement
+### ====================================
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "alarmOn",
+  "payload": {}
+}
+
+### ====================================
+### ? 21. Désactiver l'alarme
+### ====================================
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "methodName": "alarmOff",
+  "payload": {}
+}
+
+### ====================================
+### ?? 22. Test de validation GPIO invalide
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "invalid_gpio",
+  "type": "relay",
+  "gpio": 99,
+  "notes": "Test GPIO invalide (devrait échouer)",
+  "isOutput": true
+}
+
+### ====================================
+### ? 23. Test de commande invalide pour type
+### ====================================
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/mq2/commands/on
+Authorization: Bearer {{token}}
+
+# Ce test devrait échouer car "on" n'est pas valide pour type "sensor"
+
+### ====================================
+### ?? 24. Tester la synchronisation desired/reported
+### ====================================
+# Étape 1: Modifier desired
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "test_sync",
+      "type": "relay",
+      "gpio": 25,
+      "notes": "Test synchronisation",
+      "metering": "estimated",
+      "ratedWatt": 50
+    }
+  ]
+}
+
+###
+# Étape 2: Attendre 5-10 secondes que le firmware synchronise
+
+###
+# Étape 3: Vérifier la synchronisation
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/test_sync/merged
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 25. Statistiques énergétiques détaillées
+### ====================================
+# Récupérer les stats puis analyser les champs
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+# Attendu:
+# - energyWh: conversion correcte mWh ? Wh
+# - currentPowerW: conversion correcte mW ? W
+# - totalEnergyWh: somme de tous les périphériques
+# - totalPowerW: puissance totale instantanée
+
+### ====================================
+### ?? 26. Nettoyage - Supprimer le périphérique de test
+### ====================================
+DELETE {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/test_sync
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? 27. Récapitulatif final
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+### ====================================
+### ? CHECKLIST DE VALIDATION
+### ====================================
+# [ ] 1. Authentification réussie
+# [ ] 2. Récupération des périphériques
+# [ ] 3. Ajout d'un périphérique avec métadonnées (notes, unit)
+# [ ] 4. Remplacement complet de la configuration
+# [ ] 5. Suppression d'un périphérique
+# [ ] 6. Commandes ON/OFF/Toggle fonctionnelles
+# [ ] 7. Commande setBrightness avec paramètres
+# [ ] 8. Vue merged montre desired + reported
+# [ ] 9. Statistiques énergétiques correctes
+# [ ] 10. Réinitialisation des compteurs fonctionne
+# [ ] 11. Validation GPIO invalide refuse
+# [ ] 12. Validation commande invalide refuse
+# [ ] 13. Synchronisation desired?reported OK
+
+### ====================================
+### ?? NOTES DE DÉBOGAGE
+### ====================================
+# - Si un périphérique apparaît "configured: false", vérifier:
+#   * GPIO valide (12-33)
+#   * GPIO non réservé (4,5,13,14,18,19,23,25,26,27,32,33)
+#   * Type valide (relay, light, sensor, etc.)
+#
+# - Si les statistiques énergétiques sont à 0:
+#   * Vérifier que "metering" est défini ("estimated" ou "measured")
+#   * Vérifier que "ratedWatt" > 0
+#   * Attendre que le firmware envoie des reported properties
+#
+# - Si une commande échoue:
+#   * Vérifier que le device est connecté (connectionState: "Connected")
+#   * Vérifier que la commande est valide pour le type
+#   * Consulter les logs firmware via télémétrie

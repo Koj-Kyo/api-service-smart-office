@@ -11,17 +11,68 @@ namespace SmartOfficeAPP.Controllers;
 public class IoTHubController : ControllerBase
 {
     private readonly IIotHubService _iotHubService;
+    private readonly IPeripheriqueLogiqueService _peripheriqueService;
     private readonly ISignalRService _signalRService;
     private readonly ILogger<IoTHubController> _logger;
 
     public IoTHubController(
         IIotHubService iotHubService,
+        IPeripheriqueLogiqueService peripheriqueService,
         ISignalRService signalRService,
         ILogger<IoTHubController> logger)
     {
         _iotHubService = iotHubService;
+        _peripheriqueService = peripheriqueService;
         _signalRService = signalRService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Liste tous les devices disponibles dans Azure IoT Hub
+    /// </summary>
+    [HttpGet("devices")]
+    public async Task<ActionResult<IEnumerable<IoTHubDeviceSummary>>> ListDevices([FromQuery] int max = 100)
+    {
+        try
+        {
+            var devices = await _iotHubService.ListDevicesAsync(Math.Clamp(max, 1, 1000));
+            return Ok(devices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la liste des devices");
+            return StatusCode(500, new { message = "Erreur lors de la récupération des devices" });
+        }
+    }
+
+    /// <summary>
+    /// Synchronise les devices depuis Azure IoT Hub vers la base de données
+    /// </summary>
+    [HttpPost("devices/sync")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SyncDevicesFromIoTHub()
+    {
+        try
+        {
+            var syncedCount = await _peripheriqueService.SyncDevicesFromIoTHubAsync();
+            
+            await _signalRService.SendBroadcastNotificationAsync(
+                "IoT Hub Sync",
+                $"{syncedCount} nouveaux devices synchronisés depuis Azure IoT Hub"
+            );
+
+            return Ok(new 
+            { 
+                success = true, 
+                syncedCount, 
+                message = $"{syncedCount} devices synchronisés avec succès depuis Azure IoT Hub" 
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la synchronisation des devices depuis IoT Hub");
+            return StatusCode(500, new { success = false, message = "Erreur lors de la synchronisation des devices" });
+        }
     }
 
     /// <summary>
@@ -236,6 +287,69 @@ public class IoTHubController : ControllerBase
         {
             _logger.LogError(ex, "Erreur lors de la récupération du statut de connexion des devices");
             return StatusCode(500, new { message = "Erreur interne du serveur" });
+        }
+    }
+
+    /// <summary>
+    /// Synchronise les périphériques physiques d'un device spécifique depuis IoT Hub
+    /// </summary>
+    [HttpPost("device/{iotDeviceId}/peripherals/sync")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SyncPeripheralsFromIoTHub(string iotDeviceId)
+    {
+        try
+        {
+            var peripheralService = HttpContext.RequestServices.GetRequiredService<IDevicePeripheralService>();
+            var syncedCount = await peripheralService.SyncPeripheralsFromIoTHubAsync(iotDeviceId);
+            
+            await _signalRService.SendBroadcastNotificationAsync(
+                "Peripherals Sync",
+                $"{syncedCount} périphériques synchronisés depuis IoT Hub pour {iotDeviceId}"
+            );
+
+            return Ok(new 
+            { 
+                success = true, 
+                syncedCount, 
+                deviceId = iotDeviceId,
+                message = $"{syncedCount} périphériques physiques synchronisés depuis IoT Hub" 
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la synchronisation des périphériques pour {DeviceId}", iotDeviceId);
+            return StatusCode(500, new { success = false, message = "Erreur lors de la synchronisation des périphériques" });
+        }
+    }
+
+    /// <summary>
+    /// Synchronise tous les périphériques physiques de tous les devices depuis IoT Hub
+    /// </summary>
+    [HttpPost("peripherals/sync-all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SyncAllPeripheralsFromIoTHub()
+    {
+        try
+        {
+            var peripheralService = HttpContext.RequestServices.GetRequiredService<IDevicePeripheralService>();
+            var totalSynced = await peripheralService.SyncAllPeripheralsFromIoTHubAsync();
+            
+            await _signalRService.SendBroadcastNotificationAsync(
+                "Peripherals Global Sync",
+                $"{totalSynced} périphériques physiques synchronisés depuis tous les devices IoT Hub"
+            );
+
+            return Ok(new 
+            { 
+                success = true, 
+                totalSynced, 
+                message = $"{totalSynced} périphériques physiques synchronisés depuis IoT Hub" 
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la synchronisation globale des périphériques");
+            return StatusCode(500, new { success = false, message = "Erreur lors de la synchronisation globale" });
         }
     }
 

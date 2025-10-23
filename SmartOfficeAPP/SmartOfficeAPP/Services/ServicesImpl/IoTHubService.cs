@@ -76,14 +76,13 @@ public class IotHubService : IIotHubService, IDisposable
             _logger.LogInformation("Invocation de la méthode {MethodName} sur le device {DeviceId}", methodName, deviceId);
 
             var result = await _serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
-            
             if (result == null)
             {
                 _logger.LogError("Résultat null reçu d'Azure IoT Hub pour la méthode {MethodName} sur {DeviceId}", methodName, deviceId);
                 return false;
             }
 
-            var success = result.Status == 200;
+            var success = result.Status is >= 200 and < 300; // Accepte 2xx
             var responsePayload = result.GetPayloadAsJson();
 
             _logger.LogInformation("Méthode {MethodName} sur {DeviceId}: Status={Status}, Response={Response}", 
@@ -451,6 +450,32 @@ public class IotHubService : IIotHubService, IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Liste tous les devices disponibles dans Azure IoT Hub
+    /// </summary>
+    public async Task<IEnumerable<IoTHubDeviceSummary>> ListDevicesAsync(int maxCount = 100)
+    {
+        var capped = Math.Clamp(maxCount, 1, 1000);
+        try
+        {
+            var devices = await _registryManager.GetDevicesAsync(capped);
+            return devices.Select(d => new IoTHubDeviceSummary
+            {
+                DeviceId = d.Id,
+                Status = d.Status.ToString(),
+                ConnectionState = d.ConnectionState.ToString(),
+                LastActivityTime = d.LastActivityTime,
+                StatusUpdatedTime = d.StatusUpdatedTime,
+                ConnectionStateUpdatedTime = d.ConnectionStateUpdatedTime
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la liste des devices IoT Hub");
+            return Enumerable.Empty<IoTHubDeviceSummary>();
+        }
+    }
+
     public void Dispose()
     {
         try
@@ -490,4 +515,17 @@ public class DeviceConnectionInfo
     public DateTime? LastActivityTime { get; set; }
     public bool IsConnected { get; set; }
     public long TwinVersion { get; set; }
+}
+
+/// <summary>
+/// Résumé d'un device IoT Hub
+/// </summary>
+public class IoTHubDeviceSummary
+{
+    public string DeviceId { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string ConnectionState { get; set; } = string.Empty;
+    public DateTime? LastActivityTime { get; set; }
+    public DateTime? StatusUpdatedTime { get; set; }
+    public DateTime? ConnectionStateUpdatedTime { get; set; }
 }

@@ -1,0 +1,100 @@
+### ========================================
+### PARTIE 4: COMMANDES ET CONTRÔLE DEPUIS LE BACKEND
+### ========================================
+
+### 15) Méthode directe: setState = 1 (allumer)
+POST {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/method/setState
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "Payload": "{\"state\":1}"
+}
+
+###
+
+### 16) Méthode directe: setState = 0 (éteindre)
+POST {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/method/setState
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "Payload": "{\"state\":0}"
+}
+
+###
+
+### 17) Smart command: turn-on (alias prédéfini côté backend)
+POST {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/smart-commands/turn-on
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+###
+
+### 18) Smart command: set-brightness (ex: 75)
+POST {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/smart-commands/set-brightness
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "Value": 75
+}
+
+###
+
+### 19) Message Cloud-to-Device (C2D) simple
+POST {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/message
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "Message": "toggle",
+  "Properties": { "command": "toggle" }
+}
+
+###
+
+### 20) Mettre à jour le desired du twin (déclare des périphériques souhaités)
+# NOTE: Endpoint Admin (DevicesController). Requiert un token Admin.
+POST {{baseUrl}}/api/Devices/{{esp32DeviceId}}/desired
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    { "name":"relay1", "type":"relay", "gpio":26 },
+    { "name":"mq2", "type":"smoke", "gpio":34 }
+  ]
+}
+
+###
+
+### 21) Commande périphérique ciblée: relay1 -> toggle (méthode 'peripheralCommand')
+# NOTE: Endpoint Admin (DevicesController). Requiert un token Admin.
+POST {{baseUrl}}/api/Devices/{{esp32DeviceId}}/peripherals/relay1/commands/toggle
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parameters": {}
+}
+
+###
+
+### 22) Vérifier l’état des périphériques (reported prioritaire)
+GET {{baseUrl}}/api/Devices/{{esp32DeviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+
+### 23) Vérifier le twin après commandes
+GET {{baseUrl}}/api/IoTHub/device/{{esp32DeviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+
+### 24) Vue fusionnée d’un périphérique: relay1 (desired + reported)
+GET {{baseUrl}}/api/Devices/{{esp32DeviceId}}/peripherals/relay1/merged
+Authorization: Bearer {{token}}

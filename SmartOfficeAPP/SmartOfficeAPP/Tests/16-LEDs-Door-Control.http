@@ -1,0 +1,489 @@
+### ====================================
+### ?? Contrôle Spécifique: LEDs Étages + Porte
+### Firmware ESP32 v1.3.0 - Smart Office
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### ?? 1. Authentification (OBLIGATOIRE)
+### ====================================
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = {{login.response.body.$.token}}
+
+### ====================================
+### ?? 2. Vérifier l'état actuel de tous les périphériques
+### ====================================
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? CONTRÔLE DES LEDs ÉTAGES
+### ====================================
+
+### 3. ?? Allumer LED Étage 2 (GPIO 26)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+### 4. ?? Éteindre LED Étage 2
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+### 5. ?? Basculer LED Étage 2 (toggle)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/toggle
+Authorization: Bearer {{token}}
+
+###
+
+### 6. ?? Allumer LED Étage 3 (GPIO 14)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+### 7. ?? Éteindre LED Étage 3
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+### 8. ?? Basculer LED Étage 3 (toggle)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/toggle
+Authorization: Bearer {{token}}
+
+###
+
+### 9. ?? Allumer LED RDC (GPIO 27) - Bonus
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+### 10. ?? Éteindre toutes les LEDs (via méthode directe firmware)
+# ? CORRIGÉ: Route et payload mis à jour
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/peripheralCommand
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{\"name\":\"led_rdc\",\"command\":\"off\"}"
+}
+
+### ====================================
+### ?? CONTRÔLE DE LA PORTE
+### ====================================
+
+### 11. ?? Ouvrir la porte (Servo 175°)
+# ? CORRIGÉ: Route et payload mis à jour
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 12. ?? Fermer la porte (Servo 35°)
+# ? CORRIGÉ: Route et payload mis à jour
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/closeDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 13. ?? Basculer l'état de la porte (toggle)
+# Si ouverte ? ferme, si fermée ? ouvre
+# ? CORRIGÉ: Route et payload mis à jour
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+### ====================================
+### ??? SCÉNARIOS COMBINÉS
+### ====================================
+
+### 14. ?? Scénario 1: Allumer Étage 2 + Ouvrir Porte
+# Étape 1: Allumer LED Étage 2
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+# Étape 2: Ouvrir la porte (attendre 1-2 secondes entre les commandes)
+# ? CORRIGÉ
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 15. ?? Scénario 2: Allumer Étage 3 + Fermer Porte
+# Étape 1: Allumer LED Étage 3
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/on
+Authorization: Bearer {{token}}
+
+###
+# Étape 2: Fermer la porte
+# ? CORRIGÉ
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/closeDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 16. ?? Scénario 3: Allumer toutes les LEDs
+# LED RDC
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/on
+Authorization: Bearer {{token}}
+
+###
+# LED Étage 2
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+# LED Étage 3
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+### 17. ?? Scénario 4: Éteindre toutes les LEDs + Fermer Porte
+# LED RDC
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/off
+Authorization: Bearer {{token}}
+
+###
+# LED Étage 2
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/off
+Authorization: Bearer {{token}}
+
+###
+# LED Étage 3
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/off
+Authorization: Bearer {{token}}
+
+###
+# Fermer la porte
+# ? CORRIGÉ
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/closeDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+### ====================================
+### ?? VÉRIFICATIONS
+### ====================================
+
+### 18. ?? Vérifier l'état de la LED Étage 2
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2
+Authorization: Bearer {{token}}
+
+###
+
+### 19. ?? Vérifier l'état de la LED Étage 3
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3
+Authorization: Bearer {{token}}
+
+###
+
+### 20. ?? Vérifier l'état de la porte (via getStatus)
+# ? CORRIGÉ
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/getStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 21. ?? Vue fusionnée LED Étage 2 (desired + reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/merged
+Authorization: Bearer {{token}}
+
+###
+
+### 22. ?? Vue fusionnée LED Étage 3 (desired + reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/merged
+Authorization: Bearer {{token}}
+
+###
+
+### 23. ?? Statistiques énergétiques des LEDs
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+###
+
+### 24. ?? Twin complet du device
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+### ====================================
+### ??? CONFIGURATION INITIALE (Si besoin)
+### ====================================
+
+### 25. ?? Configurer les LEDs dans desired properties
+# À exécuter UNIQUEMENT si les LEDs ne sont pas déjà configurées
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "notes": "LED indicateur RDC",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "name": "led_etage2",
+      "type": "light",
+      "gpio": 26,
+      "notes": "LED indicateur Étage 2",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "name": "led_etage3",
+      "type": "light",
+      "gpio": 14,
+      "notes": "LED indicateur Étage 3",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "name": "smoke_sensor",
+      "type": "sensor",
+      "gpio": 32,
+      "notes": "Capteur de fumée MQ-2",
+      "unit": "ppm",
+      "metering": "none",
+      "isOutput": false,
+      "activeHigh": false
+    }
+  ]
+}
+
+###
+
+### 26. ?? Désactiver l'alarme fumée (si bloquée)
+# ? NOUVEAU: Si les commandes sont bloquées par l'alarme
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/alarmOff
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 27. ?? Activer l'alarme fumée (test)
+# ? NOUVEAU
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/alarmOn
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 28. ?? Redémarrer l'ESP32
+# ? NOUVEAU
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/reboot
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+
+### 29. ?? Modifier l'intervalle de télémétrie
+# ? NOUVEAU
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/setTelemetryInterval
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{\"intervalSec\": 5}"
+}
+
+###
+
+### 30. ?? Récupérer le Device Twin complet d'IoT Hub
+# ? NOUVEAU: Via IoTHubController
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? RÉFÉRENCE DES ROUTES CORRIGÉES
+### ====================================
+# 
+# ? ROUTES CORRECTES:
+# 
+# 1. CONTRÔLE LED (DevicesController):
+#    POST /api/Devices/{deviceId}/peripherals/{name}/commands/{command}
+#    Exemples: /commands/on, /commands/off, /commands/toggle
+#
+# 2. MÉTHODES DIRECTES (IoTHubController):
+#    POST /api/IoTHub/device/{deviceId}/method/{methodName}
+#    Body: { "payload": "..." }
+#
+#    Méthodes disponibles:
+#    - openDoor
+#    - closeDoor
+#    - getStatus
+#    - peripheralCommand
+#    - alarmOn
+#    - alarmOff
+#    - reboot
+#    - setTelemetryInterval
+#    - resetEnergy
+#
+# 3. TWIN (IoTHubController):
+#    GET /api/IoTHub/device/{deviceId}/twin
+#
+# 4. TWIN COMPLET (DevicesController):
+#    GET /api/Devices/{deviceId}/twin/full
+#
+# 5. PÉRIPHÉRIQUES (DevicesController):
+#    GET /api/Devices/{deviceId}/peripherals
+#    GET /api/Devices/{deviceId}/peripherals/{name}
+#    PUT /api/Devices/{deviceId}/peripherals
+#    GET /api/Devices/{deviceId}/peripherals/energy
+
+### ====================================
+### ?? RÉFÉRENCE GPIO FIRMWARE
+### ====================================
+# LED_RDC = GPIO 27
+# LED_ETAGE2 = GPIO 26
+# LED_ETAGE3 = GPIO 14
+# SERVO_PIN (Porte) = GPIO 13
+# SMOKE_SENSOR_PIN = GPIO 32
+# BUZZER_PIN = GPIO 25
+
+### ====================================
+### ? GUIDE D'UTILISATION RAPIDE
+### ====================================
+# 
+# POUR ALLUMER UNE LED:
+# 1. S'authentifier (test #1)
+# 2. Allumer LED Étage 2 (test #3)
+#    OU
+#    Allumer LED Étage 3 (test #6)
+#
+# POUR CONTRÔLER LA PORTE:
+# 1. S'authentifier (test #1)
+# 2. Ouvrir la porte (test #11)
+#    OU
+#    Fermer la porte (test #12)
+#
+# POUR UN SCÉNARIO COMPLET:
+# 1. S'authentifier (test #1)
+# 2. Exécuter un scénario (tests #14-17)
+#
+# POUR VÉRIFIER L'ÉTAT:
+# - Vérifier LED: tests #18-19
+# - Vérifier porte: test #20
+# - Statistiques: test #23
+
+### ====================================
+### ?? NOTES IMPORTANTES
+### ====================================
+# 
+# 1. ALARME FUMÉE:
+#    - Si l'alarme est active, les commandes LED et porte sont bloquées
+#    - Désactiver l'alarme avec test #26
+#
+# 2. DÉLAI ENTRE COMMANDES:
+#    - Attendre 1-2 secondes entre chaque commande
+#    - Le firmware traite les commandes séquentiellement
+#
+# 3. VALIDATION:
+#    - Toujours vérifier l'état après une commande (tests #18-24)
+#    - Consulter les logs via télémétrie si échec
+#
+# 4. FORMAT PAYLOAD:
+#    - Le payload doit être une STRING JSON
+#    - Exemple: { "payload": "{\"state\": 1}" }
+#    - PAS: { "methodName": "...", "payload": {...} }
+
+### ====================================
+### ?? DÉPANNAGE
+### ====================================
+# 
+# PROBLÈME: LED ne s'allume pas
+# SOLUTION:
+# 1. Vérifier que le device est connecté (test #30)
+#    ? Vérifier "connectionState": "Connected"
+#
+# 2. Vérifier la configuration (test #25)
+#    ? Exécuter la configuration initiale
+#
+# 3. Vérifier l'alarme (test #20)
+#    ? Si "alarm": "active", exécuter test #26
+#
+# PROBLÈME: Erreur 404 Not Found
+# SOLUTION:
+# 1. Vérifier que vous utilisez les ROUTES CORRIGÉES ci-dessus
+# 2. Vérifier que le token est valide
+# 3. Vérifier que le baseUrl est correct (7144 ou 7169)
+#
+# PROBLÈME: Erreur 400 Bad Request
+# SOLUTION:
+# 1. Vérifier le format du payload: { "payload": "..." }
+# 2. Vérifier que le payload est une STRING JSON, pas un objet
+# 3. Échapper les guillemets dans le payload

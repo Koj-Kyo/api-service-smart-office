@@ -38,5 +38,10 @@ namespace SmartOfficeAPP.Services.IServices
         /// Obtient le statut de connexion de plusieurs devices
         /// </summary>
         Task<IEnumerable<DeviceConnectionInfo>> GetDevicesConnectionStatusAsync(IEnumerable<string> deviceIds);
+
+        /// <summary>
+        /// Liste les appareils IoT Hub
+        /// </summary>
+        Task<IEnumerable<IoTHubDeviceSummary>> ListDevicesAsync(int maxCount = 100);
     }
 }

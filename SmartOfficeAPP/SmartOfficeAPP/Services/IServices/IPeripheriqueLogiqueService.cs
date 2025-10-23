@@ -10,5 +10,10 @@ namespace SmartOfficeAPP.Services.IServices
         Task<PeripheriqueLogiqueDto> CreateAsync(PeripheriqueLogiqueCreationDto peripheriqueDto);
         Task<bool> UpdateAsync(int id, PeripheriqueLogiqueUpdateDto peripheriqueDto);
         Task<bool> DeleteAsync(int id);
+        
+        /// <summary>
+        /// Synchronise les devices depuis Azure IoT Hub vers la base de données
+        /// </summary>
+        Task<int> SyncDevicesFromIoTHubAsync();
     }
 }

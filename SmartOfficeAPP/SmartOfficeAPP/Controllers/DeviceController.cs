@@ -277,6 +277,59 @@ public class DevicesController : ControllerBase
         return Ok(fullTwin);
     }
 
+    // ✅ NOUVEAU: GET: api/Devices/{iotDeviceId}/peripherals/energy
+    // Retourne les statistiques énergétiques de tous les périphériques
+    [HttpGet("{iotDeviceId}/peripherals/energy")]
+    public async Task<ActionResult<PeripheralEnergyStatsDto>> GetPeripheralsEnergy(string iotDeviceId)
+    {
+        var twin = await _iotHubService.GetDeviceTwinAsync(iotDeviceId);
+        if (twin is null) return NotFound(new { message = $"Device {iotDeviceId} introuvable." });
+
+        var reported = TryExtractPeripherals(twin.ReportedProperties);
+        
+        var stats = new PeripheralEnergyStatsDto
+        {
+            DeviceId = iotDeviceId,
+            Timestamp = DateTime.UtcNow,
+            Peripherals = reported
+                .Where(p => p.Metering != null && p.Metering != "none")
+                .Select(p => new PeripheralEnergyDto
+                {
+                    Name = p.Name,
+                    Type = p.Type,
+                    Metering = p.Metering ?? "none",
+                    RatedWatt = p.RatedWatt ?? 0,
+                    EnergyWh = (p.EnergyMWh ?? 0) / 1000.0, // Conversion mWh → Wh
+                    CurrentPowerW = (p.LastPowerMW ?? 0) / 1000.0f, // Conversion mW → W
+                    State = p.State?.ToString() ?? "unknown",
+                    LastUpdate = p.LastUpdate
+                })
+                .ToList(),
+            TotalEnergyWh = reported
+                .Where(p => p.EnergyMWh.HasValue)
+                .Sum(p => p.EnergyMWh!.Value / 1000.0),
+            TotalPowerW = reported
+                .Where(p => p.LastPowerMW.HasValue)
+                .Sum(p => p.LastPowerMW!.Value / 1000.0)
+        };
+
+        return Ok(stats);
+    }
+
+    // ✅ NOUVEAU: POST: api/Devices/{iotDeviceId}/peripherals/energy/reset
+    // Réinitialise les compteurs énergétiques de tous les périphériques
+    [HttpPost("{iotDeviceId}/peripherals/energy/reset")]
+    public async Task<IActionResult> ResetPeripheralsEnergy(string iotDeviceId)
+    {
+        var body = new { };
+        var success = await _iotHubService.InvokeDeviceMethodAsync(iotDeviceId, "resetEnergy", JsonSerializer.Serialize(body));
+        
+        if (!success) 
+            return BadRequest(new { message = $"Échec de réinitialisation des compteurs énergétiques." });
+        
+        return Ok(new { message = $"Compteurs énergétiques réinitialisés avec succès." });
+    }
+
     // ---- Helpers JSON ----
 
     private static List<PeripheralDto> TryExtractPeripherals(string json)
@@ -314,6 +367,7 @@ public class DevicesController : ControllerBase
     }
 
     // Merge: ne remplace que desired.peripherals et conserve les autres desired.*
+    // ✅ MISE À JOUR: Supporte les champs additionnels (notes, unit, wiringDiagram, installedAt)
     private static string UpsertPeripheralsIntoDesired(string existingDesiredJson, List<PeripheralDto> peripherals)
     {
         JsonNode root;
@@ -328,8 +382,15 @@ public class DevicesController : ControllerBase
             root = new JsonObject();
         }
 
-        root["peripherals"] = JsonSerializer.SerializeToNode(peripherals);
-        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
+        // Sérialisation avec conservation des propriétés nulles pour compatibilité firmware
+        var options = new JsonSerializerOptions 
+        { 
+            WriteIndented = false,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
+        
+        root["peripherals"] = JsonSerializer.SerializeToNode(peripherals, options);
+        return root.ToJsonString(options);
     }
 
     private static bool ValidPeripheral(PeripheralDto p)
@@ -347,20 +408,35 @@ public class DevicesController : ControllerBase
 
 public class PeripheralDto
 {
+    // ✅ CHAMPS DE BASE (Compatible firmware)
+    public string? Id { get; set; }                 // GUID unique du périphérique (firmware v1.3.0)
     public string Name { get; set; } = string.Empty; // ex: "relay4"
     public string Type { get; set; } = string.Empty; // ex: "relay", "smoke", "temp", ...
     public int Gpio { get; set; }                    // ex: 33
 
-    // Métadonnées admin
+    // ✅ MÉTADONNÉES ADMINISTRATIVES (Backend)
     public string? Notes { get; set; }              // Notes de câblage
     public string? Unit { get; set; }               // "°C", "%", "W", ...
     public string? WiringDiagram { get; set; }      // URL ou texte du schéma
     public DateTime? InstalledAt { get; set; }      // Date d'installation
 
-    // État temps réel (reporté par firmware)
+    // ✅ ÉTAT TEMPS RÉEL (Reporté par firmware)
     public object? State { get; set; }              // État dynamique (on/off, valeur, etc.)
     public DateTime? LastUpdate { get; set; }       // Dernier rapport
+    public string? LastChange { get; set; }         // ISO8601 timestamp (firmware)
     public string? Status { get; set; }             // "active", "error", "offline"
+    public bool? Configured { get; set; }           // Statut de configuration (firmware)
+    public string? Error { get; set; }              // Message d'erreur (firmware)
+
+    // ✅ METERING (Firmware v1.3.0 - Consommation énergétique)
+    public string? Metering { get; set; }           // "none", "estimated", "measured"
+    public float? RatedWatt { get; set; }           // Puissance nominale (W)
+    public double? EnergyMWh { get; set; }          // Énergie consommée (mWh)
+    public float? LastPowerMW { get; set; }         // Dernière puissance mesurée (mW)
+    
+    // ✅ CONFIGURATION HARDWARE (Firmware v1.3.0)
+    public bool? IsOutput { get; set; }             // true = sortie, false = entrée
+    public bool? ActiveHigh { get; set; }           // true = actif haut, false = actif bas
 }
 
 public class PeripheralsPayload
@@ -392,6 +468,28 @@ public class DeviceTwinFullDto
     public List<PeripheralDto> ReportedPeripherals { get; set; } = new();
     public string RawDesiredProperties { get; set; } = "{}";
     public string RawReportedProperties { get; set; } = "{}";
+}
+
+// ✅ NOUVEAUX DTOs pour statistiques énergétiques (Firmware v1.3.0)
+public class PeripheralEnergyDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Metering { get; set; } = "none";
+    public float RatedWatt { get; set; }
+    public double EnergyWh { get; set; }
+    public float CurrentPowerW { get; set; }
+    public string State { get; set; } = "unknown";
+    public DateTime? LastUpdate { get; set; }
+}
+
+public class PeripheralEnergyStatsDto
+{
+    public string DeviceId { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public List<PeripheralEnergyDto> Peripherals { get; set; } = new();
+    public double TotalEnergyWh { get; set; }
+    public double TotalPowerW { get; set; }
 }
 
 #endregion
