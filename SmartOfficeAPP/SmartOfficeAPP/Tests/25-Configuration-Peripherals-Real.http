@@ -1,0 +1,675 @@
+### ====================================
+### ?? CONFIGURATION RÉELLE DES PÉRIPHÉRIQUES ESP32
+### Test #25 - Synchronisation complète avec le firmware v1.3.1
+### ====================================
+### 
+### Ce fichier configure les périphériques RÉELS branchés sur l'ESP32
+### à exécuter UNIQUEMENT pour remplacer une configuration incorrecte
+### 
+### ?? ATTENTION: Cette configuration écrase TOUTES les desired properties
+### 
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### ÉTAPE 1 : AUTHENTIFICATION
+### ====================================
+
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MTI5ODczMiwiZXhwIjoxNzYxMjk5NjMyLCJpYXQiOjE3NjEyOTg3MzIsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.5I-pd3oLPCmYHP7jxXqsCdmdNfBfA8-da4xfznYIxnY
+
+### ====================================
+### ÉTAPE 2 : VÉRIFIER L'ÉTAT ACTUEL (AVANT CONFIGURATION)
+### ====================================
+
+### 2.1 - Voir les périphériques actuels (configuration incorrecte)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+
+### 2.2 - Voir le Device Twin complet d'IoT Hub
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+
+### 2.3 - Vérifier l'état de connexion du device
+GET {{baseUrl}}/api/IoTHub/devices
+Authorization: Bearer {{token}}
+
+### ====================================
+### ÉTAPE 3 : APPLIQUER LA CONFIGURATION RÉELLE
+### ====================================
+
+### ?? Configuration des périphériques RÉELS de l'ESP32 v1.3.1
+### 
+### GPIO RÉELS:
+### - LED_RDC       = GPIO 27
+### - LED_ETAGE2    = GPIO 26
+### - LED_ETAGE3    = GPIO 14
+### - SERVO_PIN     = GPIO 13 (Porte)
+### - SMOKE_SENSOR  = GPIO 32
+### - BUZZER        = GPIO 25
+###
+### Cette requête met à jour les DESIRED PROPERTIES du Device Twin
+### L'ESP32 recevra la configuration et la appliquera automatiquement
+
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "id": "led-rdc-001",
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "notes": "LED indicateur RDC - Branchée sur GPIO 27",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "led-etage2-001",
+      "name": "led_etage2",
+      "type": "light",
+      "gpio": 26,
+      "notes": "LED indicateur Étage 2 - Branchée sur GPIO 26",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "led-etage3-001",
+      "name": "led_etage3",
+      "type": "light",
+      "gpio": 14,
+      "notes": "LED indicateur Étage 3 - Branchée sur GPIO 14",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "smoke-sensor-001",
+      "name": "smoke_sensor",
+      "type": "sensor",
+      "gpio": 32,
+      "notes": "Capteur de fumée MQ-2 - Branché sur GPIO 32",
+      "unit": "ppm",
+      "metering": "none",
+      "isOutput": false,
+      "activeHigh": false
+    },
+    {
+      "id": "servo-door-001",
+      "name": "servo_door",
+      "type": "servo",
+      "gpio": 13,
+      "notes": "Servo moteur de la porte - Branché sur GPIO 13 - Angles: 35° (fermé), 175° (ouvert)",
+      "unit": "degrees",
+      "metering": "none",
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "buzzer-001",
+      "name": "buzzer",
+      "type": "buzzer",
+      "gpio": 25,
+      "notes": "Buzzer alarme fumée - Branché sur GPIO 25 - Fréquence: 800 Hz",
+      "unit": "Hz",
+      "metering": "none",
+      "isOutput": true,
+      "activeHigh": true
+    }
+  ]
+}
+
+### ====================================
+### ÉTAPE 4 : ATTENDRE LA SYNCHRONISATION (10 SECONDES)
+### ====================================
+### 
+### ? ATTENDEZ 10 SECONDES avant de continuer
+### 
+### Pendant ce temps:
+### 1. Azure IoT Hub notifie l'ESP32 des nouvelles desired properties
+### 2. L'ESP32 reçoit la configuration via MQTT
+### 3. Le firmware exécute applyDesiredPeripherals()
+### 4. Chaque GPIO est configuré (pinMode, digitalWrite)
+### 5. L'ESP32 publie les REPORTED PROPERTIES
+### 6. Le backend lit les nouvelles reported properties
+### 
+### ? COMPTEZ JUSQU'À 10... 1... 2... 3... 10 ?
+### 
+### ====================================
+
+### ====================================
+### ÉTAPE 5 : VÉRIFIER LA SYNCHRONISATION (APRÈS 10 SECONDES)
+### ====================================
+
+### 5.1 - Vérifier que les périphériques sont maintenant corrects
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+PUT https://localhost:7144/api/Devices/mon-esp32/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "id": "test-led-001",
+      "name": "test_led",
+      "type": "light",
+      "gpio": 2,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "none"
+    }
+  ]
+}
+###
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/DeviceLogs/{{deviceId}}?level=error
+Authorization: Bearer {{token}}
+### 5.2 - Vérifier le Device Twin complet (desired + reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+###
+
+### 5.3 - Vue fusionnée LED Étage 2 (desired vs reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/merged
+Authorization: Bearer {{token}}
+
+###
+
+### 5.4 - Vue fusionnée LED Étage 3 (desired vs reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/merged
+Authorization: Bearer {{token}}
+
+###
+
+### 5.5 - Vue fusionnée LED RDC (desired vs reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/merged
+Authorization: Bearer {{token}}
+
+### ====================================
+### ÉTAPE 6 : TESTER LE CONTRÔLE DES PÉRIPHÉRIQUES
+### ====================================
+
+### 6.1 - Test LED Étage 2 (GPIO 26)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFICATION PHYSIQUE: La LED sur GPIO 26 doit s'allumer
+# Attendez 2 secondes pour voir le résultat
+
+###
+
+### 6.2 - Vérifier l'état de la LED Étage 2
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu:
+# {
+#   "name": "led_etage2",
+#   "state": "on",
+#   "configured": true,
+#   "lastUpdate": "2025-01-23T16:30:00Z"
+# }
+
+###
+
+### 6.3 - Éteindre LED Étage 2
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+### 6.4 - Test LED Étage 3 (GPIO 14)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/on
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFICATION PHYSIQUE: La LED sur GPIO 14 doit s'allumer
+
+###
+
+### 6.5 - Test LED RDC (GPIO 27)
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/on
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFICATION PHYSIQUE: La LED sur GPIO 27 doit s'allumer
+
+### ====================================
+### ÉTAPE 7 : TESTER LA PORTE (SERVO)
+### ====================================
+
+### 7.1 - Ouvrir la porte (Servo 175°)
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATION PHYSIQUE: Le servo doit se positionner à 175°
+
+###
+
+### 7.2 - Vérifier l'état global du device
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/getStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# Résultat attendu:
+# {
+#   "firmware": {
+#     "version": "1.3.1",
+#     "commit": "prod2025-fixed"
+#   },
+#   "door": "open",
+#   "alarm": "inactive",
+#   "rssi": -45,
+#   "heap": 245000,
+#   "peripheralsCount": 6,
+#   "uptime": 3600
+# }
+
+###
+
+### 7.3 - Fermer la porte (Servo 35°)
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/closeDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATION PHYSIQUE: Le servo doit se positionner à 35°
+
+### ====================================
+### ÉTAPE 8 : TESTER L'ALARME FUMÉE
+### ====================================
+
+### 8.1 - Activer l'alarme manuellement
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/alarmOn
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATIONS PHYSIQUES:
+# - Le buzzer doit sonner (800 Hz)
+# - Toutes les LEDs doivent clignoter (500ms)
+# - La porte ne doit PAS pouvoir s'ouvrir
+
+###
+
+### 8.2 - Tenter d'ouvrir la porte (DOIT ÉCHOUER)
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# Résultat attendu: HTTP 423 Locked
+# {
+#   "ok": false,
+#   "error": "Alarme active"
+# }
+
+###
+
+### 8.3 - Désactiver l'alarme
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/alarmOff
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATIONS PHYSIQUES:
+# - Le buzzer doit s'arrêter
+# - Les LEDs doivent s'éteindre
+
+### ====================================
+### ÉTAPE 9 : VÉRIFIER LES STATISTIQUES ÉNERGÉTIQUES
+### ====================================
+
+### 9.1 - Statistiques énergétiques globales
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu:
+# {
+#   "deviceId": "mon-esp32",
+#   "timestamp": "2025-01-23T16:45:00Z",
+#   "peripherals": [
+#     {
+#       "name": "led_rdc",
+#       "type": "light",
+#       "metering": "estimated",
+#       "ratedWatt": 5,
+#       "energyWh": 0.015,
+#       "currentPowerW": 5,
+#       "state": "on",
+#       "lastUpdate": "2025-01-23T16:40:00Z"
+#     },
+#     {
+#       "name": "led_etage2",
+#       "type": "light",
+#       "energyWh": 0.010,
+#       "currentPowerW": 0,
+#       "state": "off"
+#     }
+#   ],
+#   "totalEnergyWh": 0.025,
+#   "totalPowerW": 5
+# }
+
+###
+
+### 9.2 - Réinitialiser les compteurs d'énergie
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy/reset
+Authorization: Bearer {{token}}
+
+### ====================================
+### ÉTAPE 10 : SCÉNARIO COMPLET DE TEST
+### ====================================
+
+### 10.1 - Allumer toutes les LEDs
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/on
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFICATION PHYSIQUE: Toutes les LEDs doivent être allumées
+
+###
+
+### 10.2 - Ouvrir la porte
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/openDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATION PHYSIQUE: Servo à 175°
+
+###
+
+### 10.3 - Vérifier l'état global
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu: Toutes les LEDs à "on", porte "open"
+
+###
+
+### 10.4 - Éteindre toutes les LEDs
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/off
+Authorization: Bearer {{token}}
+
+###
+
+### 10.5 - Fermer la porte
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/closeDoor
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# ? VÉRIFICATION PHYSIQUE: Tout doit être éteint/fermé
+
+### ====================================
+### ? VALIDATION FINALE
+### ====================================
+
+### 11.1 - Vérifier l'état final de tous les périphériques
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu:
+# [
+#   {
+#     "name": "led_rdc",
+#     "gpio": 27,
+#     "state": "off",
+#     "configured": true
+#   },
+#   {
+#     "name": "led_etage2",
+#     "gpio": 26,
+#     "state": "off",
+#     "configured": true
+#   },
+#   {
+#     "name": "led_etage3",
+#     "gpio": 14,
+#     "state": "off",
+#     "configured": true
+#   },
+#   {
+#     "name": "smoke_sensor",
+#     "gpio": 32,
+#     "configured": true
+#   },
+#   {
+#     "name": "servo_door",
+#     "gpio": 13,
+#     "configured": true
+#   },
+#   {
+#     "name": "buzzer",
+#     "gpio": 25,
+#     "configured": true
+#   }
+# ]
+
+###
+
+### 11.2 - Device Twin complet final
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+###
+
+### 11.3 - Vérifier la synchronisation de tous les périphériques
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/merged
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/merged
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/merged
+Authorization: Bearer {{token}}
+
+###
+# Pour chaque périphérique, "isSynchronized" doit être TRUE
+
+### ====================================
+### ?? CONFIGURATION TERMINÉE
+### ====================================
+### 
+### ? Si tous les tests passent, votre ESP32 est correctement configuré !
+### 
+### RÉCAPITULATIF:
+### 1. ? Configuration desired properties appliquée
+### 2. ? ESP32 a reçu et appliqué la configuration
+### 3. ? Reported properties synchronisées
+### 4. ? Contrôle des LEDs fonctionnel
+### 5. ? Contrôle de la porte fonctionnel
+### 6. ? Alarme fumée fonctionnelle
+### 7. ? Statistiques énergétiques actives
+### 
+### PROCHAINES ÉTAPES:
+### - Retournez au fichier 16-LEDs-Door-Control.http
+### - Tous les tests devraient maintenant fonctionner correctement
+### - Vous pouvez maintenant contrôler votre ESP32 via l'API !
+### 
+### ====================================
+
+### ====================================
+### ?? DÉPANNAGE
+### ====================================
+
+### Si l'ESP32 ne répond pas après la configuration:
+
+### 1. Vérifier la connexion IoT Hub
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# Vérifier "connectionState": "Connected"
+
+###
+
+### 2. Redémarrer l'ESP32
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/method/reboot
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "payload": "{}"
+}
+
+###
+# L'ESP32 va redémarrer et se reconnecter automatiquement
+
+###
+
+### 3. Forcer la synchronisation des périphériques
+POST {{baseUrl}}/api/IoTHub/device/{{deviceId}}/peripherals/sync
+Authorization: Bearer {{token}}
+
+###
+
+### 4. Vérifier les logs du device
+GET {{baseUrl}}/api/DeviceLogs/{{deviceId}}?level=error
+Authorization: Bearer {{token}}
+
+###
+# Affiche les erreurs récentes du firmware
+
+### ====================================
+### ?? CHECKLIST DE VALIDATION
+### ====================================
+# 
+# [ ] Étape 1: Authentification réussie
+# [ ] Étape 2: État initial vérifié
+# [ ] Étape 3: Configuration appliquée
+# [ ] Étape 4: Attendu 10 secondes
+# [ ] Étape 5: Synchronisation vérifiée
+# [ ] Étape 6: LEDs contrôlées avec succès
+# [ ] Étape 7: Porte contrôlée avec succès
+# [ ] Étape 8: Alarme testée avec succès
+# [ ] Étape 9: Statistiques énergétiques OK
+# [ ] Étape 10: Scénario complet réussi
+# [ ] Étape 11: Validation finale OK
+# 
+### ====================================
+
+### ====================================
+### ?? NOTES IMPORTANTES
+### ====================================
+# 
+# 1. DÉLAI DE SYNCHRONISATION:
+#    - Toujours attendre 5-10 secondes après avoir modifié les desired properties
+#    - L'ESP32 doit recevoir, traiter et reporter les changements
+# 
+# 2. VÉRIFICATION PHYSIQUE:
+#    - Ne vous fiez pas uniquement aux réponses HTTP
+#    - Vérifiez TOUJOURS physiquement que les LEDs s'allument/s'éteignent
+#    - Vérifiez que le servo se déplace correctement
+# 
+# 3. FORMAT DES NOMS:
+#    - Les noms de périphériques sont sensibles à la casse
+#    - Utilisez exactement: led_rdc, led_etage2, led_etage3
+#    - PAS: LED_RDC, ledRdc, etc.
+# 
+# 4. MÉTHODES DIRECTES:
+#    - Le payload doit être une STRING JSON: { "payload": "{}" }
+#    - PAS un objet JSON: { "payload": {} }
+# 
+# 5. ALARME FUMÉE:
+#    - Quand l'alarme est active, TOUTES les commandes LED et porte sont bloquées
+#    - Désactivez d'abord l'alarme avant de contrôler quoi que ce soit
+# 
+### ====================================

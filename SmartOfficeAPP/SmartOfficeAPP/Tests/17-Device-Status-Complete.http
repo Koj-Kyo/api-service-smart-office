@@ -1,0 +1,290 @@
+### ====================================
+### TESTS API - DEVICE STATUS (FIRMWARE ESP32)
+### ====================================
+### Description: Tests des fonctionnalités complètes du firmware ESP32
+### - Métriques système (RSSI, Heap, Uptime)
+### - Événements RFID (scans, accès)
+### - Alarmes fumée
+### - Statut complet device
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MTIyOTY2OSwiZXhwIjoxNzYxMjMwNTY5LCJpYXQiOjE3NjEyMjk2NjksImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.dPssszM8VFQkiyvJLrsXQbogp97WKFfPY1xA8sH-4o0
+
+### ====================================
+### 1. STATUT COMPLET D'UN DEVICE
+### ====================================
+
+### Récupérer le statut complet d'un device (métriques + RFID + alarme + périphériques)
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/full-status
+Authorization: Bearer {{token}}
+
+### ====================================
+### 2. MÉTRIQUES SYSTÈME
+### ====================================
+
+### Enregistrer des métriques système
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rssi": -45,
+  "heapFree": 234560,
+  "nvsQueueSize": 3,
+  "uptimeSeconds": 86400,
+  "firmwareVersion": "1.3.1",
+  "firmwareCommit": "prod2025-fixed",
+  "additionalData": "{\"wifiChannel\":6,\"cpuFreq\":240}"
+}
+
+### Récupérer les métriques d'un device (dernières 24h)
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics?startDate={{$datetime -1 d}}&endDate={{$datetime}}
+Authorization: Bearer {{token}}
+
+### Récupérer la dernière métrique d'un device
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics/latest
+Authorization: Bearer {{token}}
+
+### ====================================
+### 3. ÉVÉNEMENTS RFID
+### ====================================
+
+### Enregistrer un accès autorisé RFID
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cardUid": "a2de95ab",
+  "accessGranted": true,
+  "action": "door_opened"
+}
+
+### Enregistrer un accès refusé RFID
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cardUid": "12345678",
+  "accessGranted": false,
+  "denialReason": "Carte non autorisée"
+}
+
+### Récupérer les événements RFID d'un device
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events?startDate={{$datetime -7 d}}&endDate={{$datetime}}
+Authorization: Bearer {{token}}
+
+### Récupérer les événements RFID par carte
+GET {{baseUrl}}/api/DeviceStatus/rfid-events/by-card/a2de95ab?startDate={{$datetime -30 d}}
+Authorization: Bearer {{token}}
+
+### Récupérer tous les accès refusés (derniers 30 jours)
+GET {{baseUrl}}/api/DeviceStatus/rfid-events/denied-access?startDate={{$datetime -30 d}}
+Authorization: Bearer {{token}}
+
+### ====================================
+### 4. ALARMES FUMÉE
+### ====================================
+
+### Déclencher une alarme fumée
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "zoneId": 1
+}
+
+### Récupérer l'alarme active d'un device
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms/active
+Authorization: Bearer {{token}}
+
+### Désactiver une alarme fumée
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms/deactivate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deactivatedBy": "admin",
+  "reason": "Fausse alerte - fumée cuisine"
+}
+
+### Récupérer l'historique des alarmes fumée d'un device
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms?startDate={{$datetime -30 d}}
+Authorization: Bearer {{token}}
+
+### Récupérer toutes les alarmes actives (tous devices)
+GET {{baseUrl}}/api/DeviceStatus/smoke-alarms/all-active
+Authorization: Bearer {{token}}
+
+### ====================================
+### 5. TESTS DE SURVEILLANCE EN TEMPS RÉEL
+### ====================================
+
+### Simuler un heartbeat (métriques système)
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rssi": -42,
+  "heapFree": 245000,
+  "nvsQueueSize": 0,
+  "uptimeSeconds": 3600,
+  "firmwareVersion": "1.3.1",
+  "firmwareCommit": "prod2025-fixed"
+}
+
+### Simuler un scan RFID autorisé
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cardUid": "a2de95ab",
+  "accessGranted": true,
+  "userId": "user123",
+  "action": "door_opened"
+}
+
+### Simuler une détection de fumée
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "zoneId": 2
+}
+
+### ====================================
+### 6. MAINTENANCE ET NETTOYAGE
+### ====================================
+
+### Nettoyer les données anciennes (90 jours de rétention)
+POST {{baseUrl}}/api/DeviceStatus/cleanup?retentionDays=90
+Authorization: Bearer {{token}}
+
+### Nettoyer les données anciennes (30 jours de rétention)
+POST {{baseUrl}}/api/DeviceStatus/cleanup?retentionDays=30
+Authorization: Bearer {{token}}
+
+### ====================================
+### 7. TESTS D'INTÉGRATION FIRMWARE
+### ====================================
+
+### Test complet : Heartbeat + RFID + Alarme
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rssi": -50,
+  "heapFree": 220000,
+  "nvsQueueSize": 5,
+  "uptimeSeconds": 7200,
+  "firmwareVersion": "1.3.1",
+  "firmwareCommit": "prod2025-fixed"
+}
+
+###
+
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cardUid": "unknown123",
+  "accessGranted": false,
+  "denialReason": "Carte inconnue"
+}
+
+###
+
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/full-status
+Authorization: Bearer {{token}}
+
+### ====================================
+### 8. ANALYTICS ET STATISTIQUES
+### ====================================
+
+### Récupérer les métriques des 7 derniers jours
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics?startDate={{$datetime -7 d}}&endDate={{$datetime}}
+Authorization: Bearer {{token}}
+
+### Récupérer tous les événements RFID du mois
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events?startDate={{$datetime -30 d}}&endDate={{$datetime}}
+Authorization: Bearer {{token}}
+
+### Récupérer l'historique des alarmes fumée
+GET {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms?startDate={{$datetime -90 d}}&endDate={{$datetime}}
+Authorization: Bearer {{token}}
+
+### ====================================
+### 9. TESTS D'ERREURS
+### ====================================
+
+### Tenter d'enregistrer des métriques sans authentification
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/metrics
+Content-Type: application/json
+
+{
+  "rssi": -45,
+  "heapFree": 234560
+}
+
+### Tenter de récupérer le statut d'un device inexistant
+GET {{baseUrl}}/api/DeviceStatus/device-inexistant/full-status
+Authorization: Bearer {{token}}
+
+### Tenter de désactiver une alarme inexistante
+POST {{baseUrl}}/api/DeviceStatus/device-inexistant/smoke-alarms/deactivate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deactivatedBy": "admin",
+  "reason": "Test"
+}
+
+### ====================================
+### 10. TESTS SIGNALR (TEMPS RÉEL)
+### ====================================
+### Note: Les notifications SignalR sont envoyées automatiquement lors de:
+### - Accès RFID refusé
+### - Déclenchement d'alarme fumée
+### - Désactivation d'alarme
+###
+### Connectez-vous au hub SignalR à:
+### wss://localhost:7152/notificationhub?access_token={{token}}
+###
+### Écoutez les événements:
+### - ReceiveNotification
+### - DeviceStatusUpdate
+### ====================================
+
+### Tester la notification SignalR (accès refusé)
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/rfid-events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cardUid": "hacker123",
+  "accessGranted": false,
+  "denialReason": "Tentative d'accès suspecte"
+}
+
+### Tester la notification SignalR (alarme fumée)
+POST {{baseUrl}}/api/DeviceStatus/{{deviceId}}/smoke-alarms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "zoneId": 3
+}
+
+### ====================================
+### FIN DES TESTS
+### ====================================

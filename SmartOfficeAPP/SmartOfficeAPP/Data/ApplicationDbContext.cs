@@ -65,6 +65,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<DeviceLog>()
                .HasIndex(l => l.Peripheral)
                .HasDatabaseName("IX_DeviceLogs_Peripheral");
+
+        // ✅ Index pour les métriques device par deviceId et timestamp
+        builder.Entity<DeviceMetrics>()
+               .HasIndex(m => new { m.IotDeviceId, m.Timestamp })
+               .HasDatabaseName("IX_DeviceMetrics_IotDeviceId_Timestamp");
+
+        // ✅ Index pour les événements RFID par deviceId et timestamp
+        builder.Entity<RfidEvent>()
+               .HasIndex(r => new { r.IotDeviceId, r.Timestamp })
+               .HasDatabaseName("IX_RfidEvents_IotDeviceId_Timestamp");
+
+        // ✅ Index pour les événements RFID par UID de carte
+        builder.Entity<RfidEvent>()
+               .HasIndex(r => r.CardUid)
+               .HasDatabaseName("IX_RfidEvents_CardUid");
+
+        // ✅ Index pour les alarmes fumée actives
+        builder.Entity<SmokeAlarmEvent>()
+               .HasIndex(s => new { s.IotDeviceId, s.IsActive })
+               .HasDatabaseName("IX_SmokeAlarmEvents_IotDeviceId_IsActive");
+
+        // ✅ Index pour les alarmes fumée par timestamp
+        builder.Entity<SmokeAlarmEvent>()
+               .HasIndex(s => s.StartTime)
+               .HasDatabaseName("IX_SmokeAlarmEvents_StartTime");
     }
 
     public DbSet<Zone> Zones { get; set; }
@@ -78,4 +103,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<IncidentTicket> TicketsIncidents { get; set; }
     public DbSet<RapportUsage> RapportsUsage { get; set; }
     public DbSet<DeviceLog> DeviceLogs { get; set; }
+    
+    // ✅ Nouveaux DbSets pour fonctionnalités firmware
+    public DbSet<DeviceMetrics> DeviceMetrics { get; set; }
+    public DbSet<RfidEvent> RfidEvents { get; set; }
+    public DbSet<SmokeAlarmEvent> SmokeAlarmEvents { get; set; }
 }

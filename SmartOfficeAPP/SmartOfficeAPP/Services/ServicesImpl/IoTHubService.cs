@@ -142,11 +142,23 @@ public class IotHubService : IIotHubService, IDisposable
                 return false;
             }
 
-            var patch = $"{{ \"properties\": {{ \"desired\": {desiredJson} }} }}";
+            // ✅ CONVERSION EN CAMELCASE: Désérialiser puis re-sérialiser avec camelCase
+            var desiredObject = JsonSerializer.Deserialize<JsonElement>(desiredJson);
+            
+            var camelCaseOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = false
+            };
+            
+            var camelCaseJson = JsonSerializer.Serialize(desiredObject, camelCaseOptions);
+            
+            var patch = $"{{ \"properties\": {{ \"desired\": {camelCaseJson} }} }}";
             
             await _registryManager.UpdateTwinAsync(deviceId, patch, twin.ETag);
             
-            _logger.LogInformation("Desired properties mises à jour pour {DeviceId}: {Properties}", deviceId, desiredJson);
+            _logger.LogInformation("Desired properties mises à jour pour {DeviceId} (camelCase): {Properties}", deviceId, camelCaseJson);
             
             return true;
         }

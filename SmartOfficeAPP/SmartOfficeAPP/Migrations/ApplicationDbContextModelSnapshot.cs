@@ -245,6 +245,53 @@ namespace SmartOfficeAPP.Migrations
                     b.ToTable("DeviceLogs");
                 });
 
+            modelBuilder.Entity("SmartOfficeAPP.Models.DeviceMetrics", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdditionalData")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirmwareCommit")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FirmwareVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("HeapFree")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IotDeviceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("NvsQueueSize")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Rssi")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UptimeSeconds")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IotDeviceId", "Timestamp")
+                        .HasDatabaseName("IX_DeviceMetrics_IotDeviceId_Timestamp");
+
+                    b.ToTable("DeviceMetrics");
+                });
+
             modelBuilder.Entity("SmartOfficeAPP.Models.DevicePeripheral", b =>
                 {
                     b.Property<int>("Id")
@@ -605,6 +652,100 @@ namespace SmartOfficeAPP.Migrations
                     b.ToTable("RapportsUsage");
                 });
 
+            modelBuilder.Entity("SmartOfficeAPP.Models.RfidEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AccessGranted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CardUid")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DenialReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("IotDeviceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardUid")
+                        .HasDatabaseName("IX_RfidEvents_CardUid");
+
+                    b.HasIndex("IotDeviceId", "Timestamp")
+                        .HasDatabaseName("IX_RfidEvents_IotDeviceId_Timestamp");
+
+                    b.ToTable("RfidEvents");
+                });
+
+            modelBuilder.Entity("SmartOfficeAPP.Models.SmokeAlarmEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeactivatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IotDeviceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ZoneId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartTime")
+                        .HasDatabaseName("IX_SmokeAlarmEvents_StartTime");
+
+                    b.HasIndex("ZoneId");
+
+                    b.HasIndex("IotDeviceId", "IsActive")
+                        .HasDatabaseName("IX_SmokeAlarmEvents_IotDeviceId_IsActive");
+
+                    b.ToTable("SmokeAlarmEvents");
+                });
+
             modelBuilder.Entity("SmartOfficeAPP.Models.Telemetrie", b =>
                 {
                     b.Property<int>("Id")
@@ -794,6 +935,15 @@ namespace SmartOfficeAPP.Migrations
                         .HasForeignKey("ZoneId");
 
                     b.Navigation("PeripheriqueLogique");
+
+                    b.Navigation("Zone");
+                });
+
+            modelBuilder.Entity("SmartOfficeAPP.Models.SmokeAlarmEvent", b =>
+                {
+                    b.HasOne("SmartOfficeAPP.Models.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId");
 
                     b.Navigation("Zone");
                 });

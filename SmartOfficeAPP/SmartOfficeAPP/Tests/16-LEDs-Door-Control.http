@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ###
-@token = {{login.response.body.$.token}}
+@token = 
 
 ### ====================================
 ### ?? 2. Vérifier l'état actuel de tous les périphériques

@@ -1,0 +1,384 @@
+﻿### ====================================
+### 🧪 TEST CAMELCASE - Validation Backend
+### Vérification du format JSON camelCase
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### ÉTAPE 1 : AUTHENTIFICATION
+### ====================================
+
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MTMxNzg1MiwiZXhwIjoxNzYxMzE4NzUyLCJpYXQiOjE3NjEzMTc4NTIsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.526hgLcNLJSmJi91marW8twj0fvFYoYwtcnFCCSMzbc
+
+### ====================================
+### ÉTAPE 2 : TEST CAMELCASE - GET Peripherals
+### ====================================
+
+### 2.1 - Récupérer les périphériques (format camelCase attendu)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# {
+#   "name": "led_rdc",        // ✅ camelCase (PAS "Name")
+#   "gpio": 27,               // ✅ camelCase (PAS "Gpio")
+#   "isOutput": true,         // ✅ camelCase (PAS "IsOutput")
+#   "activeHigh": true,       // ✅ camelCase (PAS "ActiveHigh")
+#   "ratedWatt": 5,           // ✅ camelCase (PAS "RatedWatt")
+#   "wiringDiagram": null     // ✅ camelCase (PAS "WiringDiagram")
+# }
+
+### ====================================
+### ÉTAPE 3 : TEST CAMELCASE - PUT Configuration
+### ====================================
+
+### 3.1 - Envoyer configuration en camelCase
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "id": "led-test-001",
+      "name": "led_test",
+      "type": "light",
+      "gpio": 27,
+      "notes": "LED test camelCase",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    }
+  ]
+}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# - Le backend accepte le JSON en camelCase
+# - Les données sont envoyées à IoT Hub en camelCase
+# - La réponse est en camelCase
+
+### ====================================
+### ÉTAPE 4 : TEST CAMELCASE - Device Twin
+### ====================================
+
+### 4.1 - Vérifier le Device Twin (doit être en camelCase)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE dans desiredPeripherals:
+# {
+#   "name": "led_test",     // ✅ camelCase
+#   "gpio": 27,             // ✅ camelCase
+#   "isOutput": true,       // ✅ camelCase
+#   "activeHigh": true      // ✅ camelCase
+# }
+
+### ====================================
+### ÉTAPE 5 : TEST CAMELCASE - IoT Hub Direct
+### ====================================
+
+### 5.1 - Récupérer le Twin brut d'IoT Hub
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# "desired": {
+#   "peripherals": [
+#     {
+#       "name": "led_test",   // ✅ camelCase
+#       "gpio": 27            // ✅ camelCase
+#     }
+#   ]
+# }
+
+### ====================================
+### ÉTAPE 6 : COMPARAISON AVANT/APRÈS
+### ====================================
+
+### 6.1 - Test avec données variées
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+# ✅ VÉRIFICATION ATTENDUE (réponse):
+# {
+#   "accessToken": "...",           // ✅ camelCase
+#   "refreshToken": "...",          // ✅ camelCase
+#   "expiresIn": 900,               // ✅ camelCase
+#   "tokenType": "Bearer",          // ✅ camelCase
+#   "userId": "..."                 // ✅ camelCase (PAS "UserId")
+# }
+
+### ====================================
+### ÉTAPE 7 : TEST AUTRES ENDPOINTS
+### ====================================
+
+### 7.1 - Zones (camelCase)
+GET {{baseUrl}}/api/Zones
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# [
+#   {
+#     "id": 1,
+#     "nom": "Zone A",
+#     "description": "...",
+#     "createdAt": "...",      // ✅ camelCase (PAS "CreatedAt")
+#     "updatedAt": "..."       // ✅ camelCase (PAS "UpdatedAt")
+#   }
+# ]
+
+### 7.2 - Devices (camelCase)
+GET {{baseUrl}}/api/Devices
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# [
+#   {
+#     "deviceId": "mon-esp32",       // ✅ camelCase
+#     "connectionState": "Connected", // ✅ camelCase
+#     "lastActivityTime": "..."      // ✅ camelCase
+#   }
+# ]
+
+### 7.3 - Telemetries (camelCase)
+GET {{baseUrl}}/api/Telemetries/peripherique?peripheriqueId=1
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION ATTENDUE:
+# [
+#   {
+#     "id": 1,
+#     "peripheriqueLogiqueId": 1,    // ✅ camelCase
+#     "horodatage": "...",            // ✅ camelCase
+#     "valeur": 23.5,                 // ✅ camelCase
+#     "createdAt": "..."              // ✅ camelCase
+#   }
+# ]
+
+### ====================================
+### ÉTAPE 8 : VALIDATION COMPLÈTE
+### ====================================
+
+### 8.1 - Test configuration complète ESP32
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "id": "led-rdc-001",
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "notes": "LED indicateur RDC - Format camelCase",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "led-etage2-001",
+      "name": "led_etage2",
+      "type": "light",
+      "gpio": 26,
+      "notes": "LED indicateur Étage 2",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "led-etage3-001",
+      "name": "led_etage3",
+      "type": "light",
+      "gpio": 14,
+      "notes": "LED indicateur Étage 3",
+      "unit": "W",
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "smoke-sensor-001",
+      "name": "smoke_sensor",
+      "type": "sensor",
+      "gpio": 32,
+      "notes": "Capteur de fumée MQ-2",
+      "unit": "ppm",
+      "metering": "none",
+      "isOutput": false,
+      "activeHigh": false
+    },
+    {
+      "id": "servo-door-001",
+      "name": "servo_door",
+      "type": "servo",
+      "gpio": 13,
+      "notes": "Servo moteur porte",
+      "unit": "degrees",
+      "metering": "none",
+      "isOutput": true,
+      "activeHigh": true
+    },
+    {
+      "id": "buzzer-001",
+      "name": "buzzer",
+      "type": "buzzer",
+      "gpio": 25,
+      "notes": "Buzzer alarme",
+      "unit": "Hz",
+      "metering": "none",
+      "isOutput": true,
+      "activeHigh": true
+    }
+  ]
+}
+
+###
+
+# Étape 3: Reset complet
+PUT https://localhost:7144/api/Devices/mon-esp32/peripherals
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "peripherals": []
+}
+
+# Attendre 10 secondes
+
+### Étape 6: Test 1 LED
+PUT https://localhost:7144/api/Devices/mon-esp32/peripherals
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "peripherals": [
+    {
+      "name": "test_led",
+      "type": "light",
+      "gpio": 2,
+      "isOutput": true,
+      "activeHigh": true
+    }
+  ]
+}
+
+# Attendre 10 secondes
+
+# Vérifier les logs ESP32
+
+### 8.2 - Vérifier après 10 secondes
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ✅ VÉRIFICATION FINALE:
+# - Tous les champs sont en camelCase
+# - Le firmware devrait maintenant pouvoir parser les données
+# - Les clés correspondent exactement: name, gpio, isOutput, activeHigh
+
+### ====================================
+### 📋 CHECKLIST VALIDATION CAMELCASE
+### ====================================
+#
+# [ ] Test #2.1: GET peripherals retourne camelCase
+# [ ] Test #3.1: PUT accepte camelCase
+# [ ] Test #4.1: Twin est en camelCase
+# [ ] Test #5.1: IoT Hub Twin est en camelCase
+# [ ] Test #6.1: Auth retourne camelCase
+# [ ] Test #7.1: Zones en camelCase
+# [ ] Test #7.2: Devices en camelCase
+# [ ] Test #7.3: Telemetries en camelCase
+# [ ] Test #8.1: Configuration complète en camelCase
+# [ ] Test #8.2: Vérification finale OK
+#
+### ====================================
+
+### ====================================
+### 🔍 COMPARAISON AVANT/APRÈS
+### ====================================
+#
+# ❌ AVANT (PascalCase - INCOMPATIBLE):
+# {
+#   "Name": "led_rdc",
+#   "Gpio": 27,
+#   "IsOutput": true,
+#   "ActiveHigh": true,
+#   "RatedWatt": 5,
+#   "WiringDiagram": null
+# }
+#
+# ✅ APRÈS (camelCase - COMPATIBLE):
+# {
+#   "name": "led_rdc",
+#   "gpio": 27,
+#   "isOutput": true,
+#   "activeHigh": true,
+#   "ratedWatt": 5,
+#   "wiringDiagram": null
+# }
+#
+### ====================================
+
+### ====================================
+### 🎯 PROCHAINES ÉTAPES
+### ====================================
+#
+# 1. ✅ Backend configuré pour camelCase (Program.cs)
+# 2. ✅ Tous les tests ci-dessus valident le camelCase
+# 3. ⏳ Attendre que le firmware soit mis à jour
+# 4. ⏳ Re-tester avec le firmware corrigé
+# 5. ✅ Système complet fonctionnel !
+#
+### ====================================
+
+### ====================================
+### 🐛 SI UN TEST ÉCHOUE
+### ====================================
+#
+# PROBLÈME: Réponse encore en PascalCase
+# SOLUTION:
+# 1. Redémarrer le backend: dotnet run
+# 2. Vider le cache du navigateur/REST client
+# 3. Re-tester avec un nouveau token
+#
+# PROBLÈME: Firmware ne reçoit toujours pas
+# SOLUTION:
+# 1. Vérifier le Device Twin dans Azure Portal
+# 2. Vérifier que les clés sont en camelCase
+# 3. Redémarrer l'ESP32
+# 4. Consulter les logs série
+#
+### ====================================

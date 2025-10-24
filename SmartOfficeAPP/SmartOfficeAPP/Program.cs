@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +13,10 @@ using SmartOfficeAPP.Repositories.IRepositories;
 using SmartOfficeAPP.Repositories.Repos;
 using SmartOfficeAPP.Services.IServices;
 using SmartOfficeAPP.Services.ServicesImpl;
+using SmartOfficeAPP.Middleware;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +32,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// SignalR avec configuration avanc�e
+// SignalR avec configuration avancée
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
@@ -65,13 +68,13 @@ builder.Services.AddAuthentication(options =>
         OnAuthenticationFailed = context =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError(context.Exception, "�chec d'authentification JWT: {Error}", context.Exception.Message);
+            logger.LogError(context.Exception, "Échec d'authentification JWT: {Error}", context.Exception.Message);
             return Task.CompletedTask;
         },
         OnChallenge = context =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("Challenge JWT d�clench�: {Error}", context.Error);
+            logger.LogWarning("Challenge JWT déclenché: {Error}", context.Error);
             return Task.CompletedTask;
         },
         OnMessageReceived = context =>
@@ -94,8 +97,8 @@ builder.Services.AddCors(opt =>
     opt.AddPolicy("AllowFrontend", p => p
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000") // Ajouter d'autres origins si n�cessaire
-        .AllowCredentials()); // Important pour SignalR
+        .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000")
+        .AllowCredentials());
 });
 
 // Enregistrement Authorization avec handlers
@@ -136,16 +139,40 @@ builder.Services.AddScoped<ISignalRService, SignalRService>();
 // Nouveau service de statistiques de consommation
 builder.Services.AddScoped<IConsommationStatsService, ConsommationStatsService>();
 
+// 🔧 Nouveaux repositories et service pour fonctionnalités firmware
+builder.Services.AddScoped<IDeviceMetricsRepository, DeviceMetricsRepository>();
+builder.Services.AddScoped<IRfidEventRepository, RfidEventRepository>();
+builder.Services.AddScoped<ISmokeAlarmEventRepository, SmokeAlarmEventRepository>();
+builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
+
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.LogIngestionWorker>();
 
-builder.Services.AddControllers();
+// ✅ Configuration JSON pour camelCase (compatible firmware ESP32)
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Utiliser camelCase pour les noms de propriétés JSON
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        
+        // Ignorer les valeurs null dans la sérialisation
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        
+        // Permettre la lecture de nombres depuis des chaînes
+        options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+        
+        // Configuration pour gérer les références circulaires (si nécessaire)
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        
+        // Autres options utiles
+        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Configuration d'AutoMapper avec licence
 var autoMapperLicenseKey = builder.Configuration["AutoMapper:LicenseKey"];
 if (!string.IsNullOrEmpty(autoMapperLicenseKey))
 {
-    // Configuration d'AutoMapper avec licence LuckyPennySoftware
     Environment.SetEnvironmentVariable("AUTOMAPPER_LICENSE_KEY", autoMapperLicenseKey);
 }
 
@@ -186,7 +213,7 @@ builder.Services.AddRateLimiter(o => o.GlobalLimiter = System.Threading.RateLimi
 
 var app = builder.Build();
 
-// Seeding des donn�es initiales
+// Seeding des données initiales
 using (var scope = app.Services.CreateScope())
 {
     var seedingService = scope.ServiceProvider.GetRequiredService<DataSeedingService>();
@@ -203,6 +230,10 @@ else
 {
     app.UseExceptionHandler("/error");
 }
+
+// ✅ MIDDLEWARE NUCLÉAIRE ACTIVÉ: Force camelCase pour TOUTES les réponses JSON
+// Ce middleware intercepte TOUTES les réponses et convertit le JSON en camelCase
+app.UseMiddleware<CamelCaseEnforcerMiddleware>();
 
 app.UseCors("AllowFrontend");
 

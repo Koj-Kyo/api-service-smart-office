@@ -1,0 +1,352 @@
+### ====================================
+### ??? RESET COMPLET - Device Twin
+### Suppression des Desired Properties
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### ÉTAPE 1 : AUTHENTIFICATION
+### ====================================
+
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = {{login.response.body.accessToken}}
+
+### ====================================
+### ÉTAPE 2 : VÉRIFIER L'ÉTAT ACTUEL
+### ====================================
+
+### 2.1 - Voir le Device Twin actuel
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+
+### 2.2 - Voir les périphériques actuels
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+### ====================================
+### ÉTAPE 3 : RESET COMPLET (Supprimer Tout)
+### ====================================
+
+### 3.1 - Supprimer TOUTES les desired properties des périphériques
+# ?? ATTENTION: Ceci supprime TOUTE la configuration
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": []
+}
+
+###
+# ? Résultat attendu: desired.peripherals devient []
+# L'ESP32 recevra une liste vide et désactivera tout
+
+### ====================================
+### ÉTAPE 4 : ATTENDRE (10 SECONDES)
+### ====================================
+# ? Attendez 10 secondes que l'ESP32 reçoive la mise à jour
+
+### ====================================
+### ÉTAPE 5 : VÉRIFIER LE RESET
+### ====================================
+
+### 5.1 - Vérifier que desired est vide
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# ? Vérifier dans la réponse:
+# "desiredProperties": "{\"peripherals\":[]}"
+# OU
+# "desiredProperties": "{}"
+
+### 5.2 - Vérifier les périphériques
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ? Résultat attendu: []
+
+### 5.3 - Vérifier les logs ESP32
+# Sur le moniteur série, vous devriez voir:
+# [Twin] ?? Application des périphériques...
+# [Twin] ?? Nombre d'éléments: 0
+# [Twin] ? 0 périphériques configurés
+
+### ====================================
+### ÉTAPE 6 : RE-CONFIGURER PROPREMENT
+### ====================================
+
+### 6.1 - Vérifier que le backend envoie en camelCase
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ? Vérifier le format (doit être camelCase):
+# {
+#   "name": "...",     // ? Minuscule
+#   "gpio": 27,        // ? Minuscule
+#   "isOutput": true   // ? camelCase
+# }
+
+### 6.2 - Envoyer UNE SEULE LED de test
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "test_led",
+      "type": "light",
+      "gpio": 2,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "none"
+    }
+  ]
+}
+
+###
+# ? Attendre 10 secondes
+
+### 6.3 - Vérifier que la LED est configurée
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ? Résultat attendu:
+# [
+#   {
+#     "name": "test_led",
+#     "gpio": 2,
+#     "state": "off",       // ? PAS null
+#     "configured": true    // ? PAS null
+#   }
+# ]
+
+### 6.4 - Vérifier le Device Twin
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# ? Vérifier dans desiredProperties:
+# {
+#   "peripherals": [
+#     {
+#       "name": "test_led",   // ? camelCase
+#       "gpio": 2             // ? camelCase
+#     }
+#   ]
+# }
+
+### 6.5 - Vérifier les logs ESP32
+# Sur le moniteur série:
+# [Twin] ?? Application des périphériques...
+# [Twin] ?? Nombre d'éléments: 1
+# [Twin] ? GPIO 2 configuré en OUTPUT
+# [Twin] ? 1 périphériques configurés  // ? PAS 0 !
+
+### ====================================
+### ÉTAPE 7 : CONFIGURATION COMPLÈTE
+### ====================================
+
+### 7.1 - Si le test LED fonctionne, envoyer la config complète
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "notes": "LED RDC",
+      "unit": "W"
+    },
+    {
+      "name": "led_etage2",
+      "type": "light",
+      "gpio": 26,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "notes": "LED Étage 2",
+      "unit": "W"
+    },
+    {
+      "name": "led_etage3",
+      "type": "light",
+      "gpio": 14,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 5,
+      "notes": "LED Étage 3",
+      "unit": "W"
+    },
+    {
+      "name": "smoke_sensor",
+      "type": "sensor",
+      "gpio": 32,
+      "isOutput": false,
+      "activeHigh": false,
+      "metering": "none",
+      "notes": "Capteur fumée MQ-2",
+      "unit": "ppm"
+    },
+    {
+      "name": "servo_door",
+      "type": "servo",
+      "gpio": 13,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "none",
+      "notes": "Servo porte",
+      "unit": "degrees"
+    },
+    {
+      "name": "buzzer",
+      "type": "buzzer",
+      "gpio": 25,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "none",
+      "notes": "Buzzer alarme",
+      "unit": "Hz"
+    }
+  ]
+}
+
+###
+# ? Attendre 10 secondes
+
+### 7.2 - Vérifier la configuration complète
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ? Résultat attendu: 6 périphériques avec state et configured
+
+### 7.3 - Logs ESP32 attendus
+# [Twin] ?? Application des périphériques...
+# [Twin] ?? Nombre d'éléments: 6
+# [Twin] ? GPIO 27 configuré en OUTPUT
+# [Twin] ? GPIO 26 configuré en OUTPUT
+# [Twin] ? GPIO 14 configuré en OUTPUT
+# [Twin] ? GPIO 32 configuré en INPUT
+# [Twin] ? GPIO 13 configuré en OUTPUT
+# [Twin] ? GPIO 25 configuré en OUTPUT
+# [Twin] ? 6 périphériques configurés
+
+### ====================================
+### ÉTAPE 8 : TESTER LES COMMANDES
+### ====================================
+
+### 8.1 - Allumer LED RDC
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/on
+Authorization: Bearer {{token}}
+
+###
+# ? Vérification physique: LED GPIO 27 s'allume
+
+### 8.2 - Vérifier l'état
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc
+Authorization: Bearer {{token}}
+
+###
+# ? Résultat attendu:
+# {
+#   "name": "led_rdc",
+#   "state": "on",
+#   "configured": true
+# }
+
+### 8.3 - Éteindre LED RDC
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/commands/off
+Authorization: Bearer {{token}}
+
+### ====================================
+### ? RESET ET RECONFIGURATION TERMINÉS
+### ====================================
+# 
+# Si tous les tests passent:
+# ? Device Twin nettoyé
+# ? Configuration en camelCase appliquée
+# ? Firmware configure les GPIO
+# ? Commandes LED fonctionnent
+# ? Système opérationnel !
+#
+### ====================================
+
+### ====================================
+### ?? CHECKLIST
+### ====================================
+# 
+# [ ] Étape 1: Authentification OK
+# [ ] Étape 2: État initial vérifié
+# [ ] Étape 3: Reset (peripherals: []) envoyé
+# [ ] Étape 4: Attendu 10 secondes
+# [ ] Étape 5: Reset vérifié (desired vide)
+# [ ] Étape 6: Test LED unique (GPIO 2) OK
+# [ ] Étape 7: Configuration complète (6 périphériques) OK
+# [ ] Étape 8: Commandes LED fonctionnent
+#
+### ====================================
+
+### ====================================
+### ?? SI ÇA NE FONCTIONNE TOUJOURS PAS
+### ====================================
+
+### Vérifier que le backend envoie en camelCase
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# Cherchez dans desiredProperties:
+# Si vous voyez "Name", "Gpio", "IsOutput" ? Backend PAS en camelCase
+# Si vous voyez "name", "gpio", "isOutput" ? Backend OK
+
+### Si backend encore en PascalCase:
+# 1. Arrêter le backend (Ctrl+C)
+# 2. cd D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP
+# 3. dotnet clean
+# 4. dotnet build
+# 5. dotnet run
+# 6. Re-tester TOUT depuis l'étape 1
+
+### Si firmware rejette encore:
+# 1. Consulter FIRMWARE-DEBUG-ZERO-PERIPHERALS.md
+# 2. Ajouter des logs détaillés dans le firmware
+# 3. Recompiler et flasher le firmware
+# 4. Observer les logs série pour voir la cause du rejet
+
+### ====================================
+### ?? SUPPORT
+### ====================================
+# 
+# Si le problème persiste après TOUS ces tests:
+# 1. Partagez les logs série de l'ESP32
+# 2. Partagez la réponse de GET /api/IoTHub/device/mon-esp32/twin
+# 3. Partagez la réponse de GET /api/Devices/mon-esp32/peripherals
+#
+### ====================================

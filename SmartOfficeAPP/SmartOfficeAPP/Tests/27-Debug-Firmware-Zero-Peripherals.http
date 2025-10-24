@@ -1,0 +1,126 @@
+### ====================================
+### ?? DEBUG - Vérification Format JSON
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### 1. Authentification
+### ====================================
+
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = {{login.response.body.accessToken}}
+
+### ====================================
+### 2. Vérifier le Twin BRUT d'IoT Hub
+### ====================================
+
+### 2.1 - Twin complet depuis IoT Hub
+GET {{baseUrl}}/api/IoTHub/device/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFIER DANS LA RÉPONSE:
+# "desired": {
+#   "peripherals": [
+#     {
+#       "name": "led_rdc",     // ? DOIT être "name" (camelCase)
+#       "gpio": 27,            // ? DOIT être "gpio" (camelCase)
+#       "isOutput": true       // ? DOIT être "isOutput" (camelCase)
+#     }
+#   ]
+# }
+#
+# ? SI VOUS VOYEZ:
+# {
+#   "Name": "...",      // ? PascalCase = BACKEND PAS REDÉMARRÉ
+#   "Gpio": 27          // ? PascalCase = BACKEND PAS REDÉMARRÉ
+# }
+
+### ====================================
+### 3. Vérifier la Réponse du Backend
+### ====================================
+
+### 3.1 - GET peripherals (doit être camelCase)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+# ? VÉRIFIER DANS LA RÉPONSE:
+# [
+#   {
+#     "name": "led_rdc",      // ? camelCase
+#     "gpio": 27,             // ? camelCase
+#     "isOutput": true,       // ? camelCase
+#     "activeHigh": true,     // ? camelCase
+#     "ratedWatt": 5          // ? camelCase
+#   }
+# ]
+
+### ====================================
+### 4. Re-Envoyer Configuration (Si camelCase OK)
+### ====================================
+
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 5
+    }
+  ]
+}
+
+###
+# Attendre 10 secondes puis vérifier les logs ESP32
+
+### ====================================
+### 5. Vérifier les Logs ESP32
+### ====================================
+
+# Sur le moniteur série, vous devriez voir:
+# [Twin] ?? Réception propriétés souhaitées...
+# [Twin] ? 1 périphériques configurés  // ? PAS 0 !
+# [Twin] ? GPIO 27 configuré en OUTPUT
+
+### ====================================
+### ?? SI LE PROBLÈME PERSISTE
+### ====================================
+
+### Option A : Backend pas en camelCase
+# SOLUTION:
+# 1. Arrêter le backend (Ctrl+C)
+# 2. dotnet clean
+# 3. dotnet build
+# 4. dotnet run
+# 5. Re-tester
+
+### Option B : Firmware ne parse pas correctement
+# SOLUTION:
+# 1. Ajouter des logs dans le firmware
+# 2. Vérifier que peripheralsArray n'est pas vide
+# 3. Vérifier que les clés JSON sont trouvées
+
+### Option C : Structure JSON différente
+# SOLUTION:
+# 1. Consulter le code firmware actuel
+# 2. Vérifier comment il parse `peripherals`
+# 3. Adapter le format si nécessaire

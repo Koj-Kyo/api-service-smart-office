@@ -51,6 +51,18 @@ namespace SmartOfficeAPP.Helpers
             // DeviceLog ↔ DTOs
             CreateMap<DeviceLog, DeviceLogDto>();
             CreateMap<DeviceLogDto, DeviceLog>();
+
+            // ✅ DeviceMetrics ↔ DTOs (firmware monitoring)
+            CreateMap<DeviceMetrics, DeviceMetricsDto>();
+            CreateMap<DeviceMetricsDto, DeviceMetrics>();
+
+            // ✅ RfidEvent ↔ DTOs (RFID access control)
+            CreateMap<RfidEvent, RfidEventDto>();
+            CreateMap<RfidEventDto, RfidEvent>();
+
+            // ✅ SmokeAlarmEvent ↔ DTOs (alarme fumée)
+            CreateMap<SmokeAlarmEvent, SmokeAlarmEventDto>();
+            CreateMap<SmokeAlarmEventDto, SmokeAlarmEvent>();
         }
     }
 }
