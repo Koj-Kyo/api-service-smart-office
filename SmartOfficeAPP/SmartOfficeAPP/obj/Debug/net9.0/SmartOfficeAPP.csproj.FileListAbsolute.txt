@@ -163,3 +163,6 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOfficeAP
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOfficeAPP.genruntimeconfig.cache
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\ref\SmartOfficeAPP.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\StackExchange.Redis.dll

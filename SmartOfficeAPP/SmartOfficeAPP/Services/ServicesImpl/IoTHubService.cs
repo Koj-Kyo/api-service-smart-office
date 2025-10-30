@@ -4,6 +4,7 @@ using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Devices.Common.Exceptions;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace SmartOfficeAPP.Services.ServicesImpl;
 
@@ -142,17 +143,17 @@ public class IotHubService : IIotHubService, IDisposable
                 return false;
             }
 
-            // ✅ CONVERSION EN CAMELCASE: Désérialiser puis re-sérialiser avec camelCase
-            var desiredObject = JsonSerializer.Deserialize<JsonElement>(desiredJson);
-            
-            var camelCaseOptions = new JsonSerializerOptions
+            // ✅ CONVERSION RÉCURSIVE EN CAMELCASE
+            var jsonNode = JsonNode.Parse(desiredJson);
+            if (jsonNode != null)
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                WriteIndented = false
-            };
+                ConvertToCamelCase(jsonNode);
+            }
             
-            var camelCaseJson = JsonSerializer.Serialize(desiredObject, camelCaseOptions);
+            var camelCaseJson = jsonNode?.ToJsonString(new JsonSerializerOptions 
+            { 
+                WriteIndented = false 
+            }) ?? desiredJson;
             
             var patch = $"{{ \"properties\": {{ \"desired\": {camelCaseJson} }} }}";
             
@@ -177,6 +178,61 @@ public class IotHubService : IIotHubService, IDisposable
             _logger.LogError(ex, "Erreur lors de la mise à jour des desired properties pour {DeviceId}", deviceId);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Convertit récursivement toutes les clés JSON en camelCase
+    /// </summary>
+    private static void ConvertToCamelCase(JsonNode node)
+    {
+        if (node is JsonObject obj)
+        {
+            var keysToRename = obj.Select(kvp => kvp.Key).ToList();
+            
+            foreach (var key in keysToRename)
+            {
+                var camelCaseKey = ToCamelCase(key);
+                
+                if (key != camelCaseKey)
+                {
+                    var value = obj[key];
+                    obj.Remove(key);
+                    
+                    if (value != null)
+                    {
+                        // Conversion récursive des enfants
+                        ConvertToCamelCase(value);
+                        obj[camelCaseKey] = value;
+                    }
+                }
+                else if (obj[key] != null)
+                {
+                    // Même si la clé est déjà en camelCase, convertir les enfants
+                    ConvertToCamelCase(obj[key]!);
+                }
+            }
+        }
+        else if (node is JsonArray array)
+        {
+            foreach (var item in array)
+            {
+                if (item != null)
+                {
+                    ConvertToCamelCase(item);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convertit une chaîne en camelCase
+    /// </summary>
+    private static string ToCamelCase(string str)
+    {
+        if (string.IsNullOrEmpty(str) || char.IsLower(str[0]))
+            return str;
+
+        return char.ToLowerInvariant(str[0]) + str.Substring(1);
     }
 
     /// <summary>

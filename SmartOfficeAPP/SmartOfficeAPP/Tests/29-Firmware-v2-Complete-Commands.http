@@ -1,0 +1,703 @@
+﻿### ====================================
+### 🚀 FIRMWARE ESP32 v2.0.0 - COMMANDES COMPLÈTES
+### Test complet de toutes les fonctionnalités
+### Compatible avec firmware smartoffice_v2.0_etape3.ino
+### ====================================
+
+@baseUrl = https://localhost:7144
+@deviceId = mon-esp32
+
+### ====================================
+### ÉTAPE 1 : AUTHENTIFICATION
+### ====================================
+
+# @name login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MTgwMjEyMCwiZXhwIjoxNzYxODAzMDIwLCJpYXQiOjE3NjE4MDIxMjAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.WDegaE6ZqncEru4b5hc7-b-rAx9TfpctgbngWl8EBkg
+
+### ====================================
+### ÉTAPE 2 : OBTENIR LE STATUT COMPLET DU DEVICE
+### ====================================
+
+### 2.1 - Get Status (firmware v2.0)
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/status
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu (dans les logs/télémétrie) :
+# {
+#   "door": "open|closed",
+#   "alarm": "active|inactive",
+#   "smoke": "detected|normal",
+#   "rfid": "a2de95ab",
+#   "rssi": -45,
+#   "heap": 245000,
+#   "uptime": 3600,
+#   "peripheralsCount": 6,
+#   "peripherals": [...]
+# }
+
+### ====================================
+### ÉTAPE 3 : CONTRÔLE DE LA PORTE
+### ====================================
+
+### 3.1 - Ouvrir la porte
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/open
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérification physique : Servo → 175°
+
+###
+
+### 3.2 - Fermer la porte
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/close
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérification physique : Servo → 35°
+
+### ====================================
+### ÉTAPE 4 : CONTRÔLE DES PÉRIPHÉRIQUES
+### ====================================
+
+### 4.1 - Allumer LED RDC (GPIO 27)
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/on
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérification physique : LED RDC → ON
+
+###
+
+### 4.2 - Éteindre LED RDC
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/off
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérification physique : LED RDC → OFF
+
+###
+
+### 4.3 - Toggle LED Étage 2 (GPIO 26)
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/toggle
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérification physique : LED Étage 2 change d'état
+
+###
+
+### 4.4 - Allumer LED Étage 3 (GPIO 14)
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage3/on
+Authorization: Bearer {{token}}
+
+###
+
+### 4.5 - Éteindre toutes les LEDs
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage3/off
+Authorization: Bearer {{token}}
+
+###
+
+### ====================================
+### ÉTAPE 5 : CONTRÔLE ALARME FUMÉE
+### ====================================
+
+### 5.1 - Activer l'alarme fumée
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/alarm/on
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérifications physiques :
+# - Buzzer sonne (800 Hz)
+# - LEDs clignotent (500ms)
+# - Porte ne peut PAS s'ouvrir
+
+###
+
+### 5.2 - Tenter d'ouvrir la porte (DOIT ÉCHOUER)
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/open
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu : Erreur (Alarm active)
+
+###
+
+### 5.3 - Désactiver l'alarme
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/alarm/off
+Authorization: Bearer {{token}}
+
+###
+# ✅ Vérifications physiques :
+# - Buzzer arrêté
+# - LEDs éteintes
+
+### ====================================
+### ÉTAPE 6 : ÉNERGIE & METERING (v2.0)
+### ====================================
+
+### 6.1 - Obtenir le rapport énergétique
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/energy/report
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu (dans télémétrie) :
+# {
+#   "deviceId": "mon-esp32",
+#   "uptimeHours": 2.5,
+#   "totalEnergyKwh": 0.025,
+#   "totalCostEur": 0.00375,
+#   "peripherals": [
+#     {
+#       "name": "led_rdc",
+#       "powerWatts": 10.0,
+#       "totalOnTimeHours": 0.5,
+#       "totalEnergyKwh": 0.005,
+#       "costEur": 0.00075
+#     },
+#     ...
+#   ]
+# }
+
+###
+
+### 6.2 - Réinitialiser les compteurs énergétiques
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/energy/reset
+Authorization: Bearer {{token}}
+
+###
+# ✅ Tous les compteurs → 0
+
+###
+
+### 6.3 - Obtenir les statistiques énergétiques via DevicesController
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+###
+
+### 6.4 - Réinitialiser via DevicesController
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy/reset
+Authorization: Bearer {{token}}
+
+###
+
+### ====================================
+### ÉTAPE 7 : DIAGNOSTICS & MONITORING (v2.0)
+### ====================================
+
+### 7.1 - Obtenir les diagnostics complets
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/diagnostics
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu (logs) :
+# - Firmware version, build date, author
+# - Chip model, CPU freq, flash size, heap
+# - Uptime, reboot count, last reboot reason
+# - WiFi SSID, IP, RSSI, MAC
+# - MQTT status, published/failed counts
+# - BLE status, subscribers
+# - Peripherals configured
+# - Total energy, cost
+# - Activity: RFID scans, door openings
+
+###
+
+### 7.2 - Force un heartbeat
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/heartbeat
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu (télémétrie) :
+# {
+#   "type": "heartbeat",
+#   "uptime": 7200,
+#   "heap": 240000,
+#   "rssi": -42,
+#   "firmwareVersion": "2.0.0",
+#   "rebootCount": 15,
+#   "queueSize": 0,
+#   "mqttPublished": 1250,
+#   "mqttFailed": 3,
+#   "rfidScans": 45,
+#   "doorOpenings": 23
+# }
+
+###
+
+### 7.3 - Force une télémétrie
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/telemetry/send
+Authorization: Bearer {{token}}
+
+###
+
+### 7.4 - Envoyer un log de test
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/test/log
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "level": "info",
+  "source": "api_test",
+  "message": "Test log depuis l'API backend"
+}
+
+###
+
+### ====================================
+### ÉTAPE 8 : DEVICE TWIN & CONFIGURATION
+### ====================================
+
+### 8.1 - Obtenir le Device Twin complet
+GET {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/twin
+Authorization: Bearer {{token}}
+
+###
+
+### 8.2 - Obtenir la liste de tous les devices
+GET {{baseUrl}}/api/IoTHubDevice/list?maxCount=50
+Authorization: Bearer {{token}}
+
+###
+
+### 8.3 - Obtenir le statut de connexion
+POST {{baseUrl}}/api/IoTHubDevice/connection-status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceIds": ["mon-esp32"]
+}
+
+###
+
+### 8.4 - Envoyer un message Cloud-to-Device
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/message
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": "Test message from backend",
+  "properties": {
+    "source": "api",
+    "priority": "normal"
+  }
+}
+
+###
+
+### ====================================
+### ÉTAPE 9 : GESTION AVANCÉE PÉRIPHÉRIQUES
+### ====================================
+
+### 9.1 - Obtenir tous les périphériques (reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+
+###
+
+### 9.2 - Obtenir un périphérique spécifique
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc
+Authorization: Bearer {{token}}
+
+###
+
+### 9.3 - Vue fusionnée (desired vs reported)
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_rdc/merged
+Authorization: Bearer {{token}}
+
+###
+
+### 9.4 - Obtenir le Device Twin complet
+GET {{baseUrl}}/api/Devices/{{deviceId}}/twin/full
+Authorization: Bearer {{token}}
+
+###
+
+### 9.5 - Exécuter une commande sur un périphérique
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage2/commands/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_etage3/commands/toggle
+Authorization: Bearer {{token}}
+
+###
+
+### ====================================
+### ÉTAPE 10 : CONFIGURATION DES PÉRIPHÉRIQUES
+### ====================================
+
+### 10.1 - Ajouter un nouveau périphérique
+POST {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": "led-test-001",
+  "name": "led_test",
+  "type": "light",
+  "gpio": 12,
+  "isOutput": true,
+  "activeHigh": true,
+  "metering": "estimated",
+  "ratedWatt": 5,
+  "notes": "LED de test sur GPIO 12"
+}
+
+###
+
+### 10.2 - Remplacer tous les périphériques
+PUT {{baseUrl}}/api/Devices/{{deviceId}}/peripherals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripherals": [
+    {
+      "id": "led-rdc-001",
+      "name": "led_rdc",
+      "type": "light",
+      "gpio": 27,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 10,
+      "notes": "LED RDC - GPIO 27"
+    },
+    {
+      "id": "led-etage2-001",
+      "name": "led_etage2",
+      "type": "light",
+      "gpio": 26,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 10,
+      "notes": "LED Étage 2 - GPIO 26"
+    },
+    {
+      "id": "led-etage3-001",
+      "name": "led_etage3",
+      "type": "light",
+      "gpio": 14,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 10,
+      "notes": "LED Étage 3 - GPIO 14"
+    },
+    {
+      "id": "smoke-sensor-001",
+      "name": "smoke_sensor",
+      "type": "sensor",
+      "gpio": 32,
+      "isOutput": false,
+      "activeHigh": false,
+      "metering": "none",
+      "notes": "Capteur fumée MQ-2 - GPIO 32"
+    },
+    {
+      "id": "servo-door-001",
+      "name": "servo_door",
+      "type": "actuator",
+      "gpio": 13,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 2,
+      "notes": "Servo porte - GPIO 13 (35° fermé, 175° ouvert)"
+    },
+    {
+      "id": "buzzer-001",
+      "name": "buzzer",
+      "type": "actuator",
+      "gpio": 25,
+      "isOutput": true,
+      "activeHigh": true,
+      "metering": "estimated",
+      "ratedWatt": 0.5,
+      "notes": "Buzzer alarme - GPIO 25 (800 Hz)"
+    }
+  ]
+}
+
+###
+
+### 10.3 - Supprimer un périphérique
+DELETE {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/led_test
+Authorization: Bearer {{token}}
+
+###
+
+### ====================================
+### ÉTAPE 11 : COMMANDES SYSTÈME
+### ====================================
+
+### 11.1 - Redémarrer le device
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/reboot
+Authorization: Bearer {{token}}
+
+###
+# ⚠️ ATTENTION : Le device redémarre dans 2 secondes
+# Il sera indisponible pendant ~30 secondes
+
+###
+
+### 11.2 - Créer/Mettre à jour un device (Admin uniquement)
+PUT {{baseUrl}}/api/IoTHubDevice/{{deviceId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+###
+
+### 11.3 - Supprimer un device (Admin uniquement)
+# DELETE {{baseUrl}}/api/IoTHubDevice/{{deviceId}}
+# Authorization: Bearer {{token}}
+
+###
+# ⚠️ ATTENTION : Suppression définitive du device dans IoT Hub
+# Décommentez uniquement si vous êtes sûr !
+
+### ====================================
+### ÉTAPE 12 : SCÉNARIOS DE TEST COMPLETS
+### ====================================
+
+### 12.1 - Scénario : Ouverture automatique
+# 1. Vérifier que l'alarme est OFF
+# 2. Allumer LED RDC
+# 3. Ouvrir la porte
+# 4. Attendre 5 secondes
+# 5. Fermer la porte
+# 6. Éteindre LED RDC
+
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/open
+Authorization: Bearer {{token}}
+
+###
+# ⏱️ Attendre 5 secondes...
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/close
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/off
+Authorization: Bearer {{token}}
+
+###
+
+### 12.2 - Scénario : Test alarme complète
+# 1. Allumer toutes les LEDs
+# 2. Activer l'alarme
+# 3. Tenter d'ouvrir la porte (échec)
+# 4. Attendre 10 secondes (alarme active)
+# 5. Désactiver l'alarme
+# 6. Éteindre toutes les LEDs
+
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage3/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/alarm/on
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/door/open
+Authorization: Bearer {{token}}
+
+###
+# ⏱️ Attendre 10 secondes...
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/alarm/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage3/off
+Authorization: Bearer {{token}}
+
+###
+
+### 12.3 - Scénario : Monitoring énergétique
+# 1. Réinitialiser compteurs
+# 2. Allumer LED RDC (10W)
+# 3. Attendre 1 minute
+# 4. Allumer LED Étage 2 (10W)
+# 5. Attendre 1 minute
+# 6. Obtenir rapport énergétique
+# 7. Éteindre toutes les LEDs
+
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/energy/reset
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/on
+Authorization: Bearer {{token}}
+
+###
+# ⏱️ Attendre 1 minute...
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/on
+Authorization: Bearer {{token}}
+
+###
+# ⏱️ Attendre 1 minute...
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/energy/report
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/api/Devices/{{deviceId}}/peripherals/energy
+Authorization: Bearer {{token}}
+
+###
+# Résultat attendu :
+# - led_rdc : ~0.0166 kWh (10W × 2min)
+# - led_etage2 : ~0.0083 kWh (10W × 1min)
+# - Total : ~0.0249 kWh
+# - Coût : ~0.00374 € (à 0.15 €/kWh)
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_rdc/off
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/api/IoTHubDevice/{{deviceId}}/peripheral/led_etage2/off
+Authorization: Bearer {{token}}
+
+###
+
+### ====================================
+### 🎯 CHECKLIST VALIDATION FIRMWARE v2.0
+### ====================================
+# 
+# COMMANDES DE BASE :
+# [ ] getStatus - Statut complet du device
+# [ ] openDoor - Ouverture porte (servo 175°)
+# [ ] closeDoor - Fermeture porte (servo 35°)
+# [ ] reboot - Redémarrage device
+# 
+# CONTRÔLE PÉRIPHÉRIQUES :
+# [ ] peripheralCommand (on) - Allumer LED
+# [ ] peripheralCommand (off) - Éteindre LED
+# [ ] peripheralCommand (toggle) - Toggle LED
+# 
+# ALARME FUMÉE :
+# [ ] alarmOn - Activation alarme (buzzer + LEDs)
+# [ ] alarmOff - Désactivation alarme
+# [ ] Blocage porte pendant alarme
+# 
+# ÉNERGIE (v2.0) :
+# [ ] Metering automatique (mWh)
+# [ ] Calcul puissance instantanée (mW)
+# [ ] Calcul coût énergétique (€)
+# [ ] resetEnergy - Réinitialisation compteurs
+# [ ] getEnergyReport - Rapport énergétique JSON
+# 
+# MONITORING (v2.0) :
+# [ ] Heartbeat automatique (60s)
+# [ ] sendHeartbeat - Force heartbeat
+# [ ] sendLog - Envoi log structuré
+# [ ] getDiagnostics - Diagnostics complets
+# 
+# DEVICE TWIN :
+# [ ] GET Twin - Récupération twin
+# [ ] PATCH Desired - Mise à jour config
+# [ ] PATCH Reported - Report état périphériques
+# [ ] Synchronisation desired ↔ reported
+# 
+# BLE (v2.0) :
+# [ ] Service SmartOffice-ESP32
+# [ ] Characteristic CMD (write)
+# [ ] Characteristic STATE (read/notify)
+# [ ] Characteristic RFID (read)
+# 
+# NVS QUEUE (v2.0) :
+# [ ] Enqueue messages offline
+# [ ] Flush queue à la reconnexion
+# [ ] Persistance messages (64 max)
+# 
+# WIFI MANAGER (v2.0) :
+# [ ] Portail configuration WiFi
+# [ ] Auto-connexion credentials sauvegardés
+# [ ] Reset config (bouton BOOT 5s)
+# 
+# ====================================
+
+### ====================================
+### 📊 RÉSULTATS ATTENDUS
+### ====================================
+# 
+# FIRMWARE VERSION: 2.0.0
+# BUILD DATE: 2025-01-25
+# AUTHOR: Koj-Kyo
+# 
+# PÉRIPHÉRIQUES CONFIGURÉS (6):
+# - led_rdc (GPIO 27) : Light 10W
+# - led_etage2 (GPIO 26) : Light 10W
+# - led_etage3 (GPIO 14) : Light 10W
+# - smoke_sensor (GPIO 32) : Sensor
+# - servo_door (GPIO 13) : Actuator 2W
+# - buzzer (GPIO 25) : Actuator 0.5W
+# 
+# FONCTIONNALITÉS AVANCÉES:
+# ✅ Energy Metering (mWh/kWh/€)
+# ✅ BLE Control (SmartOffice-ESP32)
+# ✅ NVS Queue (64 messages offline)
+# ✅ WiFi Manager (portail config)
+# ✅ Heartbeat automatique (60s)
+# ✅ Logs structurés (level/source/message)
+# ✅ Diagnostics complets
+# ✅ Metrics (reboot count, MQTT stats, etc.)
+# 
+# ====================================

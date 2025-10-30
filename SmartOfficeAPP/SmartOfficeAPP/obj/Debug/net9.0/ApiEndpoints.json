@@ -995,11 +995,16 @@
         "Name": "iotDeviceId",
         "Type": "System.String",
         "IsRequired": true
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Controllers.PeripheralDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Controllers.PeripheralDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -2002,6 +2007,416 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "CreateOrUpdateDevice",
+    "RelativePath": "api/IoTHubDevice/{deviceId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "payload",
+        "Type": "SmartOfficeAPP.Controllers.DeviceUpdatePayload",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "DeleteDevice",
+    "RelativePath": "api/IoTHubDevice/{deviceId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "AlarmOff",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/alarm/off",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "AlarmOn",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/alarm/on",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "GetDiagnostics",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/diagnostics",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "CloseDoor",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/door/close",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "OpenDoor",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/door/open",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "GetEnergyReport",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/energy/report",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "ResetEnergy",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/energy/reset",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "ForceHeartbeat",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/heartbeat",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "SendCloudToDeviceMessage",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/message",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "payload",
+        "Type": "SmartOfficeAPP.Controllers.CloudMessagePayload",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "InvokeMethod",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/method/{methodName}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "methodName",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "payload",
+        "Type": "SmartOfficeAPP.Controllers.DirectMethodPayload",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "ControlPeripheral",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/peripheral/{peripheralName}/{command}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "peripheralName",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "command",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "parameters",
+        "Type": "SmartOfficeAPP.Controllers.PeripheralControlParameters",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "RebootDevice",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/reboot",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "GetDeviceStatus",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/status",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Object, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "ForceTelemetry",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/telemetry/send",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "SendTestLog",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/test/log",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "payload",
+        "Type": "SmartOfficeAPP.Controllers.TestLogPayload",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "GetDeviceTwin",
+    "RelativePath": "api/IoTHubDevice/{deviceId}/twin",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deviceId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[SmartOfficeAPP.Services.ServicesImpl.DeviceTwinInfo, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "GetConnectionStatus",
+    "RelativePath": "api/IoTHubDevice/connection-status",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "payload",
+        "Type": "SmartOfficeAPP.Controllers.DeviceListPayload",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Services.ServicesImpl.DeviceConnectionInfo, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
+    "Method": "ListDevices",
+    "RelativePath": "api/IoTHubDevice/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "maxCount",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Services.ServicesImpl.IoTHubDeviceSummary, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.NotificationController",
