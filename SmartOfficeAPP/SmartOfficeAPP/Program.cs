@@ -27,6 +27,78 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
+// ✅ Redis + OutputCache Configuration
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") 
+    ?? builder.Configuration["Redis:ConnectionString"];
+
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    // Ajouter Redis pour la mise en cache
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+   options.Configuration = redisConnectionString;
+     options.InstanceName = "SmartOfficeAPI";
+    });
+
+    // Configurer OutputCache avec Redis
+  builder.Services.AddOutputCache(options =>
+    {
+        options.AddPolicy("DefaultPolicy", policy =>
+   {
+            policy.Expire(TimeSpan.FromMinutes(5));
+    policy.SetVaryByQuery("fresh", "limit", "offset");
+            policy.Tag("api-data");
+    });
+
+        options.AddPolicy("DeviceData", policy =>
+        {
+   policy.Expire(TimeSpan.FromMinutes(2));
+ policy.SetVaryByQuery("fresh", "deviceId");
+    policy.Tag("device-data");
+        });
+
+  options.AddPolicy("TelemetryData", policy =>
+        {
+            policy.Expire(TimeSpan.FromMinutes(1));
+   policy.SetVaryByQuery("fresh", "peripheriqueId", "startDate", "endDate");
+     policy.Tag("telemetry-data");
+      });
+    });
+
+    builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
+    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Redis configuré avec OutputCache pour : {RedisConnectionString}", redisConnectionString);
+}
+else
+{
+    // Fallback vers mémoire cache
+  builder.Services.AddMemoryCache();
+    builder.Services.AddOutputCache(options =>
+    {
+   options.AddPolicy("DefaultPolicy", policy =>
+     {
+ policy.Expire(TimeSpan.FromMinutes(3));
+       policy.SetVaryByQuery("fresh", "limit", "offset");
+  });
+
+        options.AddPolicy("DeviceData", policy =>
+        {
+  policy.Expire(TimeSpan.FromMinutes(1));
+            policy.SetVaryByQuery("fresh", "deviceId");
+        });
+
+        options.AddPolicy("TelemetryData", policy =>
+        {
+   policy.Expire(TimeSpan.FromSeconds(30));
+          policy.SetVaryByQuery("fresh", "peripheriqueId", "startDate", "endDate");
+     });
+    });
+
+    builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
+    var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+    logger.LogWarning("Redis non configuré, utilisation du cache mémoire. Pour activer Redis : dotnet user-secrets set \"Redis:ConnectionString\" \"localhost:6379\"");
+}
+
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -39,7 +111,7 @@ builder.Services.AddSignalR(options =>
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
     options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-    options.MaximumReceiveMessageSize = 64 * 1024; // 64KB
+  options.MaximumReceiveMessageSize = 64 * 1024; // 64KB
 });
 
 // Auth JWT avec support SignalR
@@ -51,11 +123,11 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
-    {
+ {
         ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+     ValidateAudience = true,
+  ValidateLifetime = true,
+    ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)),
@@ -65,28 +137,28 @@ builder.Services.AddAuthentication(options =>
     // Configuration pour SignalR
     options.Events = new JwtBearerEvents
     {
-        OnAuthenticationFailed = context =>
-        {
+   OnAuthenticationFailed = context =>
+    {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError(context.Exception, "Échec d'authentification JWT: {Error}", context.Exception.Message);
+  logger.LogError(context.Exception, "Échec d'authentification JWT: {Error}", context.Exception.Message);
             return Task.CompletedTask;
+     },
+  OnChallenge = context =>
+ {
+    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+ logger.LogWarning("Challenge JWT déclenché: {Error}", context.Error);
+         return Task.CompletedTask;
         },
-        OnChallenge = context =>
+     OnMessageReceived = context =>
         {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("Challenge JWT déclenché: {Error}", context.Error);
-            return Task.CompletedTask;
-        },
-        OnMessageReceived = context =>
-        {
-            // Support JWT pour SignalR (query access_token)
+         // Support JWT pour SignalR (query access_token)
             var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationhub"))
+      var path = context.HttpContext.Request.Path;
+     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationhub"))
             {
                 context.Token = accessToken;
-            }
-            return Task.CompletedTask;
+    }
+    return Task.CompletedTask;
         }
     };
 });
@@ -98,7 +170,7 @@ builder.Services.AddCors(opt =>
         .AllowAnyHeader()
         .AllowAnyMethod()
         .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000")
-        .AllowCredentials());
+   .AllowCredentials());
 });
 
 // Enregistrement Authorization avec handlers
@@ -133,6 +205,9 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUserActivityService, UserActivityService>();
 builder.Services.AddScoped<DataSeedingService>();
 
+// ✅ Service de synchronisation DeviceSyncService
+builder.Services.AddScoped<IDeviceSyncService, DeviceSyncService>();
+
 // Nouveau service SignalR
 builder.Services.AddScoped<ISignalRService, SignalRService>();
 
@@ -147,22 +222,24 @@ builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.TelemetrieIngestionWorker>();
 builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.LogIngestionWorker>();
+// ✅ Ajouter le worker de synchronisation périodique
+builder.Services.AddHostedService<SmartOfficeAPP.Services.Background.DeviceSyncWorker>();
 
 // ✅ Configuration JSON pour camelCase (compatible firmware ESP32)
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Utiliser camelCase pour les noms de propriétés JSON
+      // Utiliser camelCase pour les noms de propriétés JSON
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        
+     
         // Ignorer les valeurs null dans la sérialisation
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-        
-        // Permettre la lecture de nombres depuis des chaînes
+ options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    
+// Permettre la lecture de nombres depuis des chaînes
         options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
         
-        // Configuration pour gérer les références circulaires (si nécessaire)
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+   // Configuration pour gérer les références circulaires (si nécessaire)
+     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         
         // Autres options utiles
         options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
@@ -188,14 +265,14 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "JWT Bearer. Exemple: 'Bearer {token}'",
         Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "bearer",
+      Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+      Scheme = "bearer",
         BearerFormat = "JWT"
     });
     c.AddSecurityRequirement(new()
-    {
+  {
         {
-            new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" } },
+   new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" } },
             Array.Empty<string>()
         }
     });
@@ -207,7 +284,7 @@ builder.Services.AddRateLimiter(o => o.GlobalLimiter = System.Threading.RateLimi
     {
         PermitLimit = 100,
         Window = TimeSpan.FromSeconds(10),
-        QueueLimit = 0
+ QueueLimit = 0
     })
 ));
 
@@ -236,6 +313,9 @@ else
 app.UseMiddleware<CamelCaseEnforcerMiddleware>();
 
 app.UseCors("AllowFrontend");
+
+// ✅ Activer OutputCache
+app.UseOutputCache();
 
 // Mapping du hub SignalR
 app.MapHub<NotificationHub>("/notificationhub");

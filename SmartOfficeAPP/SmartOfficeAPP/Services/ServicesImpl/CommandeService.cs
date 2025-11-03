@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed;
 using SmartOfficeAPP.Models;
 using SmartOfficeAPP.Repositories.IRepositories;
 using SmartOfficeAPP.DTOs.Request;
 using SmartOfficeAPP.DTOs.Response;
 using SmartOfficeAPP.Services.IServices;
 using SmartOfficeAPP.Enums;
+using System.Text.Json;
 
 namespace SmartOfficeAPP.Services.ServicesImpl
 {
@@ -15,6 +17,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
         private readonly IIotHubService _iotHubService;
         private readonly IDroitAccesRepository _droitAccesRepository;
         private readonly ISignalRService _signalRService;
+        private readonly IDistributedCache _cache;
         private readonly IMapper _mapper;
         private readonly ILogger<CommandeService> _logger;
 
@@ -24,6 +27,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
             IIotHubService iotHubService,
             IDroitAccesRepository droitAccesRepository,
             ISignalRService signalRService,
+            IDistributedCache cache,
             IMapper mapper,
             ILogger<CommandeService> logger)
         {
@@ -32,6 +36,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
             _iotHubService = iotHubService;
             _droitAccesRepository = droitAccesRepository;
             _signalRService = signalRService;
+            _cache = cache;
             _mapper = mapper;
             _logger = logger;
         }
@@ -40,16 +45,32 @@ namespace SmartOfficeAPP.Services.ServicesImpl
         {
             try
             {
-                // 0. Vérifier les droits de l'utilisateur sur le périphérique (doit avoir "Controle")
-                var droits = await _droitAccesRepository.GetDroitsAccesByUserPeripheriquesAsync(userId);
-                var canControl = droits.Any(d =>
+                // 1. Chercher le périphérique pour obtenir son IotDeviceId et sa Zone
+                var peripherique = await _peripheriqueRepository.GetByIdAsync(requestDto.PeripheriqueLogiqueId);
+                if (peripherique == null)
+                {
+                    return new CommandeResponseDto { IsSuccess = false, Message = "Périphérique introuvable." };
+                }
+
+                // 2. ✅ Vérifier les droits: contrôle direct sur le périphérique OU contrôle sur la zone du périphérique
+                var droitsPeripheriques = await _droitAccesRepository.GetDroitsAccesByUserPeripheriquesAsync(userId);
+                var hasDeviceControl = droitsPeripheriques.Any(d =>
                     d.PeripheriqueLogiqueId == requestDto.PeripheriqueLogiqueId &&
                     d.Type == DroitAccesType.Controle);
+
+                var droitsZones = await _droitAccesRepository.GetDroitsAccesByUserZonesAsync(userId);
+                var hasZoneControl = droitsZones.Any(d =>
+                    d.ZoneId == peripherique.ZoneId &&
+                    d.Type == DroitAccesType.Controle);
+
+                var canControl = hasDeviceControl || hasZoneControl;
 
                 if (!canControl)
                 {
                     var errorMessage = "Accès refusé : vous n'avez pas le droit de contrôler ce périphérique.";
-                    _logger.LogWarning("Tentative de commande refusée pour l'utilisateur {UserId} sur le périphérique {PeripheriqueId}", userId, requestDto.PeripheriqueLogiqueId);
+                    _logger.LogWarning("Accès refusé (contrôle) user {UserId} → périphérique {PeriphId} (zone {ZoneId}). " +
+                        "Droit direct: {HasDevice}, Droit zone: {HasZone}", 
+                        userId, requestDto.PeripheriqueLogiqueId, peripherique.ZoneId, hasDeviceControl, hasZoneControl);
                     
                     return new CommandeResponseDto
                     {
@@ -58,21 +79,18 @@ namespace SmartOfficeAPP.Services.ServicesImpl
                     };
                 }
 
-                // 1. Chercher le périphérique pour obtenir son IotDeviceId
-                var peripherique = await _peripheriqueRepository.GetByIdAsync(requestDto.PeripheriqueLogiqueId);
-                if (peripherique == null)
-                {
-                    return new CommandeResponseDto { IsSuccess = false, Message = "Périphérique introuvable." };
-                }
+                _logger.LogInformation("Contrôle autorisé pour user {UserId} → périphérique {PeriphId} (zone {ZoneId}). " +
+                    "Droit direct: {HasDevice}, Droit zone: {HasZone}", 
+                    userId, requestDto.PeripheriqueLogiqueId, peripherique.ZoneId, hasDeviceControl, hasZoneControl);
 
-                // 2. Préparer et envoyer la commande via le service IoT Hub
+                // 3. Préparer et envoyer la commande via le service IoT Hub
                 var commandSuccess = await _iotHubService.InvokeDeviceMethodAsync(
                     peripherique.IotDeviceId,
                     requestDto.NomCommande,
                     requestDto.Valeur
                 );
 
-                // 3. Enregistrer la commande dans la base de données
+                // 4. ✅ Write-through: Enregistrer la commande dans la base de données
                 var commande = new Commande
                 {
                     Horodatage = DateTime.UtcNow,
@@ -85,6 +103,13 @@ namespace SmartOfficeAPP.Services.ServicesImpl
 
                 await _commandeRepository.AddCommandeAsync(commande);
 
+                // 5. ✅ Write-through: Invalider le cache après écriture en DB
+                await InvalidateCommandeCacheAsync(userId, requestDto.PeripheriqueLogiqueId);
+
+                // 6. ✅ Mettre en cache la nouvelle commande
+                var commandeDto = _mapper.Map<CommandeResponseDto>(commande);
+                await CacheCommandeAsync(commande.Id.ToString(), commandeDto);
+
                 var response = new CommandeResponseDto
                 {
                     IsSuccess = commandSuccess,
@@ -92,7 +117,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
                     CommandeId = commande.Id
                 };
 
-                // 4. Envoyer le résultat de la commande via SignalR
+                // 7. ✅ SignalR: Envoyer le résultat de la commande
                 await _signalRService.SendCommandExecutionResultAsync(
                     commande.Id,
                     requestDto.PeripheriqueLogiqueId,
@@ -100,7 +125,7 @@ namespace SmartOfficeAPP.Services.ServicesImpl
                     response.Message
                 );
 
-                // 5. Mettre à jour le statut du périphérique si la commande a réussi
+                // 8. ✅ SignalR: Mettre à jour le statut du périphérique si la commande a réussi
                 if (commandSuccess)
                 {
                     await _signalRService.SendDeviceStatusUpdateAsync(
@@ -129,6 +154,57 @@ namespace SmartOfficeAPP.Services.ServicesImpl
                     IsSuccess = false,
                     Message = "Erreur interne lors de l'envoi de la commande."
                 };
+            }
+        }
+
+        /// <summary>
+        /// ✅ Write-through: Invalide le cache des commandes après une nouvelle commande
+        /// </summary>
+        private async Task InvalidateCommandeCacheAsync(string userId, int peripheriqueId)
+        {
+            try
+            {
+                var cacheKeys = new[]
+                {
+                    $"commandes:user:{userId}",
+                    $"commandes:peripherique:{peripheriqueId}",
+                    "commandes:recent",
+                    "api-data" // Tag pour OutputCache
+                };
+
+                foreach (var key in cacheKeys)
+                {
+                    await _cache.RemoveAsync(key);
+                }
+
+                _logger.LogDebug("Cache invalidé pour les commandes - User:{UserId}, Périphérique:{PeripheriqueId}", userId, peripheriqueId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erreur lors de l'invalidation du cache des commandes");
+            }
+        }
+
+        /// <summary>
+        /// ✅ Mise en cache d'une commande
+        /// </summary>
+        private async Task CacheCommandeAsync(string commandeId, CommandeResponseDto commande)
+        {
+            try
+            {
+                var cacheKey = $"commande:{commandeId}";
+                var json = JsonSerializer.Serialize(commande);
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                };
+
+                await _cache.SetStringAsync(cacheKey, json, options);
+                _logger.LogDebug("Commande {CommandeId} mise en cache", commandeId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erreur lors de la mise en cache de la commande {CommandeId}", commandeId);
             }
         }
     }

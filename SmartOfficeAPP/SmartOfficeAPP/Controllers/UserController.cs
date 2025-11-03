@@ -19,6 +19,9 @@ public class UserController : ControllerBase
         _userManager = userManager;
     }
 
+    /// <summary>
+    /// ✅ MISE À JOUR: Récupère le profil complet de l'utilisateur connecté avec rôles
+    /// </summary>
     [HttpGet("profile")]
     public async Task<ActionResult<UserProfileDto>> GetProfile()
     {
@@ -34,10 +37,22 @@ public class UserController : ControllerBase
             return NotFound("Utilisateur non trouvé.");
         }
 
+        // ✅ Récupérer les rôles de l'utilisateur
+        var roles = await _userManager.GetRolesAsync(user);
+
+        // ✅ Extraire prénom et nom du FullName
+        var nameParts = user.FullName?.Split(' ', 2) ?? Array.Empty<string>();
+        var firstName = nameParts.Length > 0 ? nameParts[0] : null;
+        var lastName = nameParts.Length > 1 ? nameParts[1] : null;
+
         var profileDto = new UserProfileDto
         {
+            Id = user.Id,
             Email = user.Email,
-            // Ajoutez d'autres champs de profil si nécessaire (ex: Nom, Prénom)
+            FullName = user.FullName,
+            FirstName = firstName,
+            LastName = lastName,
+            Roles = roles.ToList()
         };
 
         return Ok(profileDto);
@@ -71,7 +86,6 @@ public class UserController : ControllerBase
         return NoContent();
     }
 
-    // TODO: Implémenter le point de terminaison pour /api/admin/users/{id}/roles
     // Point de terminaison pour les administrateurs pour attribuer un rôle
     [HttpPost("admin/users/{id}/roles")]
     [Authorize(Roles = "Admin")]

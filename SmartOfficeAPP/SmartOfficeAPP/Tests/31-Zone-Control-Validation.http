@@ -1,0 +1,146 @@
+### Tests de validation: Contrôle des périphériques via droits de zone
+
+#### Variables pour les tests
+@baseUrl = https://localhost:7152
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+@userToken = YOUR_USER_JWT_TOKEN_HERE
+@zoneId = 1
+@peripheriqueId = 1
+
+###
+
+#### 1. Créer une zone (Admin)
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nom": "Zone Test Contrôle"
+}
+
+###
+
+#### 2. Créer un périphérique dans cette zone (Admin)
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Périphérique Test Zone",
+  "type": "relay",
+  "iotDeviceId": "test-device-zone-001",
+  "zoneId": {{zoneId}}
+}
+
+###
+
+#### 3. Créer un utilisateur test (Admin)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user.zone@test.com",
+  "password": "Test123!",
+  "fullName": "Utilisateur Zone Test"
+}
+
+###
+
+#### 4. Assigner le droit de CONTRÔLE sur la ZONE à l'utilisateur (Admin)
+POST {{baseUrl}}/api/droitsacces
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "USER_ID_FROM_STEP_3",
+  "zoneId": {{zoneId}},
+  "type": 1
+}
+
+# Note: type=0 pour Lecture, type=1 pour Contrôle
+
+###
+
+#### 5. Tenter de contrôler le périphérique avec l'utilisateur (doit RÉUSSIR via droit de zone)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "nomCommande": "test_zone_control",
+  "valeur": "zone_access_test"
+}
+
+# Réponse attendue: IsSuccess=true, Message="Commande envoyée avec succès."
+
+###
+
+#### 6. Vérifier les logs dans la console du serveur
+# Rechercher les logs avec:
+# "Contrôle autorisé pour user ... Droit direct: False, Droit zone: True"
+
+###
+
+#### 7. Test négatif: Utilisateur sans droit sur la zone
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user.nodroit@test.com",
+  "password": "Test123!",
+  "fullName": "Utilisateur Sans Droit"
+}
+
+###
+
+#### 8. Tenter de contrôler le périphérique avec l'utilisateur sans droit (doit ÉCHOUER)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer USER_TOKEN_WITHOUT_RIGHTS
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "nomCommande": "test_denied",
+  "valeur": "should_fail"
+}
+
+# Réponse attendue: IsSuccess=false, Message="Accès refusé : vous n'avez pas le droit de contrôler ce périphérique."
+
+###
+
+#### 9. Validation: Créer un droit DIRECT sur périphérique (pour comparaison)
+POST {{baseUrl}}/api/droitsacces
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "USER_ID_FROM_STEP_3",
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "type": 1
+}
+
+###
+
+#### 10. Contrôler le périphérique avec droit DIRECT (doit RÉUSSIR)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "nomCommande": "test_direct_control",
+  "valeur": "direct_access_test"
+}
+
+# Réponse attendue: IsSuccess=true
+# Log attendu: "Droit direct: True, Droit zone: True"
+
+###
+
+### Validation complète:
+# ? Un utilisateur avec droit de CONTRÔLE sur une ZONE peut contrôler TOUS les périphériques de cette zone
+# ? Un utilisateur sans droit ne peut pas contrôler les périphériques
+# ? Les logs indiquent clairement la source du droit (direct vs zone)
+# ? Les droits directs sur périphérique fonctionnent toujours
+# ? Héritage zone ? périphériques opérationnel

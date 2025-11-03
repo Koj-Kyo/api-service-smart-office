@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartOfficeAPP.DTOs;
+using SmartOfficeAPP.DTOs.Response;
 using SmartOfficeAPP.Services.IServices;
+using SmartOfficeAPP.Enums;
 using System.Security.Claims;
 
 namespace SmartOfficeAPP.Controllers;
@@ -11,10 +13,14 @@ namespace SmartOfficeAPP.Controllers;
 public class DroitAccesController : ControllerBase
 {
     private readonly IDroitAccesService _droitAccesService;
+    private readonly ILogger<DroitAccesController> _logger;
 
-    public DroitAccesController(IDroitAccesService droitAccesService)
+    public DroitAccesController(
+        IDroitAccesService droitAccesService,
+        ILogger<DroitAccesController> logger)
     {
         _droitAccesService = droitAccesService;
+        _logger = logger;
     }
 
     // Points de terminaison pour l'administration des droits d'accès (CRUD)
@@ -22,37 +28,41 @@ public class DroitAccesController : ControllerBase
     // GET: api/admin/access-rights
     [HttpGet("admin/access-rights")]
     [Authorize(Roles = "Admin")] // Seuls les administrateurs peuvent accéder
-    public async Task<IActionResult> GetDroitsAcces()
+    public async Task<ActionResult<ApiResponse<IEnumerable<DroitAccesDto>>>> GetDroitsAcces()
     {
         var droitsAcces = await _droitAccesService.GetDroitsAccesAsync();
-        return Ok(droitsAcces);
+        var response = ApiResponse<IEnumerable<DroitAccesDto>>.FromDatabase(droitsAcces);
+        return Ok(response);
     }
 
     // GET: api/admin/access-rights/{id}
     [HttpGet("admin/access-rights/{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetDroitAccesById(int id)
+    public async Task<ActionResult<ApiResponse<DroitAccesDto>>> GetDroitAccesById(int id)
     {
         var droitAcces = await _droitAccesService.GetDroitAccesByIdAsync(id);
         if (droitAcces == null)
         {
-            return NotFound("Droit d'accès non trouvé.");
+            return NotFound(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
         }
-        return Ok(droitAcces);
+        
+        var response = ApiResponse<DroitAccesDto>.FromDatabase(droitAcces);
+        return Ok(response);
     }
 
     // POST: api/admin/access-rights
     [HttpPost("admin/access-rights")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> AddDroitAcces([FromBody] DroitAccesCreationDto droitAccesDto)
+    public async Task<ActionResult<ApiResponse<DroitAccesDto>>> AddDroitAcces([FromBody] DroitAccesCreationDto droitAccesDto)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
         }
 
         var newDroitAcces = await _droitAccesService.AddDroitAccesAsync(droitAccesDto);
-        return CreatedAtAction(nameof(GetDroitAccesById), new { id = newDroitAcces.Id }, newDroitAcces);
+        var response = ApiResponse<DroitAccesDto>.FromDatabase(newDroitAcces);
+        return CreatedAtAction(nameof(GetDroitAccesById), new { id = newDroitAcces.Id }, response);
     }
 
     // PUT: api/admin/access-rights/{id}
@@ -86,35 +96,124 @@ public class DroitAccesController : ControllerBase
         return NoContent();
     }
 
+    // ✅ NOUVEAU: Endpoint spécialisé pour affecter une zone à un utilisateur
+    [HttpPost("admin/assign-zone-to-user")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<DroitAccesDto>>> AssignZoneToUser([FromBody] AssignZoneToUserDto assignDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
+        }
+
+        try
+        {
+            var droitAccesDto = new DroitAccesCreationDto
+            {
+                UserId = assignDto.UserId,
+                ZoneId = assignDto.ZoneId,
+                Type = ((int)assignDto.AccessType).ToString() // ✅ Conversion enum → string
+            };
+
+            var newDroitAcces = await _droitAccesService.AddDroitAccesAsync(droitAccesDto);
+            
+            _logger.LogInformation("Zone {ZoneId} affectée à l'utilisateur {UserId} avec type {AccessType}",
+         assignDto.ZoneId, assignDto.UserId, assignDto.AccessType);
+
+            var response = ApiResponse<DroitAccesDto>.FromDatabase(newDroitAcces);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'affectation de zone {ZoneId} à l'utilisateur {UserId}",
+            assignDto.ZoneId, assignDto.UserId);
+          
+            return BadRequest(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
+        }
+    }
+
+    // ✅ NOUVEAU: Endpoint pour affecter un périphérique spécifique à un utilisateur
+    [HttpPost("admin/assign-device-to-user")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<DroitAccesDto>>> AssignDeviceToUser([FromBody] AssignDeviceToUserDto assignDto)
+{
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
+        }
+
+        try
+   {
+            var droitAccesDto = new DroitAccesCreationDto
+  {
+                UserId = assignDto.UserId,
+                PeripheriqueLogiqueId = assignDto.PeripheriqueLogiqueId,
+                Type = ((int)assignDto.AccessType).ToString() // ✅ Conversion enum → string
+            };
+
+            var newDroitAcces = await _droitAccesService.AddDroitAccesAsync(droitAccesDto);
+            
+             _logger.LogInformation("Périphérique {PeripheriqueId} affecté à l'utilisateur {UserId} avec type {AccessType}",
+           assignDto.PeripheriqueLogiqueId, assignDto.UserId, assignDto.AccessType);
+
+   var response = ApiResponse<DroitAccesDto>.FromDatabase(newDroitAcces);
+  return Ok(response);
+        }
+        catch (Exception ex)
+        {
+ _logger.LogError(ex, "Erreur lors de l'affectation de périphérique {PeripheriqueId} à l'utilisateur {UserId}",
+    assignDto.PeripheriqueLogiqueId, assignDto.UserId);
+    
+   return BadRequest(ApiResponse<DroitAccesDto>.FromDatabase(null!, DateTime.UtcNow));
+    }
+    }
+
     // Points de terminaison pour les utilisateurs finaux
 
-    // GET: api/user/access-rights/zones
+  // GET: api/user/access-rights/zones
     [HttpGet("user/access-rights/zones")]
     [Authorize] // Les utilisateurs authentifiés peuvent accéder à leurs propres droits
-    public async Task<IActionResult> GetUserZoneAccessRights()
+ public async Task<ActionResult<ApiResponse<IEnumerable<DroitAccesDto>>>> GetUserZoneAccessRights()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized("Impossible de déterminer l'utilisateur.");
+   return Unauthorized("Impossible de déterminer l'utilisateur.");
         }
 
         var droits = await _droitAccesService.GetUserZoneAccessRightsAsync(userId);
-        return Ok(droits);
+        var response = ApiResponse<IEnumerable<DroitAccesDto>>.FromDatabase(droits);
+ return Ok(response);
     }
 
     // GET: api/user/access-rights/peripheriques
     [HttpGet("user/access-rights/peripheriques")]
     [Authorize]
-    public async Task<IActionResult> GetUserPeripheriqueAccessRights()
+    public async Task<ActionResult<ApiResponse<IEnumerable<DroitAccesDto>>>> GetUserPeripheriqueAccessRights()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized("Impossible de déterminer l'utilisateur.");
-        }
+return Unauthorized("Impossible de déterminer l'utilisateur.");
+      }
 
         var droits = await _droitAccesService.GetUserPeripheriqueAccessRightsAsync(userId);
-        return Ok(droits);
+        var response = ApiResponse<IEnumerable<DroitAccesDto>>.FromDatabase(droits);
+        return Ok(response);
     }
+}
+
+// ✅ NOUVEAUX DTOs pour simplifier l'affectation
+public class AssignZoneToUserDto
+{
+    public required string UserId { get; set; }
+    public int ZoneId { get; set; }
+    public DroitAccesType AccessType { get; set; } = DroitAccesType.Controle;
+}
+
+public class AssignDeviceToUserDto
+{
+    public required string UserId { get; set; }
+    public int PeripheriqueLogiqueId { get; set; }
+    public DroitAccesType AccessType { get; set; } = DroitAccesType.Controle;
 }

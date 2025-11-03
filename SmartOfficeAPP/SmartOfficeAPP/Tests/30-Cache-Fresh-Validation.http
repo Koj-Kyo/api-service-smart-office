@@ -1,0 +1,85 @@
+### Tests pour validation du système de cache et fresh=true
+
+#### 1. Test télémétrie avec cache
+GET {{baseUrl}}/api/telemetries/peripherique?peripheriqueId=1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 2. Test télémétrie avec fresh=true (bypass cache)
+GET {{baseUrl}}/api/telemetries/peripherique?peripheriqueId=1&fresh=true
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 3. Test données historiques avec cache
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01&endDate=2024-12-31&peripheriqueId=1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 4. Test données historiques avec fresh=true
+GET {{baseUrl}}/api/telemetries/history?startDate=2024-01-01&endDate=2024-12-31&peripheriqueId=1&fresh=true
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 5. Test commandes récentes avec cache
+GET {{baseUrl}}/api/commandes/my-commands?limit=10
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 6. Test commandes récentes avec fresh=true
+GET {{baseUrl}}/api/commandes/my-commands?limit=10&fresh=true
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 7. Test commandes par périphérique avec cache
+GET {{baseUrl}}/api/commandes/by-peripherique/1?limit=10
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 8. Test commandes par périphérique avec fresh=true
+GET {{baseUrl}}/api/commandes/by-peripherique/1?limit=10&fresh=true
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+###
+
+#### 9. Envoyer une commande (pour tester l'invalidation du cache)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "test_command",
+  "valeur": "test_value"
+}
+
+###
+
+#### 10. Vérifier que le cache a été invalidé
+GET {{baseUrl}}/api/commandes/my-commands?limit=10
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+### Variables pour les tests
+@baseUrl = https://localhost:7152
+@accessToken = YOUR_JWT_TOKEN_HERE
+
+### Notes de validation:
+# - Les réponses avec cache doivent avoir "meta.source": "cache"
+# - Les réponses avec fresh=true doivent avoir "meta.source": "database"
+# - Les réponses en cache doivent avoir "meta.cachedAt" renseigné
+# - Après une commande, le cache doit être invalidé automatiquement

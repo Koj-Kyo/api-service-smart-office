@@ -7,7 +7,17 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
@@ -23,7 +33,17 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
@@ -39,7 +59,17 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
@@ -77,6 +107,58 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
+    "Method": "AssignDeviceToUser",
+    "RelativePath": "api/admin/assign-device-to-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "assignDto",
+        "Type": "SmartOfficeAPP.Controllers.AssignDeviceToUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
+    "Method": "AssignZoneToUser",
+    "RelativePath": "api/admin/assign-zone-to-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "assignDto",
+        "Type": "SmartOfficeAPP.Controllers.AssignZoneToUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.AuthController",
@@ -156,7 +238,79 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.CommandeResponseDto",
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.Response.CommandeResponseDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.CommandesController",
+    "Method": "GetCommandsByPeripherique",
+    "RelativePath": "api/Commandes/by-peripherique/{peripheriqueId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "peripheriqueId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "limit",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.CommandeResponseDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.CommandesController",
+    "Method": "GetMyCommands",
+    "RelativePath": "api/Commandes/my-commands",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "limit",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "offset",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.Response.CommandeResponseDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -491,6 +645,72 @@
     "ReturnTypes": [
       {
         "Type": "SmartOfficeAPP.DTOs.ConsommationStatsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DashboardController",
+    "Method": "GetDeviceActivity",
+    "RelativePath": "api/Dashboard/device-activity",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.List\u00601[[SmartOfficeAPP.DTOs.Response.DeviceActivityDataDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DashboardController",
+    "Method": "GetEnergyData",
+    "RelativePath": "api/Dashboard/energy",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "period",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.List\u00601[[SmartOfficeAPP.DTOs.Response.EnergyDataPointDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.DashboardController",
+    "Method": "GetStats",
+    "RelativePath": "api/Dashboard/stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.Response.DashboardStatsDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -995,16 +1215,11 @@
         "Name": "iotDeviceId",
         "Type": "System.String",
         "IsRequired": true
-      },
-      {
-        "Name": "fresh",
-        "Type": "System.Boolean",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Controllers.PeripheralDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Controllers.PeripheralDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -2279,24 +2494,9 @@
         "Name": "deviceId",
         "Type": "System.String",
         "IsRequired": true
-      },
-      {
-        "Name": "fresh",
-        "Type": "System.Boolean",
-        "IsRequired": false
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Object, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
@@ -2347,24 +2547,9 @@
         "Name": "deviceId",
         "Type": "System.String",
         "IsRequired": true
-      },
-      {
-        "Name": "fresh",
-        "Type": "System.Boolean",
-        "IsRequired": false
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[SmartOfficeAPP.Services.ServicesImpl.DeviceTwinInfo, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
@@ -2380,17 +2565,7 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Services.ServicesImpl.DeviceConnectionInfo, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.IoTHubDeviceController",
@@ -2406,17 +2581,7 @@
         "IsRequired": false
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponseEnvelope\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.Services.ServicesImpl.IoTHubDeviceSummary, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.NotificationController",
@@ -2580,7 +2745,17 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.Models.Telemetrie, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
@@ -2594,9 +2769,24 @@
         "Name": "peripheriqueId",
         "Type": "System.Int32",
         "IsRequired": true
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.TelemetrieDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
@@ -2620,9 +2810,24 @@
         "Name": "peripheriqueId",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.TelemetrieDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
@@ -2636,9 +2841,24 @@
         "Name": "peripheriqueId",
         "Type": "System.Int32",
         "IsRequired": false
+      },
+      {
+        "Name": "fresh",
+        "Type": "System.Boolean",
+        "IsRequired": false
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.TelemetrieDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.TelemetriesController",
@@ -2654,7 +2874,17 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
@@ -2664,7 +2894,17 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.DroitAccesController",
@@ -2674,7 +2914,17 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": []
+    "ReturnTypes": [
+      {
+        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.UserActivityController",

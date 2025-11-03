@@ -166,3 +166,6 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebasse
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\StackExchange.Redis.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Polly.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Polly.Core.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\bin\Debug\net9.0\Polly.Extensions.Http.dll

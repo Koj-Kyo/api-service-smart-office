@@ -1,0 +1,138 @@
+### Tests simplifiés pour affectation de zones et périphériques aux utilisateurs
+
+#### Variables
+@baseUrl = https://localhost:7152
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+@testUserId = USER_ID_TO_ASSIGN
+@zoneId = 1
+@peripheriqueId = 1
+
+###
+
+#### 1. ? Affecter une zone entière à un utilisateur (CONTRÔLE)
+POST {{baseUrl}}/api/admin/assign-zone-to-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{testUserId}}",
+  "zoneId": {{zoneId}},
+  "accessType": 1
+}
+
+# accessType: 0=Lecture, 1=Contrôle
+# Résultat: L'utilisateur peut contrôler TOUS les périphériques de cette zone
+
+###
+
+#### 2. ? Affecter une zone entière à un utilisateur (LECTURE seulement)
+POST {{baseUrl}}/api/admin/assign-zone-to-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{testUserId}}",
+  "zoneId": 2,
+  "accessType": 0
+}
+
+# Résultat: L'utilisateur peut voir mais pas contrôler les périphériques de cette zone
+
+###
+
+#### 3. ? Affecter un périphérique spécifique à un utilisateur
+POST {{baseUrl}}/api/admin/assign-device-to-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{testUserId}}",
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "accessType": 1
+}
+
+# Résultat: L'utilisateur peut contrôler ce périphérique spécifique (même s'il n'a pas accès à la zone)
+
+###
+
+#### 4. Voir tous les droits d'accès (Admin)
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+###
+
+#### 5. Voir les zones accessibles pour un utilisateur
+GET {{baseUrl}}/api/user/access-rights/zones
+Authorization: Bearer {{testUserId}}
+Content-Type: application/json
+
+# Retourne les zones auxquelles l'utilisateur a accès
+
+###
+
+#### 6. Voir les périphériques accessibles pour un utilisateur
+GET {{baseUrl}}/api/user/access-rights/peripheriques
+Authorization: Bearer {{testUserId}}
+Content-Type: application/json
+
+# Retourne les périphériques auxquels l'utilisateur a un accès direct
+
+###
+
+#### 7. Test de contrôle: Envoyer une commande via droit de zone
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{testUserId}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{peripheriqueId}},
+  "nomCommande": "test_zone_access",
+  "valeur": "success_via_zone"
+}
+
+# Doit réussir si le périphérique est dans une zone où l'utilisateur a le contrôle
+
+###
+
+#### 8. Supprimer un droit d'accès spécifique
+DELETE {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+###
+
+### Documentation des types d'accès:
+# 
+# DroitAccesType.Lecture (0): 
+#   - Peut voir les données de télémétrie
+#   - Peut voir l'état des périphériques
+#   - NE peut PAS envoyer de commandes
+#
+# DroitAccesType.Controle (1):
+#   - Peut faire tout ce que permet "Lecture"
+#   - Peut envoyer des commandes aux périphériques
+#   - Peut modifier l'état des périphériques
+#
+# Héritage Zone ? Périphériques:
+#   - Si un utilisateur a le droit "Controle" sur une zone
+#   - Il peut contrôler TOUS les périphériques de cette zone
+#   - Même sans droit direct sur chaque périphérique
+#
+# Priorité des droits:
+#   - Droit direct sur périphérique > Droit via zone
+#   - Les droits se cumulent (pas d'exclusion)
+
+###
+
+### Cas d'usage recommandés:
+# 
+# 1. Affecter des zones entières:
+#    - Personnel d'une zone spécifique (bureau, atelier, etc.)
+#    - Gestionnaires de bâtiment
+#    - Équipes de maintenance
+#
+# 2. Affecter des périphériques spécifiques:
+#    - Équipements sensibles nécessitant une autorisation spéciale
+#    - Périphériques partagés entre zones
+#    - Accès temporaire ou exceptionnel

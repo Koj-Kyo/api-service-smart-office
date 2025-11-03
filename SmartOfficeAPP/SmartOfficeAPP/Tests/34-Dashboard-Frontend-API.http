@@ -1,0 +1,186 @@
+### ============================================
+### Tests API Dashboard pour Frontend Blazor
+### ============================================
+### Ces endpoints fournissent les données pour la page Dashboard
+### Authentification requise via JWT Bearer token
+
+@baseUrl = http://localhost:5210/api
+@token = {{$dotenv BEARER_TOKEN}}
+
+### ============================================
+### 1. Profil utilisateur connecté
+### ============================================
+### Endpoint: GET /api/User/profile
+### Utilisation front: IAuthService.GetCurrentUserAsync()
+### Retourne: UserProfileDto avec FirstName, LastName, Roles
+
+GET {{baseUrl}}/User/profile
+Authorization: Bearer {{token}}
+
+### ============================================
+### 2. Statistiques KPI du Dashboard
+### ============================================
+### Endpoint: GET /api/Dashboard/stats
+### Utilisation front: IDashboardStatsService.GetDashboardStatsAsync()
+### Retourne: DashboardStatsDto (devices, users, incidents, energy)
+
+GET {{baseUrl}}/Dashboard/stats
+Authorization: Bearer {{token}}
+
+### ============================================
+### 3. Consommation énergétique - Mensuelle
+### ============================================
+### Endpoint: GET /api/Dashboard/energy?period=month
+### Utilisation front: IDashboardStatsService.GetEnergyConsumptionDataAsync("month")
+### Retourne: List<EnergyDataPointDto> (30 derniers jours)
+
+GET {{baseUrl}}/Dashboard/energy?period=month
+Authorization: Bearer {{token}}
+
+### ============================================
+### 4. Consommation énergétique - Hebdomadaire
+### ============================================
+### Endpoint: GET /api/Dashboard/energy?period=week
+### Utilisation front: IDashboardStatsService.GetEnergyConsumptionDataAsync("week")
+### Retourne: List<EnergyDataPointDto> (7 derniers jours)
+
+GET {{baseUrl}}/Dashboard/energy?period=week
+Authorization: Bearer {{token}}
+
+### ============================================
+### 5. Consommation énergétique - Quotidienne
+### ============================================
+### Endpoint: GET /api/Dashboard/energy?period=day
+### Utilisation front: IDashboardStatsService.GetEnergyConsumptionDataAsync("day")
+### Retourne: List<EnergyDataPointDto> (24 dernières heures)
+
+GET {{baseUrl}}/Dashboard/energy?period=day
+Authorization: Bearer {{token}}
+
+### ============================================
+### 6. Activité des appareils par type
+### ============================================
+### Endpoint: GET /api/Dashboard/device-activity
+### Utilisation front: IDashboardStatsService.GetDeviceActivityDataAsync()
+### Retourne: List<DeviceActivityDataDto> (répartition par type)
+
+GET {{baseUrl}}/Dashboard/device-activity
+Authorization: Bearer {{token}}
+
+### ============================================
+### 7. Envoyer une commande IoT (TurnOn)
+### ============================================
+### Endpoint: POST /api/Commande
+### Utilisation front: ICommandeService.SendCommandAsync(peripheriqueId, "TurnOn")
+### Retourne: CommandeResponseDto
+
+POST {{baseUrl}}/Commande
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "TurnOn",
+"valeur": null
+}
+
+### ============================================
+### 8. Envoyer une commande IoT (TurnOff)
+### ============================================
+### Endpoint: POST /api/Commande
+### Utilisation front: ICommandeService.SendCommandAsync(peripheriqueId, "TurnOff")
+### Retourne: CommandeResponseDto
+
+POST {{baseUrl}}/Commande
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 1,
+  "nomCommande": "TurnOff",
+  "valeur": null
+}
+
+### ============================================
+### 9. Envoyer une commande IoT avec valeur
+### ============================================
+### Endpoint: POST /api/Commande
+### Utilisation front: ICommandeService.SendCommandAsync(peripheriqueId, "SetTemperature", "22.5")
+### Retourne: CommandeResponseDto
+
+POST {{baseUrl}}/Commande
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": 3,
+  "nomCommande": "SetTemperature",
+  "valeur": "22.5"
+}
+
+### ============================================
+### Réponses attendues (exemples)
+### ============================================
+
+###
+### Réponse GET /api/User/profile
+### {
+###   "id": "user123",
+###   "email": "john.doe@example.com",
+###   "fullName": "John Doe",
+###   "firstName": "John",
+###   "lastName": "Doe",
+###   "roles": ["Admin", "User"]
+### }
+
+###
+### Réponse GET /api/Dashboard/stats
+### {
+###   "data": {
+###     "activeDevices": 12,
+###     "totalDevices": 15,
+###     "devicesChangePercent": 5.2,
+###     "activeUsers": 8,
+###     "totalUsers": 10,
+### "usersChangePercent": 3.1,
+###     "openIncidents": 3,
+###     "totalIncidents": 25,
+###     "incidentsChangePercent": -2.4,
+###     "energyConsumed": 1245.5,
+###     "energyChangePercent": -8.5
+###   },
+###   "source": "Database",
+###   "timestamp": "2025-01-13T10:30:00Z"
+### }
+
+###
+### Réponse GET /api/Dashboard/energy?period=month
+### {
+###   "data": [
+###     { "label": "01/12", "value": 45.2 },
+###     { "label": "02/12", "value": 48.7 },
+###     { "label": "03/12", "value": 42.1 }
+###   ],
+###   "source": "Database",
+###   "timestamp": "2025-01-13T10:30:00Z"
+### }
+
+###
+### Réponse GET /api/Dashboard/device-activity
+### {
+###   "data": [
+###     { "deviceType": "Climatisation", "count": 5 },
+###     { "deviceType": "Éclairage", "count": 8 },
+###     { "deviceType": "Capteur", "count": 2 }
+###   ],
+###   "source": "Database",
+###   "timestamp": "2025-01-13T10:30:00Z"
+### }
+
+###
+### Réponse POST /api/Commande
+### {
+###   "isSuccess": true,
+###   "message": "Commande envoyée avec succès",
+###   "commandeId": 42
+### }

@@ -1,0 +1,250 @@
+### Test final: Validation complète du système d'autorisation par zones
+
+#### Variables
+@baseUrl = https://localhost:7152
+@adminToken = YOUR_ADMIN_JWT_TOKEN_HERE
+
+###
+
+#### Étape 1: Créer un utilisateur test
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test.zone.control@smartoffice.com",
+  "password": "TestZone123!",
+  "fullName": "Utilisateur Test Zone"
+}
+
+# Copier l'ID utilisateur de la réponse pour les tests suivants
+# @testUserId = USER_ID_FROM_RESPONSE
+
+###
+
+#### Étape 2: Connecter l'utilisateur test
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test.zone.control@smartoffice.com",
+  "password": "TestZone123!"
+}
+
+# Copier le accessToken de la réponse
+# @userToken = ACCESS_TOKEN_FROM_RESPONSE
+
+###
+
+#### Étape 3: Créer une zone de test (Admin)
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nom": "Zone Test Contrôle Global"
+}
+
+# Copier l'ID de la zone
+# @testZoneId = ZONE_ID_FROM_RESPONSE
+
+###
+
+#### Étape 4: Créer un périphérique dans cette zone (Admin)
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Périphérique Zone Test",
+  "type": "relay",
+  "iotDeviceId": "test-zone-device-001",
+  "zoneId": {{testZoneId}}
+}
+
+# Copier l'ID du périphérique
+# @testPeripheriqueId = PERIPHERIQUE_ID_FROM_RESPONSE
+
+###
+
+#### Étape 5: ? Affecter la zone à l'utilisateur avec droit de CONTRÔLE
+POST {{baseUrl}}/api/admin/assign-zone-to-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{testUserId}}",
+  "zoneId": {{testZoneId}},
+  "accessType": 1
+}
+
+# Réponse attendue: Succès avec détails du DroitAcces créé
+
+###
+
+#### Étape 6: Vérifier les droits de l'utilisateur sur les zones
+GET {{baseUrl}}/api/user/access-rights/zones
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+# Réponse attendue: Liste contenant la zone avec type=1 (Contrôle)
+
+###
+
+#### Étape 7: ? TEST PRINCIPAL - Contrôler le périphérique via droit de zone
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{testPeripheriqueId}},
+  "nomCommande": "test_zone_inheritance",
+  "valeur": "success_via_zone_control"
+}
+
+# ? RÉSULTAT ATTENDU:
+# - IsSuccess: true
+# - Message: "Commande envoyée avec succès."
+# 
+# ? LOG ATTENDU DANS LA CONSOLE DU SERVEUR:
+# "Contrôle autorisé pour user {userId} ? périphérique {id} (zone {zoneId}). Droit direct: False, Droit zone: True"
+
+###
+
+#### Étape 8: Créer un second périphérique dans la même zone
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Second Périphérique Zone Test",
+  "type": "sensor",
+  "iotDeviceId": "test-zone-device-002",
+  "zoneId": {{testZoneId}}
+}
+
+# @secondPeripheriqueId = PERIPHERIQUE_ID_FROM_RESPONSE
+
+###
+
+#### Étape 9: ? Contrôler le SECOND périphérique (même zone)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{secondPeripheriqueId}},
+  "nomCommande": "test_second_device",
+  "valeur": "zone_control_inheritance"
+}
+
+# ? RÉSULTAT ATTENDU:
+# - IsSuccess: true (l'utilisateur peut contrôler ce nouveau périphérique automatiquement)
+
+###
+
+#### Étape 10: Créer un périphérique dans une AUTRE zone
+POST {{baseUrl}}/api/zones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nom": "Zone Interdite"
+}
+
+# @forbiddenZoneId = ZONE_ID_FROM_RESPONSE
+
+###
+
+POST {{baseUrl}}/api/devices
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Périphérique Interdit",
+  "type": "relay",
+  "iotDeviceId": "forbidden-device-001",
+  "zoneId": {{forbiddenZoneId}}
+}
+
+# @forbiddenPeripheriqueId = PERIPHERIQUE_ID_FROM_RESPONSE
+
+###
+
+#### Étape 11: ? Tenter de contrôler le périphérique de l'autre zone (doit ÉCHOUER)
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{forbiddenPeripheriqueId}},
+  "nomCommande": "test_forbidden",
+  "valeur": "should_fail"
+}
+
+# ? RÉSULTAT ATTENDU:
+# - IsSuccess: false
+# - Message: "Accès refusé : vous n'avez pas le droit de contrôler ce périphérique."
+#
+# ? LOG ATTENDU:
+# "Accès refusé (contrôle) user {userId} ? périphérique {id} (zone {zoneId}). Droit direct: False, Droit zone: False"
+
+###
+
+#### Étape 12: ? Validation finale - Affecter droit DIRECT sur périphérique interdit
+POST {{baseUrl}}/api/admin/assign-device-to-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{testUserId}}",
+  "peripheriqueLogiqueId": {{forbiddenPeripheriqueId}},
+  "accessType": 1
+}
+
+###
+
+#### Étape 13: ? Maintenant contrôler le périphérique via droit direct
+POST {{baseUrl}}/api/commandes
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "peripheriqueLogiqueId": {{forbiddenPeripheriqueId}},
+  "nomCommande": "test_direct_access",
+  "valeur": "success_via_direct_right"
+}
+
+# ? RÉSULTAT ATTENDU:
+# - IsSuccess: true
+#
+# ? LOG ATTENDU:
+# "Contrôle autorisé pour user {userId} ? périphérique {id} (zone {zoneId}). Droit direct: True, Droit zone: False"
+
+###
+
+### ?? RÉSUMÉ DES VALIDATIONS
+
+# ? Héritage zone ? périphériques: 
+#    Un utilisateur avec contrôle sur une zone peut contrôler TOUS ses périphériques
+#
+# ? Nouveaux périphériques automatiquement accessibles:
+#    Périphériques ajoutés après affectation de zone sont contrôlables
+#
+# ? Isolation des zones:
+#    Pas d'accès aux périphériques d'autres zones sans droit
+#
+# ? Droits directs prioritaires:
+#    Droit direct sur périphérique fonctionne même sans droit de zone
+#
+# ? Logs détaillés:
+#    Traçabilité complète des décisions d'autorisation
+
+### ?? CHECKLIST DE VALIDATION
+
+# [ ] Étapes 1-4: Setup utilisateur, zone, périphérique
+# [ ] Étape 5: Affectation zone réussie
+# [ ] Étape 7: Contrôle via zone RÉUSSI
+# [ ] Étape 9: Second périphérique même zone RÉUSSI
+# [ ] Étape 11: Périphérique autre zone REFUSÉ
+# [ ] Étape 13: Droit direct RÉUSSI
+# [ ] Logs: Messages détaillés dans console serveur

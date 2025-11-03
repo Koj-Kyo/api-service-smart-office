@@ -8,7 +8,7 @@ public class ApiResponse<T>
     /// <summary>
     /// Données de la réponse
     /// </summary>
-    public T? Data { get; set; }
+ public T? Data { get; set; }
 
     /// <summary>
     /// Métadonnées sur la source et la fraîcheur des données
@@ -22,13 +22,13 @@ public class ApiResponse<T>
     {
         return new ApiResponse<T>
         {
-Data = data,
-   Meta = new ApiResponseMeta
-            {
-     Source = "cache",
-     LastUpdatedUtc = lastUpdated,
-              Stale = isStale,
-                CachedAt = DateTime.UtcNow
+     Data = data,
+            Meta = new ApiResponseMeta
+  {
+      Source = "cache",
+          LastUpdatedUtc = lastUpdated,
+       Stale = isStale,
+        CachedAt = DateTime.UtcNow
     }
         };
     }
@@ -38,35 +38,35 @@ Data = data,
     /// </summary>
     public static ApiResponse<T> FromDatabase(T data, DateTime? lastUpdated = null)
     {
+   return new ApiResponse<T>
+        {
+            Data = data,
+  Meta = new ApiResponseMeta
+    {
+    Source = "database",
+ LastUpdatedUtc = lastUpdated ?? DateTime.UtcNow,
+       Stale = false
+   }
+      };
+    }
+
+    /// <summary>
+  /// Crée une réponse depuis le cloud (IoT Hub)
+    /// </summary>
+    public static ApiResponse<T> FromCloud(T data)
+    {
         return new ApiResponse<T>
         {
  Data = data,
             Meta = new ApiResponseMeta
-       {
-         Source = "database",
-     LastUpdatedUtc = lastUpdated ?? DateTime.UtcNow,
-  Stale = false
-          }
-   };
-    }
-
-    /// <summary>
-    /// Crée une réponse depuis le cloud (IoT Hub)
-    /// </summary>
-    public static ApiResponse<T> FromCloud(T data)
-    {
-     return new ApiResponse<T>
-        {
-            Data = data,
-     Meta = new ApiResponseMeta
-         {
-      Source = "cloud",
-    LastUpdatedUtc = DateTime.UtcNow,
+      {
+       Source = "cloud",
+  LastUpdatedUtc = DateTime.UtcNow,
     Stale = false,
-      FreshFromCloud = true
+    FreshFromCloud = true
             }
         };
- }
+    }
 }
 
 /// <summary>
@@ -81,25 +81,25 @@ public class ApiResponseMeta
 
     /// <summary>
     /// Date de dernière mise à jour des données
- /// </summary>
+    /// </summary>
     public DateTime LastUpdatedUtc { get; set; }
 
     /// <summary>
     /// Indique si les données sont obsolètes (stale-while-revalidate)
-  /// </summary>
+    /// </summary>
     public bool Stale { get; set; }
 
     /// <summary>
     /// Date de mise en cache (si applicable)
     /// </summary>
-  public DateTime? CachedAt { get; set; }
+    public DateTime? CachedAt { get; set; }
 
-    /// <summary>
+  /// <summary>
     /// Indique si les données viennent directement du cloud
     /// </summary>
     public bool FreshFromCloud { get; set; }
 
-/// <summary>
+    /// <summary>
     /// Durée de validité du cache (en secondes)
     /// </summary>
     public int? CacheTtlSeconds { get; set; }
