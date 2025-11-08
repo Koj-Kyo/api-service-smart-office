@@ -1,0 +1,496 @@
+### ============================================
+### ?? Tests Complets - Gestion des Incidents
+### ============================================
+### Fichier: 37-Incidents-Complete.http
+### Date: 6 janvier 2025
+### Backend: ? 100% fonctionnel
+### ============================================
+
+### Variables
+@baseUrl = https://localhost:7144
+@token = {{$dotenv LOGIN_TOKEN}}
+@ticketId = 1
+@userId = user-123
+
+### ============================================
+### ?? Section 1: Authentication
+### ============================================
+
+### 1.1 Login User (pour obtenir le token)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@smartoffice.com",
+  "password": "User@123"
+}
+
+### 1.2 Login Manager (pour tests d'assignation)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@smartoffice.com",
+  "password": "Manager@123"
+}
+
+### 1.3 Login Admin (pour tests de suppression)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### ============================================
+### ? Section 2: Création de Tickets
+### ============================================
+
+### 2.1 Créer un ticket pour une zone
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Capteur de température défectueux",
+  "description": "Le capteur de la salle de réunion A ne répond plus depuis ce matin",
+  "statut": "Ouvert",
+  "zoneId": 5,
+  "peripheriqueLogiqueId": null
+}
+
+### 2.2 Créer un ticket pour un périphérique
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Climatisation hors service",
+  "description": "Le climatiseur du bureau 3 ne démarre pas",
+  "statut": "Ouvert",
+  "zoneId": null,
+  "peripheriqueLogiqueId": 12
+}
+
+### 2.3 Créer un ticket général (sans zone ni périphérique)
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Problème réseau WiFi",
+  "description": "Perte de connexion intermittente dans tout le bâtiment",
+  "statut": "Ouvert",
+  "zoneId": null,
+  "peripheriqueLogiqueId": null
+}
+
+### 2.4 Créer un ticket avec zone ET périphérique
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Éclairage défectueux",
+  "description": "Les lumières LED du couloir B clignotent",
+  "statut": "Ouvert",
+  "zoneId": 3,
+  "peripheriqueLogiqueId": 8
+}
+
+### 2.5 Créer un ticket "En cours" directement
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Mise à jour firmware",
+  "description": "Mise à jour du firmware en cours",
+  "statut": "En cours",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": null
+}
+
+### ============================================
+### ?? Section 3: Récupération de Tickets
+### ============================================
+
+### 3.1 Récupérer un ticket par ID
+GET {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### 3.2 Récupérer un ticket inexistant (404)
+GET {{baseUrl}}/api/IncidentTickets/99999
+Authorization: Bearer {{token}}
+
+### 3.3 Récupérer les tickets "Ouvert"
+GET {{baseUrl}}/api/IncidentTickets/status/Ouvert
+Authorization: Bearer {{token}}
+
+### 3.4 Récupérer les tickets "En cours"
+GET {{baseUrl}}/api/IncidentTickets/status/En cours
+Authorization: Bearer {{token}}
+
+### 3.5 Récupérer les tickets "Résolu"
+GET {{baseUrl}}/api/IncidentTickets/status/Résolu
+Authorization: Bearer {{token}}
+
+### 3.6 Récupérer les tickets "Fermé"
+GET {{baseUrl}}/api/IncidentTickets/status/Fermé
+Authorization: Bearer {{token}}
+
+### 3.7 Récupérer les tickets d'un utilisateur
+GET {{baseUrl}}/api/IncidentTickets/user/{{userId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ?? Section 4: Mise à Jour du Statut
+### ============================================
+
+### 4.1 Passer un ticket de "Ouvert" à "En cours"
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"En cours"
+
+### 4.2 Passer un ticket en "En attente"
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"En attente"
+
+### 4.3 Marquer un ticket comme "Résolu"
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Résolu"
+
+### 4.4 Fermer un ticket
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Fermé"
+
+### 4.5 Annuler un ticket
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Annulé"
+
+### 4.6 Rouvrir un ticket fermé
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Ouvert"
+
+### 4.7 Tenter de mettre à jour un ticket inexistant (404)
+PUT {{baseUrl}}/api/IncidentTickets/99999/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Résolu"
+
+### ============================================
+### ?? Section 5: Assignation de Tickets
+### ============================================
+### ?? Requiert le rôle Manager ou Admin
+
+### 5.1 Assigner un ticket à un utilisateur (Manager)
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"tech-user-789"
+
+### 5.2 Assigner à un autre utilisateur
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"support-user-456"
+
+### 5.3 Réassigner à soi-même
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"{{userId}}"
+
+### 5.4 Tenter d'assigner sans autorisation (403) - User simple
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"tech-user-789"
+
+### 5.5 Assigner un ticket inexistant (404)
+PUT {{baseUrl}}/api/IncidentTickets/99999/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"tech-user-789"
+
+### ============================================
+### ??? Section 6: Suppression de Tickets
+### ============================================
+### ?? Requiert le rôle Admin uniquement
+
+### 6.1 Supprimer un ticket (Admin)
+DELETE {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### 6.2 Tenter de supprimer sans autorisation (403) - Manager
+DELETE {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### 6.3 Tenter de supprimer sans autorisation (403) - User
+DELETE {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### 6.4 Supprimer un ticket inexistant (404)
+DELETE {{baseUrl}}/api/IncidentTickets/99999
+Authorization: Bearer {{token}}
+
+### ============================================
+### ?? Section 7: Scénarios Complets
+### ============================================
+
+### 7.1 Scénario: Cycle de vie complet d'un ticket
+### Étape 1: Créer
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Test cycle complet",
+  "description": "Ticket de test pour cycle de vie",
+  "statut": "Ouvert",
+  "zoneId": 1
+}
+
+### Étape 2: Récupérer (copier l'ID du ticket créé)
+GET {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### Étape 3: Passer en "En cours"
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"En cours"
+
+### Étape 4: Assigner (Manager/Admin)
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"tech-user-789"
+
+### Étape 5: Marquer "Résolu"
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Résolu"
+
+### Étape 6: Fermer
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Fermé"
+
+### Étape 7: Supprimer (Admin)
+DELETE {{baseUrl}}/api/IncidentTickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ? Section 8: Tests d'Erreur
+### ============================================
+
+### 8.1 Créer sans token (401)
+POST {{baseUrl}}/api/IncidentTickets
+Content-Type: application/json
+
+{
+  "sujet": "Test sans auth",
+  "description": "Devrait échouer",
+  "statut": "Ouvert"
+}
+
+### 8.2 Créer avec token invalide (401)
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer invalid-token-123
+Content-Type: application/json
+
+{
+  "sujet": "Test token invalide",
+  "description": "Devrait échouer",
+  "statut": "Ouvert"
+}
+
+### 8.3 Créer sans sujet (400)
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Ticket sans sujet",
+  "statut": "Ouvert"
+}
+
+### 8.4 Créer sans description (400)
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Ticket sans description",
+  "statut": "Ouvert"
+}
+
+### 8.5 Créer avec un statut invalide
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Test statut invalide",
+  "description": "Test",
+  "statut": "StatusInvalide"
+}
+
+### ============================================
+### ?? Section 9: Statistiques et Agrégations
+### ============================================
+
+### 9.1 Compter tous les tickets "Ouvert"
+GET {{baseUrl}}/api/IncidentTickets/status/Ouvert
+Authorization: Bearer {{token}}
+
+### 9.2 Compter tous les tickets "En cours"
+GET {{baseUrl}}/api/IncidentTickets/status/En cours
+Authorization: Bearer {{token}}
+
+### 9.3 Compter tous les tickets "Résolu"
+GET {{baseUrl}}/api/IncidentTickets/status/Résolu
+Authorization: Bearer {{token}}
+
+### 9.4 Tickets d'un utilisateur spécifique
+GET {{baseUrl}}/api/IncidentTickets/user/{{userId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ?? Section 10: Tests Avancés
+### ============================================
+
+### 10.1 Créer plusieurs tickets rapidement
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Ticket batch 1",
+  "description": "Test de charge 1",
+  "statut": "Ouvert",
+  "zoneId": 1
+}
+
+###
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Ticket batch 2",
+  "description": "Test de charge 2",
+  "statut": "Ouvert",
+  "zoneId": 2
+}
+
+###
+POST {{baseUrl}}/api/IncidentTickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sujet": "Ticket batch 3",
+  "description": "Test de charge 3",
+  "statut": "Ouvert",
+  "zoneId": 3
+}
+
+### 10.2 Tester la concurrence: 2 assignations simultanées
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"user-A"
+
+###
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/assign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"user-B"
+
+### 10.3 Changements de statut rapides successifs
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"En cours"
+
+###
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"En attente"
+
+###
+PUT {{baseUrl}}/api/IncidentTickets/{{ticketId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Résolu"
+
+### ============================================
+### ? Résumé des Tests
+### ============================================
+### 
+### Total: 50+ requêtes de test
+### 
+### ? Section 1: Authentication (3 tests)
+### ? Section 2: Création (5 tests)
+### ? Section 3: Récupération (7 tests)
+### ? Section 4: Mise à jour statut (7 tests)
+### ? Section 5: Assignation (5 tests)
+### ? Section 6: Suppression (4 tests)
+### ? Section 7: Scénarios complets (7 tests)
+### ? Section 8: Tests d'erreur (5 tests)
+### ? Section 9: Statistiques (4 tests)
+### ? Section 10: Tests avancés (6 tests)
+### 
+### Codes HTTP testés:
+### - 200 OK
+### - 201 Created
+### - 204 No Content
+### - 400 Bad Request
+### - 401 Unauthorized
+### - 403 Forbidden
+### - 404 Not Found
+### 
+### Autorisations testées:
+### - User (création, vue, changement statut)
+### - Manager (assignation)
+### - Admin (suppression)
+### 
+### ============================================

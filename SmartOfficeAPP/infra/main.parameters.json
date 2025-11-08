@@ -1,0 +1,43 @@
+// =========================================
+// ?? SmartOffice API - Fichier de paramètres
+// Environnement : Production (Soutenance)
+// Région : East US
+// =========================================
+
+using './main.bicep'
+
+// =========================================
+// Paramètres d'application
+// =========================================
+param appName = 'smartoffice'
+param environment = 'prod'
+param location = 'eastus'
+
+// =========================================
+// PostgreSQL Configuration
+// =========================================
+param postgresqlAdminUsername = 'smartofficeadmin'
+// ?? Le mot de passe sera demandé lors du déploiement ou fourni via variable d'environnement
+
+// =========================================
+// Tags pour gestion
+// =========================================
+param tags = {
+  Application: 'SmartOffice'
+  Environment: 'Production'
+  ManagedBy: 'Bicep-IaC'
+  Purpose: 'Academic-Presentation'
+  Owner: 'Student-Memoire'
+  CostCenter: 'Education'
+}
+
+// =========================================
+// ?? Secrets (à fournir lors du déploiement)
+// =========================================
+// Ces secrets seront demandés lors de l'exécution de 'azd up' ou 'azd provision'
+// Ou peuvent être définis via variables d'environnement :
+//
+// $env:POSTGRESQL_ADMIN_PASSWORD = "VotreMotDePasseSecurise123!"
+// $env:JWT_SECRET = "VotreCleSecretJWT256Bits..."
+// $env:IOTHUB_CONNECTION_STRING = "HostName=brainoffice.azure-devices.net;..."
+// $env:STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;..."

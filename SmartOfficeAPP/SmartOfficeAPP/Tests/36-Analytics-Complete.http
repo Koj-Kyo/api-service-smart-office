@@ -1,0 +1,635 @@
+### ?? Tests Analytics Énergétiques - API Complète
+### Fichier: analytics-complete-tests.http
+
+### ========================================
+### CONFIGURATION
+### ========================================
+
+@baseUrl = https://localhost:7144
+@token = {{$dotenv LOGIN_TOKEN}}
+@peripheriqueId = 1
+@zoneId = 1
+@startDate = 2025-01-01
+@endDate = 2025-01-07
+@tarifKwh = 0.13
+
+### ========================================
+### 1. AUTHENTIFICATION
+### ========================================
+
+### 1.1 - Login Admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### Copier le token JWT retourné
+
+### ========================================
+### 2. STATISTIQUES DE BASE
+### ========================================
+
+### 2.1 - Stats par périphérique (7 jours)
+# @name getStatsPeripherique
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+#   "peripheriqueId": 1,
+#   "peripheriqueName": "Climatiseur Salon",
+#   "zoneId": 1,
+#   "zoneName": "Salon",
+#   "consommationTotaleMwh": 145.7,
+#   "puissanceMoyenneMw": 6.2,
+#   "puissanceMaximaleMw": 8.5,
+#   "puissanceMinimaleMw": 3.1,
+#   "tempsFonctionnementHeures": 168.5,
+#   "efficaciteEnergetique": 0.78,
+#   "nombreCycles": 24,
+#   "tempsMoyenCycleMinutes": 45.2
+# }
+
+### 2.2 - Stats par zone (toute la zone)
+GET {{baseUrl}}/api/ConsommationStats/zone/{{zoneId}}
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response: Agrégation de tous les périphériques de la zone
+
+### 2.3 - ? Test validation: date début >= date fin
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate=2025-01-07
+    &endDate=2025-01-01
+Authorization: Bearer {{token}}
+
+### Expected Response (400 Bad Request):
+# "La date de début doit être antérieure à la date de fin"
+
+### 2.4 - ? Test validation: périphérique inexistant
+GET {{baseUrl}}/api/ConsommationStats/peripherique/99999
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response (404 Not Found)
+
+### ========================================
+### 3. DONNÉES TEMPORELLES
+### ========================================
+
+### 3.1 - Consommation horaire (aujourd'hui)
+# @name getHoraire
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/horaire
+    ?date=2025-01-06
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Array de 24 heures
+# [
+#   {
+#     "heure": "2025-01-06T00:00:00Z",
+#     "consommationMwh": 5.2,
+#     "puissanceMoyenneMw": 6.1,
+#     "etatActif": true,
+#     "nombreActivations": 2
+#   },
+#   // ... 24 heures
+# ]
+
+### ? Vérifications:
+# - Array contient 24 éléments (une heure = un élément)
+# - Chaque élément a: heure, consommationMwh, puissanceMoyenneMw
+# - etatActif est un booléen
+# - nombreActivations >= 0
+
+### 3.2 - Consommation horaire (hier)
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/horaire
+    ?date=2025-01-05
+Authorization: Bearer {{token}}
+
+### 3.3 - Tendances de consommation (30 derniers jours)
+# @name getTendances
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/tendances
+    ?nombreJours=30
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+#   "peripheriqueId": 1,
+#   "peripheriqueName": "Climatiseur Salon",
+#   "nombreJours": 30,
+#   "consommationQuotidienneMoyenne": 20.8,
+#   "tendancePourcentage": 5.2,
+#   "consommationPrediteJour": 21.5,
+#   "donneesQuotidiennes": [
+#     {
+#       "date": "2025-01-01T00:00:00Z",
+#       "consommationMwh": 19.5,
+#       "tempsFonctionnementHeures": 22.3,
+#       "puissanceMoyenne": 6.4
+#     }
+#     // ... 30 jours
+#   ]
+# }
+
+### 3.4 - Tendances sur 7 jours
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/tendances
+    ?nombreJours=7
+Authorization: Bearer {{token}}
+
+### 3.5 - Tendances sur 90 jours
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/tendances
+    ?nombreJours=90
+Authorization: Bearer {{token}}
+
+### 3.6 - ? Test validation: nombreJours trop grand
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/tendances
+    ?nombreJours=400
+Authorization: Bearer {{token}}
+
+### Expected Response (400 Bad Request):
+# "Le nombre de jours doit être entre 1 et 365"
+
+### ========================================
+### 4. DÉTECTION D'ANOMALIES
+### ========================================
+
+### 4.1 - Anomalies sur 7 jours
+# @name getAnomalies
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/anomalies
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Array d'anomalies
+# [
+#   {
+#     "peripheriqueId": 1,
+#     "peripheriqueName": "Climatiseur Salon",
+#     "dateDetection": "2025-01-05T14:30:00Z",
+#     "typeAnomalie": "ConsommationElevee",
+#     "description": "Consommation 35% supérieure à la moyenne habituelle",
+#     "valeurMesuree": 9.2,
+#     "valeurAttendue": 6.8,
+#     "ecartPourcentage": 35.3,
+#     "severite": "High"
+#   }
+# ]
+
+### ? Vérifications:
+# - typeAnomalie: "ConsommationElevee", "ConsommationAnormale", "ArretInattendu"
+# - severite: "Low", "Medium", "High"
+# - ecartPourcentage >= 0
+
+### 4.2 - Anomalies sur 30 jours
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/anomalies
+    ?startDate=2024-12-07
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### 4.3 - Anomalies autre périphérique
+GET {{baseUrl}}/api/ConsommationStats/peripherique/2/anomalies
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### 5. CALCUL DES COÛTS
+### ========================================
+
+### 5.1 - Coût énergétique (tarif 0.13€/kWh)
+# @name getCout
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/cout
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &tarifKwh={{tarifKwh}}
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+#   "peripheriqueId": 1,
+#   "peripheriqueName": "Climatiseur Salon",
+#   "consommationMwh": 145.7,
+#   "tarifKwh": 0.13,
+#   "coutTotal": 18.94,
+#   "coutMoyen": 2.71,
+#   "coutJournalier": 2.71,
+#   "coutsHoraires": [
+#     {
+#       "heure": "2025-01-06T00:00:00Z",
+#       "consommationMwh": 5.2,
+#       "tarifKwh": 0.13,
+#       "cout": 0.68
+#     }
+#     // ... heures
+#   ]
+# }
+
+### 5.2 - Coût avec tarif différent (0.15€/kWh)
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/cout
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &tarifKwh=0.15
+Authorization: Bearer {{token}}
+
+### 5.3 - ? Test validation: tarif négatif
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/cout
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &tarifKwh=-0.13
+Authorization: Bearer {{token}}
+
+### Expected Response (400 Bad Request):
+# "Le tarif kWh doit être positif"
+
+### ========================================
+### 6. TOP CONSOMMATEURS
+### ========================================
+
+### 6.1 - Top 10 consommateurs (toutes zones)
+# @name getTopAll
+GET {{baseUrl}}/api/ConsommationStats/top-consommateurs
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &top=10
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Array trié par consommation
+# [
+#   {
+#     "peripheriqueId": 1,
+#     "peripheriqueName": "Climatiseur Salon",
+#     "peripheriqueType": "HVAC",
+#     "zoneId": 1,
+#     "zoneName": "Salon",
+#     "consommationMwh": 45.2,
+#     "pourcentageTotal": 31.0,
+#     "coutEstime": 5.89,
+#     "rang": 1
+#   },
+#   {
+#     "peripheriqueId": 2,
+#     "peripheriqueName": "Éclairage Bureau",
+#     "peripheriqueType": "LED",
+#     "zoneId": 2,
+#     "zoneName": "Bureau",
+#     "consommationMwh": 28.7,
+#     "pourcentageTotal": 19.7,
+#     "coutEstime": 3.74,
+#     "rang": 2
+#   }
+#   // ... jusqu'à 10
+# ]
+
+### ? Vérifications:
+# - Trié par consommationMwh décroissant
+# - pourcentageTotal: somme ? 100%
+# - rang: 1, 2, 3, ...
+
+### 6.2 - Top 5 consommateurs (zone spécifique)
+GET {{baseUrl}}/api/ConsommationStats/top-consommateurs
+    ?zoneId={{zoneId}}
+    &startDate={{startDate}}
+    &endDate={{endDate}}
+    &top=5
+Authorization: Bearer {{token}}
+
+### 6.3 - Top 20 consommateurs
+GET {{baseUrl}}/api/ConsommationStats/top-consommateurs
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &top=20
+Authorization: Bearer {{token}}
+
+### 6.4 - ? Test validation: top trop grand
+GET {{baseUrl}}/api/ConsommationStats/top-consommateurs
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &top=200
+Authorization: Bearer {{token}}
+
+### Expected Response (400 Bad Request):
+# "Le paramètre 'top' doit être entre 1 et 100"
+
+### ========================================
+### 7. RAPPORTS COMPLETS
+### ========================================
+
+### 7.1 - Rapport global (toutes zones)
+# @name getRapportGlobal
+GET {{baseUrl}}/api/ConsommationStats/rapport
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+#   "zoneId": null,
+#   "zoneName": "Toutes les zones",
+#   "startDate": "2025-01-01T00:00:00Z",
+#   "endDate": "2025-01-07T00:00:00Z",
+#   "dateGeneration": "2025-01-07T10:30:00Z",
+#   "consommationTotaleMwh": 145.7,
+#   "coutTotalEstime": 18.95,
+#   "economiesPotentiellesMwh": 12.3,
+#   "economiesPotentiellesEuros": 3.75,
+#   "statistiquesParPeripherique": [
+#     {
+#       "peripheriqueId": 1,
+#       "peripheriqueName": "Climatiseur Salon",
+#       "consommationTotaleMwh": 85.2
+#       // ... autres stats
+#     }
+#   ],
+#   "recommandations": [
+#     {
+#       "peripheriqueId": 1,
+#       "peripheriqueName": "Climatiseur Salon",
+#       "typeRecommandation": "Optimisation température",
+#       "description": "Réduire la température de 1°C permettrait d'économiser 8% d'énergie",
+#       "economieEstimeeMwh": 3.6,
+#       "economieEstimeeEuros": 1.52,
+#       "priorite": "High"
+#     }
+#   ],
+#   "comparaisonPeriodePrecedente": {
+#     "consommationPrecedenteMwh": 138.2,
+#     "consommationActuelleMwh": 145.7,
+#     "variationMwh": 7.5,
+#     "variationPourcentage": 5.4,
+#     "tendance": "Dégradation"
+#   }
+# }
+
+### ? Vérifications:
+# - consommationTotaleMwh > 0
+# - coutTotalEstime > 0
+# - statistiquesParPeripherique non vide
+# - recommandations présentes (si applicable)
+# - comparaisonPeriodePrecedente peut être null
+
+### 7.2 - Rapport par zone
+GET {{baseUrl}}/api/ConsommationStats/rapport
+    ?zoneId={{zoneId}}
+    &startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### 7.3 - Rapport sur 30 jours
+GET {{baseUrl}}/api/ConsommationStats/rapport
+    ?startDate=2024-12-07
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### 8. COMPARAISON ENTRE PÉRIODES
+### ========================================
+
+### 8.1 - Comparer décembre vs janvier
+# @name getComparaison
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/comparaison
+    ?startDate1=2024-12-01
+    &endDate1=2024-12-31
+    &startDate2=2025-01-01
+    &endDate2=2025-01-31
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+#   "peripheriqueId": 1,
+#   "peripheriqueName": "Climatiseur Salon",
+#   "startDate1": "2024-12-01T00:00:00Z",
+#   "endDate1": "2024-12-31T00:00:00Z",
+#   "consommationPeriode1Mwh": 138.2,
+#   "startDate2": "2025-01-01T00:00:00Z",
+#   "endDate2": "2025-01-31T00:00:00Z",
+#   "consommationPeriode2Mwh": 145.7,
+#   "differenceMwh": 7.5,
+#   "differencePourcentage": 5.4,
+#   "tendance": "Augmentation",
+#   "interpretation": "La consommation a augmenté de 5.4% par rapport à la période précédente"
+# }
+
+### ? Vérifications:
+# - differenceMwh = consommationPeriode2 - consommationPeriode1
+# - differencePourcentage correct
+# - tendance: "Augmentation", "Diminution", "Stable"
+
+### 8.2 - Comparer semaines (même mois)
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/comparaison
+    ?startDate1=2025-01-01
+    &endDate1=2025-01-07
+    &startDate2=2025-01-08
+    &endDate2=2025-01-14
+Authorization: Bearer {{token}}
+
+### 8.3 - ? Test validation: dates inversées période 1
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/comparaison
+    ?startDate1=2025-01-07
+    &endDate1=2025-01-01
+    &startDate2=2025-01-08
+    &endDate2=2025-01-14
+Authorization: Bearer {{token}}
+
+### Expected Response (400 Bad Request):
+# "Les dates de début doivent être antérieures aux dates de fin"
+
+### ========================================
+### 9. TESTS AVEC PLUSIEURS PÉRIPHÉRIQUES
+### ========================================
+
+### 9.1 - Stats périphérique 2
+GET {{baseUrl}}/api/ConsommationStats/peripherique/2
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### 9.2 - Stats périphérique 3
+GET {{baseUrl}}/api/ConsommationStats/peripherique/3
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### 9.3 - Comparer périphériques 1 et 2 (même période)
+### Lancer en parallèle:
+# GET /api/ConsommationStats/peripherique/1?...
+# GET /api/ConsommationStats/peripherique/2?...
+### Puis comparer les consommationTotaleMwh
+
+### ========================================
+### 10. TESTS DE PERFORMANCE
+### ========================================
+
+### 10.1 - Période longue (365 jours)
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate=2024-01-01
+    &endDate=2024-12-31
+Authorization: Bearer {{token}}
+
+### ? Vérifier que le temps de réponse < 5 secondes
+
+### 10.2 - Top 100 consommateurs
+GET {{baseUrl}}/api/ConsommationStats/top-consommateurs
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+    &top=100
+Authorization: Bearer {{token}}
+
+### 10.3 - Tendances sur 365 jours
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}/tendances
+    ?nombreJours=365
+Authorization: Bearer {{token}}
+
+### ========================================
+### 11. TESTS D'AUTORISATION
+### ========================================
+
+### 11.1 - ? Accès sans token
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+
+### Expected Response (401 Unauthorized)
+
+### 11.2 - ? Accès avec token expiré
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer expired-token-here
+
+### Expected Response (401 Unauthorized)
+
+### 11.3 - ? Accès avec token valide User (non-Admin)
+# Les endpoints ConsommationStats sont accessibles aux utilisateurs authentifiés
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@smartoffice.com",
+  "password": "User@123"
+}
+
+###
+GET {{baseUrl}}/api/ConsommationStats/peripherique/{{peripheriqueId}}
+    ?startDate={{startDate}}
+    &endDate={{endDate}}
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK)
+
+### ========================================
+### 12. SCÉNARIO COMPLET
+### ========================================
+
+### Scénario: Analyser la consommation d'un périphérique sur 7 jours
+
+### 12.1 - Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### 12.2 - Obtenir les stats principales
+# @name scenario1Stats
+GET {{baseUrl}}/api/ConsommationStats/peripherique/1
+    ?startDate=2025-01-01
+    &endDate=2025-01-07
+Authorization: Bearer {{token}}
+
+### 12.3 - Obtenir les données horaires pour graphique
+GET {{baseUrl}}/api/ConsommationStats/peripherique/1/horaire
+    ?date=2025-01-06
+Authorization: Bearer {{token}}
+
+### 12.4 - Détecter les anomalies
+GET {{baseUrl}}/api/ConsommationStats/peripherique/1/anomalies
+    ?startDate=2025-01-01
+    &endDate=2025-01-07
+Authorization: Bearer {{token}}
+
+### 12.5 - Calculer le coût
+GET {{baseUrl}}/api/ConsommationStats/peripherique/1/cout
+    ?startDate=2025-01-01
+    &endDate=2025-01-07
+    &tarifKwh=0.13
+Authorization: Bearer {{token}}
+
+### 12.6 - Comparer avec période précédente
+GET {{baseUrl}}/api/ConsommationStats/peripherique/1/comparaison
+    ?startDate1=2024-12-25
+    &endDate1=2024-12-31
+    &startDate2=2025-01-01
+    &endDate2=2025-01-07
+Authorization: Bearer {{token}}
+
+### ? Vérifier:
+# - Toutes les requêtes retournent 200 OK
+# - Les données sont cohérentes entre elles
+# - consommationMwh > 0 dans toutes les réponses
+
+### ========================================
+### 13. RÉSUMÉ DES TESTS
+### ========================================
+
+# ? Tests à valider:
+# 
+# STATISTIQUES DE BASE:
+# - [?] GET stats périphérique (7 jours, 30 jours, 365 jours)
+# - [?] GET stats zone
+# - [?] Validation dates (début < fin)
+# - [?] Validation périphérique existe
+#
+# DONNÉES TEMPORELLES:
+# - [?] GET consommation horaire (aujourd'hui, hier)
+# - [?] GET tendances (7j, 30j, 90j, 365j)
+# - [?] Validation nombreJours (1-365)
+#
+# ANOMALIES:
+# - [?] GET anomalies (7j, 30j)
+# - [?] Vérifier types: ConsommationElevee, ConsommationAnormale, ArretInattendu
+# - [?] Vérifier sévérités: Low, Medium, High
+#
+# COÛTS:
+# - [?] GET coût énergétique
+# - [?] Validation tarif positif
+# - [?] Calculs corrects (cout = consommation * tarif)
+#
+# TOP CONSOMMATEURS:
+# - [?] GET top 10, 20, 100
+# - [?] Filtrage par zone
+# - [?] Tri par consommation décroissant
+# - [?] Validation top (1-100)
+#
+# RAPPORTS:
+# - [?] GET rapport global
+# - [?] GET rapport par zone
+# - [?] Présence recommandations
+# - [?] Présence comparaison période
+#
+# COMPARAISONS:
+# - [?] Comparer 2 périodes
+# - [?] Validation dates
+# - [?] Calculs différences corrects
+#
+# AUTORISATION:
+# - [?] 401 sans token
+# - [?] 401 token expiré
+# - [?] 200 utilisateur authentifié
+#
+# PERFORMANCE:
+# - [?] Période 365j < 5s
+# - [?] Top 100 < 3s
+# - [?] Pas de timeout
+
+### ========================================
+### FIN DES TESTS
+### ========================================

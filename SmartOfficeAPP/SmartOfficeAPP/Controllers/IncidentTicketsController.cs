@@ -19,6 +19,17 @@ public class IncidentTicketsController : ControllerBase
     }
 
     /// <summary>
+    /// Récupère TOUS les tickets d'incidents (sans filtrage).
+    /// </summary>
+    /// <returns>Une liste complète de tickets d'incident.</returns>
+    [HttpGet]
+    public async Task<IActionResult> GetAllTickets()
+    {
+        var tickets = await _incidentTicketService.GetAllTicketsAsync();
+        return Ok(tickets);
+    }
+
+    /// <summary>
     /// Crée un nouveau ticket d'incident.
     /// </summary>
     /// <param name="ticketDto">Les données du ticket à créer.</param>

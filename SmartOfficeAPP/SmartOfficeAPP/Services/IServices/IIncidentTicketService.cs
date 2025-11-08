@@ -6,7 +6,8 @@ namespace SmartOfficeAPP.Services.IServices;
 public interface IIncidentTicketService
 {
     Task<IncidentTicketDto> CreateTicketAsync(IncidentTicketCreateDto ticketDto, string createdById);
-    Task<IncidentTicketDto> GetTicketByIdAsync(int id);
+    Task<IncidentTicketDto?> GetTicketByIdAsync(int id);
+    Task<IEnumerable<IncidentTicketDto>> GetAllTicketsAsync();  // ✅ NOUVEAU
     Task<IEnumerable<IncidentTicketDto>> GetTicketsByStatusAsync(string status);
     Task<IEnumerable<IncidentTicketDto>> GetTicketsByUserIdAsync(string userId);
     Task<bool> UpdateTicketStatusAsync(int id, string newStatus);

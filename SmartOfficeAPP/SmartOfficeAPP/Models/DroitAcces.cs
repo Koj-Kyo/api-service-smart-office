@@ -25,4 +25,8 @@ public class DroitAcces
 
     // Type de droit d'accès
     public DroitAccesType Type { get; set; }
+    
+    // ✅ Métadonnées de tracking
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 }

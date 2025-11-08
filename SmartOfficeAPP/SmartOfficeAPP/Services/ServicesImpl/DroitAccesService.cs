@@ -22,8 +22,9 @@ public class DroitAccesService : IDroitAccesService
         var droitsAcces = await _droitAccesRepository.GetDroitsAccesAsync();
         return droitsAcces.Select(da => MapToDto(da));
     }
+  
     // Récupère un droit d'accès par son ID et le mappe vers un DTO.
-    public async Task<DroitAccesDto> GetDroitAccesByIdAsync(int id)
+    public async Task<DroitAccesDto?> GetDroitAccesByIdAsync(int id)
     {
         var droitAcces = await _droitAccesRepository.GetDroitAccesByIdAsync(id);
         return droitAcces == null ? null : MapToDto(droitAcces);
@@ -69,7 +70,7 @@ public class DroitAccesService : IDroitAccesService
         existingDroitAcces.UserId = droitAccesDto.UserId;
         existingDroitAcces.ZoneId = droitAccesDto.ZoneId;
         existingDroitAcces.PeripheriqueLogiqueId = droitAccesDto.PeripheriqueLogiqueId;
-        existingDroitAcces.Type = (DroitAccesType)Enum.Parse(typeof(DroitAccesType),droitAccesDto.Type, true);
+        existingDroitAcces.Type = (DroitAccesType)Enum.Parse(typeof(DroitAccesType), droitAccesDto.Type, true);
 
         return await _droitAccesRepository.UpdateDroitAccesAsync(existingDroitAcces);
     }
@@ -80,18 +81,35 @@ public class DroitAccesService : IDroitAccesService
         return await _droitAccesRepository.DeleteDroitAccesAsync(id);
     }
 
-    // Méthode utilitaire pour mapper une entité DroitAcces vers un DTO.
+    // ✅ Méthode utilitaire ENRICHIE pour mapper une entité DroitAcces vers un DTO.
     private DroitAccesDto MapToDto(DroitAcces droitAcces)
     {
         return new DroitAccesDto
         {
             Id = droitAcces.Id,
+            
+            // ✅ Informations utilisateur enrichies
             UserId = droitAcces.UserId,
+            UserName = droitAcces.User?.UserName,
+            UserEmail = droitAcces.User?.Email,
+            UserFullName = droitAcces.User?.FullName,
+            
+            // ✅ Informations zone
             ZoneId = droitAcces.ZoneId,
             ZoneName = droitAcces.Zone?.Name,
+            ZoneDescription = null,  // ✅ Zone n'a pas de Description dans le modèle
+            
+            // ✅ Informations périphérique
             PeripheriqueLogiqueId = droitAcces.PeripheriqueLogiqueId,
             PeripheriqueLogiqueName = droitAcces.PeripheriqueLogique?.Name,
-            Type = droitAcces.Type.ToString()
+            PeripheriqueLogiqueType = droitAcces.PeripheriqueLogique?.Type,
+            
+            // ✅ Type d'accès (enum → string)
+            Type = droitAcces.Type.ToString(),
+            
+            // ✅ Métadonnées de tracking
+            CreatedAt = droitAcces.CreatedAt,
+            UpdatedAt = droitAcces.UpdatedAt
         };
     }
 }

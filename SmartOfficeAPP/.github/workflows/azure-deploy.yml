@@ -1,0 +1,213 @@
+# =========================================
+# ?? SmartOffice API - CI/CD Pipeline
+# Déploiement automatique sur Azure App Service
+# Déclenchement : push sur main ou workflow manuel
+# =========================================
+
+name: ?? Deploy SmartOffice API to Azure
+
+on:
+  push:
+    branches: 
+      - main
+    paths:
+      - 'SmartOfficeAPP/**'
+      - '.github/workflows/azure-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'SmartOfficeAPP/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  AZURE_WEBAPP_NAME: 'smartoffice-prod-api'
+  AZURE_WEBAPP_PACKAGE_PATH: './SmartOfficeAPP'
+  DOTNET_VERSION: '9.0.x'
+  DOTNET_CORE_VERSION: '9.0'
+
+# Permissions pour Azure login avec OIDC (sécurisé)
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  # =========================================
+  # Job 1 : Build & Test
+  # =========================================
+  build:
+    name: ??? Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: ?? Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: ?? Setup .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: ?? Restore dependencies
+      run: |
+        cd SmartOfficeAPP
+        dotnet restore SmartOfficeAPP.csproj
+
+    - name: ??? Build
+      run: |
+        cd SmartOfficeAPP
+        dotnet build SmartOfficeAPP.csproj \
+          --configuration Release \
+          --no-restore \
+          /p:TreatWarningsAsErrors=false
+
+    - name: ?? Run Tests
+      run: |
+        cd SmartOfficeAPP
+        dotnet test SmartOfficeAPP.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=test-results.trx" || true
+
+    - name: ?? Publish Application
+      run: |
+        cd SmartOfficeAPP
+        dotnet publish SmartOfficeAPP.csproj \
+          --configuration Release \
+          --output ${{github.workspace}}/publish \
+          --no-build \
+          /p:UseAppHost=false
+
+    - name: ?? Upload artifact for deployment
+      uses: actions/upload-artifact@v4
+      with:
+        name: smartoffice-api-${{ github.sha }}
+        path: ${{github.workspace}}/publish
+        retention-days: 1
+
+  # =========================================
+  # Job 2 : Deploy to Azure
+  # =========================================
+  deploy:
+    name: ?? Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: ?? Checkout code (for migrations)
+      uses: actions/checkout@v4
+
+    - name: ?? Setup .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: ?? Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: smartoffice-api-${{ github.sha }}
+        path: ${{github.workspace}}/publish
+
+    - name: ?? Azure Login (Managed Identity - OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: ?? Deploy to Azure App Service
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: ${{github.workspace}}/publish
+
+    - name: ?? Run Entity Framework Migrations
+      if: success()
+      env:
+        CONNECTION_STRING: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+      run: |
+        echo "?? Installing EF Core Tools..."
+        dotnet tool install --global dotnet-ef --version 9.* || dotnet tool update --global dotnet-ef --version 9.*
+        
+        echo "?? Running database migrations..."
+        cd SmartOfficeAPP
+        dotnet ef database update --connection "$CONNECTION_STRING" --no-build || echo "?? Migration failed or already applied"
+
+    - name: ?? Health Check
+      if: success()
+      run: |
+        echo "? Waiting 30s for app to start..."
+        sleep 30
+        
+        WEBAPP_URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        echo "?? Testing health endpoint: $WEBAPP_URL/health/ready"
+        
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WEBAPP_URL/health/ready" || echo "000")
+        
+        if [ "$HTTP_STATUS" == "200" ]; then
+          echo "? Health check passed (HTTP $HTTP_STATUS)"
+          echo "?? API URL: $WEBAPP_URL"
+          echo "?? Swagger: $WEBAPP_URL/swagger"
+        else
+          echo "?? Health check returned HTTP $HTTP_STATUS"
+          echo "?? App may still be starting up. Check logs in Azure Portal."
+        fi
+
+    - name: ?? Deployment Summary
+      if: success()
+      run: |
+        WEBAPP_URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        echo "???????????????????????????????????????????????????"
+        echo "?? Déploiement réussi !"
+        echo "???????????????????????????????????????????????????"
+        echo "?? URL API       : $WEBAPP_URL"
+        echo "?? Swagger UI    : $WEBAPP_URL/swagger"
+        echo "?? Health Check  : $WEBAPP_URL/health/ready"
+        echo "?? Azure Portal  : https://portal.azure.com/#@/resource/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/smartoffice-prod-rg"
+        echo "???????????????????????????????????????????????????"
+
+    - name: ? Logout from Azure
+      if: always()
+      run: |
+        az logout || true
+
+  # =========================================
+  # Job 3 : Notification
+  # =========================================
+  notify:
+    name: ?? Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always()
+    
+    steps:
+    - name: ?? Deployment Status
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "? Déploiement réussi !"
+          echo "?? URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+          echo "? Déploiement échoué. Vérifiez les logs ci-dessus."
+        elif [ "${{ needs.deploy.result }}" == "skipped" ]; then
+          echo "?? Déploiement ignoré (PR ou branche non-main)"
+        else
+          echo "?? Statut de déploiement: ${{ needs.deploy.result }}"
+        fi

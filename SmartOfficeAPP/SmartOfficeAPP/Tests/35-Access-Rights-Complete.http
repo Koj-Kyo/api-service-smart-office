@@ -1,0 +1,485 @@
+### ?? Tests des APIs de Gestion des Droits d'Accès
+### Fichier: access-rights-api-tests.http
+
+### ========================================
+### CONFIGURATION
+### ========================================
+
+@baseUrl = https://localhost:5001
+@token = {{$dotenv LOGIN_TOKEN}}
+
+### ========================================
+### 1. AUTHENTIFICATION (Obtenir un token Admin)
+### ========================================
+
+### 1.1 - Login Admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### Copier le token JWT retourné et le coller en haut du fichier
+
+### ========================================
+### 2. LECTURE (GET) - Liste des Droits d'Accès
+### ========================================
+
+### 2.1 - Récupérer TOUS les droits d'accès
+# @name getAllAccessRights
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK):
+# {
+# "isSuccess": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "userId": "abc-123",
+#       "userName": "john.doe",
+#       "userEmail": "john.doe@example.com",
+#       "userFullName": "John Doe",
+#       "zoneId": 5,
+#       "zoneName": "Salle de réunion A",
+#    "zoneDescription": null,
+#       "peripheriqueLogiqueId": null,
+#       "peripheriqueLogiqueName": null,
+#     "peripheriqueLogiqueType": null,
+#       "type": "Controle",
+#   "createdAt": "2025-01-06T10:30:00Z",
+#  "updatedAt": null
+#     }
+#   ],
+#   "databaseTimestamp": "2025-01-06T12:00:00Z"
+# }
+
+### 2.2 - Récupérer un droit d'accès par ID
+GET {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Détails d'un seul droit
+### Expected Response (404 Not Found): Si l'ID n'existe pas
+
+### ========================================
+### 3. CRÉATION (POST) - Nouveaux Droits d'Accès
+### ========================================
+
+### 3.1 - Créer un droit d'accès ZONE (Contrôle)
+# @name createZoneAccessControl
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+"userId": "user-id-from-identity",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": null,
+  "type": "Controle"
+}
+
+### Expected Response (201 Created):
+# Location: /api/admin/access-rights/42
+# Body: DroitAccesDto complet avec toutes les propriétés remplies
+
+### 3.2 - Créer un droit d'accès ZONE (Lecture)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 2,
+  "peripheriqueLogiqueId": null,
+  "type": "Lecture"
+}
+
+### 3.3 - Créer un droit d'accès PÉRIPHÉRIQUE (Contrôle)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": null,
+  "peripheriqueLogiqueId": 1,
+  "type": "Controle"
+}
+
+### 3.4 - Créer un droit d'accès PÉRIPHÉRIQUE (Lecture)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": null,
+  "peripheriqueLogiqueId": 2,
+  "type": "Lecture"
+}
+
+### 3.5 - ? Test de validation: Sans userId (devrait échouer)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "",
+  "zoneId": 1,
+  "type": "Controle"
+}
+
+### Expected Response (400 Bad Request): Erreur de validation
+
+### 3.6 - ? Test de validation: Sans type (devrait échouer)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 1,
+  "type": ""
+}
+
+### Expected Response (400 Bad Request): Erreur de validation
+
+### 3.7 - ? Test de validation: Type invalide (devrait échouer)
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 1,
+  "type": "InvalidType"
+}
+
+### Expected Response (400 Bad Request): Erreur de validation
+
+### ========================================
+### 4. APIs SIMPLIFIÉES (Bonus)
+### ========================================
+
+### 4.1 - Affecter une zone à un utilisateur (Contrôle)
+POST {{baseUrl}}/api/admin/assign-zone-to-user
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 3,
+  "accessType": 1
+}
+
+### accessType: 0 = Lecture, 1 = Controle
+
+### 4.2 - Affecter une zone à un utilisateur (Lecture)
+POST {{baseUrl}}/api/admin/assign-zone-to-user
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+"zoneId": 4,
+  "accessType": 0
+}
+
+### 4.3 - Affecter un périphérique à un utilisateur (Contrôle)
+POST {{baseUrl}}/api/admin/assign-device-to-user
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "peripheriqueLogiqueId": 5,
+  "accessType": 1
+}
+
+### 4.4 - Affecter un périphérique à un utilisateur (Lecture)
+POST {{baseUrl}}/api/admin/assign-device-to-user
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "peripheriqueLogiqueId": 6,
+  "accessType": 0
+}
+
+### ========================================
+### 5. MODIFICATION (PUT) - Mise à jour
+### ========================================
+
+### 5.1 - Modifier le type d'accès (Contrôle ? Lecture)
+PUT {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 1,
+  "peripheriqueLogiqueId": null,
+  "type": "Lecture"
+}
+
+### Expected Response (204 No Content)
+
+### 5.2 - Modifier la ressource (Zone ? Périphérique)
+PUT {{baseUrl}}/api/admin/access-rights/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": null,
+  "peripheriqueLogiqueId": 3,
+  "type": "Controle"
+}
+
+### Expected Response (204 No Content)
+
+### 5.3 - ? Modifier un droit inexistant (devrait échouer)
+PUT {{baseUrl}}/api/admin/access-rights/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-id-from-identity",
+  "zoneId": 1,
+  "type": "Controle"
+}
+
+### Expected Response (404 Not Found)
+
+### ========================================
+### 6. SUPPRESSION (DELETE)
+### ========================================
+
+### 6.1 - Supprimer un droit d'accès
+DELETE {{baseUrl}}/api/admin/access-rights/1
+Authorization: Bearer {{token}}
+
+### Expected Response (204 No Content)
+
+### 6.2 - ? Supprimer un droit inexistant (devrait échouer)
+DELETE {{baseUrl}}/api/admin/access-rights/99999
+Authorization: Bearer {{token}}
+
+### Expected Response (404 Not Found)
+
+### ========================================
+### 7. TESTS D'AUTORISATION
+### ========================================
+
+### 7.1 - ? Accès sans token (devrait échouer)
+GET {{baseUrl}}/api/admin/access-rights
+
+### Expected Response (401 Unauthorized)
+
+### 7.2 - ? Accès avec token expiré (devrait échouer)
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer expired-token-here
+
+### Expected Response (401 Unauthorized)
+
+### 7.3 - ? Accès avec rôle User (non-Admin) - devrait échouer
+# Connectez-vous avec un compte User d'abord
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@smartoffice.com",
+  "password": "User@123"
+}
+
+### Puis essayez d'accéder à l'API admin
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+
+### Expected Response (403 Forbidden)
+
+### ========================================
+### 8. TESTS DES ENDPOINTS UTILISATEUR
+### ========================================
+
+### 8.1 - Récupérer les droits d'accès ZONES de l'utilisateur connecté
+GET {{baseUrl}}/api/user/access-rights/zones
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Liste des zones accessibles par l'utilisateur
+
+### 8.2 - Récupérer les droits d'accès PÉRIPHÉRIQUES de l'utilisateur connecté
+GET {{baseUrl}}/api/user/access-rights/peripheriques
+Authorization: Bearer {{token}}
+
+### Expected Response (200 OK): Liste des périphériques accessibles par l'utilisateur
+
+### ========================================
+### 9. VALIDATION DES DONNÉES ENRICHIES
+### ========================================
+
+### 9.1 - Vérifier que toutes les propriétés sont présentes
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+
+### ? Checklist des propriétés à vérifier dans la réponse:
+# - id (int)
+# - userId (string)
+# - userName (string?) ? NOUVEAU
+# - userEmail (string?) ? NOUVEAU
+# - userFullName (string?) ? NOUVEAU
+# - zoneId (int?)
+# - zoneName (string?)
+# - zoneDescription (string?)
+# - peripheriqueLogiqueId (int?)
+# - peripheriqueLogiqueName (string?)
+# - peripheriqueLogiqueType (string?) ? NOUVEAU
+# - type (string) - "Lecture" ou "Controle"
+# - createdAt (DateTime) ? NOUVEAU
+# - updatedAt (DateTime?) ? NOUVEAU
+
+### ========================================
+### 10. TESTS DE PERFORMANCE ET DONNÉES
+### ========================================
+
+### 10.1 - Créer plusieurs droits en série
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-1",
+  "zoneId": 1,
+  "type": "Controle"
+}
+
+###
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-1",
+  "zoneId": 2,
+  "type": "Lecture"
+}
+
+###
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "user-2",
+  "peripheriqueLogiqueId": 1,
+  "type": "Controle"
+}
+
+### 10.2 - Vérifier le tri par date (CreatedAt descendant)
+GET {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+
+### ? Le dernier droit créé doit apparaître en premier
+
+### ========================================
+### 11. SCÉNARIOS COMPLETS
+### ========================================
+
+### Scénario 1: Créer, Modifier, Lire, Supprimer (CRUD complet)
+
+### 11.1 - Créer un droit
+# @name createRight
+POST {{baseUrl}}/api/admin/access-rights
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "test-user-scenario-1",
+  "zoneId": 1,
+  "type": "Lecture"
+}
+
+### 11.2 - Lire le droit créé (utiliser l'ID retourné)
+@createdId = {{createRight.response.body.$.data.id}}
+GET {{baseUrl}}/api/admin/access-rights/{{createdId}}
+Authorization: Bearer {{token}}
+
+### 11.3 - Modifier le droit
+PUT {{baseUrl}}/api/admin/access-rights/{{createdId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": "test-user-scenario-1",
+  "zoneId": 1,
+  "type": "Controle"
+}
+
+### 11.4 - Relire pour vérifier la modification
+GET {{baseUrl}}/api/admin/access-rights/{{createdId}}
+Authorization: Bearer {{token}}
+
+### ? Vérifier que:
+# - type = "Controle"
+# - updatedAt n'est plus null
+
+### 11.5 - Supprimer le droit
+DELETE {{baseUrl}}/api/admin/access-rights/{{createdId}}
+Authorization: Bearer {{token}}
+
+### 11.6 - Vérifier que le droit n'existe plus
+GET {{baseUrl}}/api/admin/access-rights/{{createdId}}
+Authorization: Bearer {{token}}
+
+### Expected Response (404 Not Found)
+
+### ========================================
+### 12. RÉSUMÉ DES TESTS
+### ========================================
+
+# ? Tests à valider:
+# 
+# LECTURE:
+# - [?] GET /api/admin/access-rights (liste complète)
+# - [?] GET /api/admin/access-rights/{id} (détail)
+# - [?] Propriétés userName, userEmail, userFullName présentes
+# - [?] Propriétés peripheriqueLogiqueType présente
+# - [?] Propriétés createdAt, updatedAt présentes
+# - [?] Relations User, Zone, PeripheriqueLogique chargées
+# - [?] Tri par CreatedAt descendant
+#
+# CRÉATION:
+# - [?] POST /api/admin/access-rights (zone)
+# - [?] POST /api/admin/access-rights (périphérique)
+# - [?] POST /api/admin/assign-zone-to-user (API simplifiée)
+# - [?] POST /api/admin/assign-device-to-user (API simplifiée)
+# - [?] Validation userId requis
+# - [?] Validation type requis
+# - [?] Validation type valide (Lecture/Controle)
+#
+# MODIFICATION:
+# - [?] PUT /api/admin/access-rights/{id}
+# - [?] UpdatedAt mis à jour automatiquement
+# - [?] 404 si ID inexistant
+#
+# SUPPRESSION:
+# - [?] DELETE /api/admin/access-rights/{id}
+# - [?] 204 si succès
+# - [?] 404 si ID inexistant
+#
+# AUTORISATION:
+# - [?] 401 sans token
+# - [?] 401 avec token expiré
+# - [?] 403 avec rôle User (non-Admin)
+# - [?] 200/201/204 avec rôle Admin
+#
+# ENDPOINTS UTILISATEUR:
+# - [?] GET /api/user/access-rights/zones
+# - [?] GET /api/user/access-rights/peripheriques
+
+### ========================================
+### FIN DES TESTS
+### ========================================

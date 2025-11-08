@@ -47,7 +47,7 @@ if (!string.IsNullOrWhiteSpace(redisConnectionString))
    {
             policy.Expire(TimeSpan.FromMinutes(5));
     policy.SetVaryByQuery("fresh", "limit", "offset");
-            policy.Tag("api-data");
+    policy.Tag("api-data");
     });
 
         options.AddPolicy("DeviceData", policy =>
@@ -55,11 +55,11 @@ if (!string.IsNullOrWhiteSpace(redisConnectionString))
    policy.Expire(TimeSpan.FromMinutes(2));
  policy.SetVaryByQuery("fresh", "deviceId");
     policy.Tag("device-data");
-        });
+  });
 
   options.AddPolicy("TelemetryData", policy =>
         {
-            policy.Expire(TimeSpan.FromMinutes(1));
+   policy.Expire(TimeSpan.FromMinutes(1));
    policy.SetVaryByQuery("fresh", "peripheriqueId", "startDate", "endDate");
      policy.Tag("telemetry-data");
       });
@@ -71,10 +71,12 @@ if (!string.IsNullOrWhiteSpace(redisConnectionString))
 }
 else
 {
-    // Fallback vers mémoire cache
-  builder.Services.AddMemoryCache();
+    // Fallback vers mémoire cache - ✅ IMPORTANT: Ajouter IDistributedCache en mémoire
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddMemoryCache();
+    
     builder.Services.AddOutputCache(options =>
-    {
+ {
    options.AddPolicy("DefaultPolicy", policy =>
      {
  policy.Expire(TimeSpan.FromMinutes(3));
@@ -82,21 +84,21 @@ else
   });
 
         options.AddPolicy("DeviceData", policy =>
-        {
+     {
   policy.Expire(TimeSpan.FromMinutes(1));
-            policy.SetVaryByQuery("fresh", "deviceId");
-        });
+      policy.SetVaryByQuery("fresh", "deviceId");
+    });
 
         options.AddPolicy("TelemetryData", policy =>
         {
    policy.Expire(TimeSpan.FromSeconds(30));
-          policy.SetVaryByQuery("fresh", "peripheriqueId", "startDate", "endDate");
+        policy.SetVaryByQuery("fresh", "peripheriqueId", "startDate", "endDate");
      });
     });
 
     builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Information);
     var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-    logger.LogWarning("Redis non configuré, utilisation du cache mémoire. Pour activer Redis : dotnet user-secrets set \"Redis:ConnectionString\" \"localhost:6379\"");
+    logger.LogWarning("Redis non configuré, utilisation du cache mémoire distribué. Pour activer Redis : dotnet user-secrets set \"Redis:ConnectionString\" \"localhost:6379\"");
 }
 
 // Identity
@@ -163,14 +165,54 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// CORS avec support SignalR
+// CORS avec support SignalR et Application Mobile MAUI
 builder.Services.AddCors(opt =>
 {
+    // ✅ Politique pour applications web (existante)
     opt.AddPolicy("AllowFrontend", p => p
-        .AllowAnyHeader()
+     .AllowAnyHeader()
         .AllowAnyMethod()
         .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000")
-   .AllowCredentials());
+        .AllowCredentials());
+
+    // ✅ Politique pour application mobile MAUI
+ opt.AddPolicy("AllowMobileApp", p => p
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .SetIsOriginAllowed(origin => 
+        {
+   // Les applications mobiles natives n'ont pas d'origine HTTP traditionnelle
+ // MAUI envoie souvent des requêtes avec origine null ou vide
+     if (string.IsNullOrEmpty(origin)) return true;
+     
+          // Autoriser localhost pour tests émulateur/simulateur
+         if (origin.StartsWith("http://localhost")) return true;
+          if (origin.StartsWith("https://localhost")) return true;
+            if (origin.StartsWith("http://127.0.0.1")) return true;
+          if (origin.StartsWith("https://127.0.0.1")) return true;
+     
+            // Android Emulator
+            if (origin.StartsWith("http://10.0.2.2")) return true;
+      if (origin.StartsWith("https://10.0.2.2")) return true;
+     
+   // Android Emulator (Genymotion)
+      if (origin.StartsWith("http://10.0.3.2")) return true;
+       
+            // iOS Simulator
+            if (origin.Contains("localhost")) return true;
+    
+ // Schémas personnalisés MAUI
+      if (origin.StartsWith("app://")) return true;
+     if (origin.StartsWith("file://")) return true;
+  if (origin.StartsWith("capacitor://")) return true;
+  if (origin.StartsWith("ionic://")) return true;
+    
+    // Votre domaine de production
+    if (origin.Contains("smartoffice") || origin.Contains("brainoffice")) return true;
+            
+    return false;
+        })
+        .AllowCredentials());
 });
 
 // Enregistrement Authorization avec handlers
@@ -312,7 +354,7 @@ else
 // Ce middleware intercepte TOUTES les réponses et convertit le JSON en camelCase
 app.UseMiddleware<CamelCaseEnforcerMiddleware>();
 
-app.UseCors("AllowFrontend");
+app.UseCors("AllowMobileApp");
 
 // ✅ Activer OutputCache
 app.UseOutputCache();

@@ -1,4 +1,4 @@
-ï»¿using AutoMapper;
+using AutoMapper;
 using SmartOfficeAPP.DTOs.Request;
 using SmartOfficeAPP.DTOs.Response;
 using SmartOfficeAPP.Services.IServices;
@@ -38,7 +38,14 @@ public class IncidentTicketService : IIncidentTicketService
             _context.TicketsIncidents.Add(ticket);
             await _context.SaveChangesAsync();
 
-            var result = _mapper.Map<IncidentTicketDto>(ticket);
+            // ? Recharger avec les relations
+            var createdTicket = await _context.TicketsIncidents
+                .Include(t => t.User)
+                .Include(t => t.Zone)
+                .Include(t => t.PeripheriqueLogique)
+                .FirstOrDefaultAsync(t => t.Id == ticket.Id);
+
+            var result = MapToDto(createdTicket!);
 
             // Envoyer une alerte d'incident via SignalR
             await _signalRService.SendIncidentAlertAsync(
@@ -48,44 +55,70 @@ public class IncidentTicketService : IIncidentTicketService
                 GetPriorityFromStatus(ticket.Statut)
             );
 
-            _logger.LogInformation("Nouveau ticket d'incident crÃ©Ã© avec ID {TicketId} et alerte envoyÃ©e via SignalR", ticket.Id);
+            _logger.LogInformation("Nouveau ticket d'incident créé avec ID {TicketId} et alerte envoyée via SignalR", ticket.Id);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la crÃ©ation du ticket d'incident");
+            _logger.LogError(ex, "Erreur lors de la création du ticket d'incident");
             throw;
         }
     }
 
-    public async Task<IncidentTicketDto> GetTicketByIdAsync(int id)
+    public async Task<IncidentTicketDto?> GetTicketByIdAsync(int id)
     {
-        var ticket = await _context.TicketsIncidents.FindAsync(id);
+        var ticket = await _context.TicketsIncidents
+            .Include(t => t.User)
+            .Include(t => t.Zone)
+            .Include(t => t.PeripheriqueLogique)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
         if (ticket == null)
         {
             return null;
         }
 
-        return _mapper.Map<IncidentTicketDto>(ticket);
+        return MapToDto(ticket);
+    }
+
+    // ? NOUVEAU: Récupère TOUS les tickets avec relations
+    public async Task<IEnumerable<IncidentTicketDto>> GetAllTicketsAsync()
+    {
+        var tickets = await _context.TicketsIncidents
+            .Include(t => t.User)
+            .Include(t => t.Zone)
+            .Include(t => t.PeripheriqueLogique)
+            .OrderByDescending(t => t.DateCreation)
+            .ToListAsync();
+
+        return tickets.Select(MapToDto);
     }
 
     public async Task<IEnumerable<IncidentTicketDto>> GetTicketsByStatusAsync(string status)
     {
         var tickets = await _context.TicketsIncidents
+            .Include(t => t.User)
+            .Include(t => t.Zone)
+            .Include(t => t.PeripheriqueLogique)
             .Where(t => t.Statut == status)
+            .OrderByDescending(t => t.DateCreation)
             .ToListAsync();
         
-        return _mapper.Map<IEnumerable<IncidentTicketDto>>(tickets);
+        return tickets.Select(MapToDto);
     }
 
     public async Task<IEnumerable<IncidentTicketDto>> GetTicketsByUserIdAsync(string userId)
     {
         var tickets = await _context.TicketsIncidents
+            .Include(t => t.User)
+            .Include(t => t.Zone)
+            .Include(t => t.PeripheriqueLogique)
             .Where(t => t.UserId == userId)
+            .OrderByDescending(t => t.DateCreation)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<IncidentTicketDto>>(tickets);
+        return tickets.Select(MapToDto);
     }
 
     public async Task<bool> UpdateTicketStatusAsync(int id, string newStatus)
@@ -101,7 +134,7 @@ public class IncidentTicketService : IIncidentTicketService
             var oldStatus = ticket.Statut;
             ticket.Statut = newStatus;
             
-            if (newStatus.ToLowerInvariant() == "rÃ©solu" || newStatus.ToLowerInvariant() == "fermÃ©")
+            if (newStatus.ToLowerInvariant() == "résolu" || newStatus.ToLowerInvariant() == "fermé")
             {
                 ticket.DateResolution = DateTime.UtcNow;
             }
@@ -111,25 +144,25 @@ public class IncidentTicketService : IIncidentTicketService
 
             // Envoyer une notification de changement de statut via SignalR
             await _signalRService.SendBroadcastNotificationAsync(
-                "Mise Ã  jour de ticket",
-                $"Le ticket #{id} - {ticket.Sujet} est passÃ© de '{oldStatus}' Ã  '{newStatus}'"
+                "Mise à jour de ticket",
+                $"Le ticket #{id} - {ticket.Sujet} est passé de '{oldStatus}' à '{newStatus}'"
             );
 
-            _logger.LogInformation("Statut du ticket {TicketId} mis Ã  jour de '{OldStatus}' vers '{NewStatus}'", id, oldStatus, newStatus);
+            _logger.LogInformation("Statut du ticket {TicketId} mis à jour de '{OldStatus}' vers '{NewStatus}'", id, oldStatus, newStatus);
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la mise Ã  jour du statut du ticket {TicketId}", id);
+            _logger.LogError(ex, "Erreur lors de la mise à jour du statut du ticket {TicketId}", id);
             throw;
         }
     }
 
     public async Task<bool> AssignTicketAsync(int id, string assignedToId)
     {
-        // Note: Cette mÃ©thode est dÃ©prÃ©ciÃ©e car le modÃ¨le n'a plus AssignedToId
-        // On pourrait l'implÃ©menter diffÃ©remment ou la retirer
+        // Note: Cette méthode est dépréciée car le modèle n'a plus AssignedToId
+        // On pourrait l'implémenter différemment ou la retirer
         return await Task.FromResult(false);
     }
 
@@ -148,11 +181,11 @@ public class IncidentTicketService : IIncidentTicketService
 
             // Envoyer une notification de suppression via SignalR
             await _signalRService.SendBroadcastNotificationAsync(
-                "Ticket supprimÃ©",
-                $"Le ticket #{id} - {ticket.Sujet} a Ã©tÃ© supprimÃ©"
+                "Ticket supprimé",
+                $"Le ticket #{id} - {ticket.Sujet} a été supprimé"
             );
 
-            _logger.LogInformation("Ticket {TicketId} supprimÃ© avec succÃ¨s", id);
+            _logger.LogInformation("Ticket {TicketId} supprimé avec succès", id);
 
             return true;
         }
@@ -163,15 +196,53 @@ public class IncidentTicketService : IIncidentTicketService
         }
     }
 
+    // ? MÉTHODE UTILITAIRE: Mapping enrichi avec relations
+    private IncidentTicketDto MapToDto(IncidentTicket ticket)
+    {
+        return new IncidentTicketDto
+        {
+            Id = ticket.Id,
+            
+            // Informations du ticket
+            Sujet = ticket.Sujet,
+            Description = ticket.Description,
+            Statut = ticket.Statut,
+            Priorite = GetPriorityFromStatus(ticket.Statut),
+            
+            // Informations utilisateur (créateur)
+            CreatedById = ticket.UserId,
+            CreatedByName = ticket.User?.UserName,
+            CreatedByEmail = ticket.User?.Email,
+            
+            // Assignation (pour l'instant null car pas dans le modèle)
+            AssignedToId = null,
+            AssignedToName = null,
+            
+            // Informations zone
+            ZoneId = ticket.ZoneId,
+            ZoneName = ticket.Zone?.Name,
+            
+            // Informations périphérique
+            PeripheriqueLogiqueId = ticket.PeripheriqueLogiqueId,
+            PeripheriqueLogiqueName = ticket.PeripheriqueLogique?.Name,
+            PeripheriqueLogiqueType = ticket.PeripheriqueLogique?.Type,
+            
+            // Dates
+            CreatedAt = ticket.DateCreation,
+            UpdatedAt = null,  // Pas de champ UpdatedAt dans le modèle actuel
+            ResolvedAt = ticket.DateResolution
+        };
+    }
+
     private static string GetPriorityFromStatus(string status)
     {
         return status.ToLowerInvariant() switch
         {
-            "urgent" => "High",
-            "critique" => "High",
-            "ouvert" => "Medium",
-            "en cours" => "Medium",
-            _ => "Low"
+            "urgent" => "Haute",
+            "critique" => "Haute",
+            "ouvert" => "Moyenne",
+            "en cours" => "Moyenne",
+            _ => "Basse"
         };
     }
 }

@@ -9,7 +9,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -35,7 +35,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "SmartOfficeAPP.DTOs.DroitAccesDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -61,7 +61,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "SmartOfficeAPP.DTOs.DroitAccesDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -124,7 +124,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "SmartOfficeAPP.DTOs.DroitAccesDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -150,7 +150,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "SmartOfficeAPP.DTOs.DroitAccesDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -1858,6 +1858,16 @@
   },
   {
     "ContainingType": "SmartOfficeAPP.Controllers.IncidentTicketsController",
+    "Method": "GetAllTickets",
+    "RelativePath": "api/IncidentTickets",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartOfficeAPP.Controllers.IncidentTicketsController",
     "Method": "CreateTicket",
     "RelativePath": "api/IncidentTickets",
     "HttpMethod": "POST",
@@ -2896,7 +2906,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -2916,7 +2926,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "SmartOfficeAPP.DTOs.Response.ApiResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartOfficeAPP.DTOs.DroitAccesDto, SmartOfficeAPP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",

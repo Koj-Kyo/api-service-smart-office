@@ -1,0 +1,142 @@
+# ?? SmartOffice API - Configuration Azure Developer CLI (azd)
+# Déploiement Infrastructure as Code avec Bicep
+# Optimisé pour soutenance académique
+
+name: smartoffice-api
+metadata:
+  template: azd-init@1.0.0
+
+# =========================================
+# Services de l'application
+# =========================================
+services:
+  api:
+    project: ./SmartOfficeAPP
+    language: csharp
+    host: appservice
+    
+# =========================================
+# Hooks de déploiement
+# =========================================
+hooks:
+  # Avant le provisionnement
+  preprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "?? Préparation du déploiement SmartOffice API..." -ForegroundColor Cyan
+        Write-Host "?? Région cible : East US" -ForegroundColor Green
+        Write-Host "???  Infrastructure : PostgreSQL + Redis + App Service + Key Vault" -ForegroundColor Green
+    posix:
+      shell: sh
+      run: |
+        echo "?? Préparation du déploiement SmartOffice API..."
+        echo "?? Région cible : East US"
+        echo "???  Infrastructure : PostgreSQL + Redis + App Service + Key Vault"
+  
+  # Après le provisionnement
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "? Infrastructure provisionnée avec succès!" -ForegroundColor Green
+        Write-Host "?? Exécution des migrations de base de données..." -ForegroundColor Yellow
+        
+        # Récupérer la connection string depuis les outputs Bicep
+        $connectionString = azd env get-value AZURE_POSTGRESQL_CONNECTION_STRING
+        
+        if ($connectionString) {
+          Write-Host "?? Installation de dotnet-ef si nécessaire..." -ForegroundColor Cyan
+          dotnet tool install --global dotnet-ef --version 9.*
+          
+          Write-Host "?? Exécution de 'dotnet ef database update'..." -ForegroundColor Cyan
+          cd SmartOfficeAPP
+          dotnet ef database update --connection "$connectionString"
+          
+          Write-Host "? Migrations appliquées avec succès!" -ForegroundColor Green
+        } else {
+          Write-Host "??  Connection string introuvable. Exécutez manuellement les migrations." -ForegroundColor Yellow
+        }
+    posix:
+      shell: sh
+      run: |
+        echo "? Infrastructure provisionnée avec succès!"
+        echo "?? Exécution des migrations de base de données..."
+        
+        # Récupérer la connection string depuis les outputs Bicep
+        connectionString=$(azd env get-value AZURE_POSTGRESQL_CONNECTION_STRING)
+        
+        if [ ! -z "$connectionString" ]; then
+          echo "?? Installation de dotnet-ef si nécessaire..."
+          dotnet tool install --global dotnet-ef --version 9.*
+          
+          echo "?? Exécution de 'dotnet ef database update'..."
+          cd SmartOfficeAPP
+          dotnet ef database update --connection "$connectionString"
+          
+          echo "? Migrations appliquées avec succès!"
+        else
+          echo "??  Connection string introuvable. Exécutez manuellement les migrations."
+        fi
+  
+  # Après le déploiement
+  postdeploy:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "?? Déploiement terminé avec succès!" -ForegroundColor Green
+        Write-Host "" 
+        Write-Host "?? Informations de déploiement :" -ForegroundColor Cyan
+        Write-Host "???????????????????????????????????????????????????????" -ForegroundColor Gray
+        
+        $webAppUrl = azd env get-value AZURE_WEBAPP_URL
+        $resourceGroup = azd env get-value AZURE_RESOURCE_GROUP
+        
+        if ($webAppUrl) {
+          Write-Host "?? URL de l'API       : $webAppUrl" -ForegroundColor Green
+          Write-Host "?? Swagger UI         : $webAppUrl/swagger" -ForegroundColor Green
+          Write-Host "??  Health Check      : $webAppUrl/health/ready" -ForegroundColor Green
+        }
+        
+        if ($resourceGroup) {
+          Write-Host "?? Resource Group     : $resourceGroup" -ForegroundColor Yellow
+          Write-Host "?? Portail Azure      : https://portal.azure.com/#@/resource/subscriptions/$(azd env get-value AZURE_SUBSCRIPTION_ID)/resourceGroups/$resourceGroup" -ForegroundColor Cyan
+        }
+        
+        Write-Host "???????????????????????????????????????????????????????" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "?? Commandes utiles :" -ForegroundColor Cyan
+        Write-Host "   azd monitor              # Ouvrir Application Insights" -ForegroundColor White
+        Write-Host "   azd deploy               # Redéployer uniquement le code" -ForegroundColor White
+        Write-Host "   azd down                 # Supprimer toute l'infrastructure" -ForegroundColor White
+        Write-Host ""
+    posix:
+      shell: sh
+      run: |
+        echo "?? Déploiement terminé avec succès!"
+        echo ""
+        echo "?? Informations de déploiement :"
+        echo "???????????????????????????????????????????????????????"
+        
+        webAppUrl=$(azd env get-value AZURE_WEBAPP_URL)
+        resourceGroup=$(azd env get-value AZURE_RESOURCE_GROUP)
+        
+        if [ ! -z "$webAppUrl" ]; then
+          echo "?? URL de l'API       : $webAppUrl"
+          echo "?? Swagger UI         : $webAppUrl/swagger"
+          echo "??  Health Check      : $webAppUrl/health/ready"
+        fi
+        
+        if [ ! -z "$resourceGroup" ]; then
+          echo "?? Resource Group     : $resourceGroup"
+          subscriptionId=$(azd env get-value AZURE_SUBSCRIPTION_ID)
+          echo "?? Portail Azure      : https://portal.azure.com/#@/resource/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+        fi
+        
+        echo "???????????????????????????????????????????????????????"
+        echo ""
+        echo "?? Commandes utiles :"
+        echo "   azd monitor              # Ouvrir Application Insights"
+        echo "   azd deploy               # Redéployer uniquement le code"
+        echo "   azd down                 # Supprimer toute l'infrastructure"
+        echo ""
