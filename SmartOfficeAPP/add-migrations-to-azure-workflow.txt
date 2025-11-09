@@ -1,0 +1,36 @@
+# ============================================
+# Section à AJOUTER après "Deploy to Azure Web App"
+# dans le workflow créé par Azure Deployment Center
+# ============================================
+
+    - name: ?? Run Entity Framework Migrations
+      if: success()
+      env:
+        CONNECTION_STRING: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+      run: |
+        echo "?? Installing EF Core Tools..."
+        dotnet tool install --global dotnet-ef --version 9.* || dotnet tool update --global dotnet-ef --version 9.*
+        
+        echo "?? Running database migrations..."
+        cd SmartOfficeAPP/SmartOfficeAPP
+        dotnet ef database update --connection "$CONNECTION_STRING" || echo "?? Migration failed or already applied"
+
+    - name: ?? Health Check
+      if: success()
+      run: |
+        echo "? Waiting 30s for app to start..."
+        sleep 30
+        
+        WEBAPP_URL="https://smartoffice-prod-api.azurewebsites.net"
+        echo "?? Testing health endpoint: $WEBAPP_URL/health/ready"
+        
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WEBAPP_URL/health/ready" || echo "000")
+        
+        if [ "$HTTP_STATUS" == "200" ]; then
+          echo "? Health check passed (HTTP $HTTP_STATUS)"
+          echo "?? API URL: $WEBAPP_URL"
+          echo "?? Swagger: $WEBAPP_URL/swagger"
+        else
+          echo "?? Health check returned HTTP $HTTP_STATUS"
+          echo "?? App may still be starting up. Check logs in Azure Portal."
+        fi
