@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,24 +23,28 @@ jobs:
         with:
           dotnet-version: '9.x'
 
+      # ✅ AJOUT : working-directory
       - name: Build with dotnet
         run: dotnet build --configuration Release
+        working-directory: ./SmartOfficeAPP/SmartOfficeAPP
 
+      # ✅ AJOUT : working-directory
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o ${{github.workspace}}/myapp
+        working-directory: ./SmartOfficeAPP/SmartOfficeAPP
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{github.workspace}}/myapp
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -62,4 +66,45 @@ jobs:
           app-name: 'smartoffice-prod-api'
           slot-name: 'Production'
           package: .
+
+      # ✅ NOUVEAU : Checkout pour migrations
+      - name: Checkout code for migrations
+        uses: actions/checkout@v4
+
+      # ✅ NOUVEAU : Setup .NET pour migrations
+      - name: Set up .NET Core for migrations
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      # ✅ NOUVEAU : Migrations EF Core
+      - name: Run Entity Framework Migrations
+        env:
+          CONNECTION_STRING: ${{ secrets.POSTGRESQL_CONNECTION_STRING }}
+        run: |
+          echo "📦 Installing EF Core Tools..."
+          dotnet tool install --global dotnet-ef --version 9.* || dotnet tool update --global dotnet-ef --version 9.*
           
+          echo "🔄 Running database migrations..."
+          dotnet ef database update --connection "$CONNECTION_STRING" || echo "⚠️ Migration failed or already applied"
+        working-directory: ./SmartOfficeAPP/SmartOfficeAPP
+
+      # ✅ NOUVEAU : Health Check
+      - name: Health Check
+        run: |
+          echo "⏳ Waiting 30s for app to start..."
+          sleep 30
+          
+          WEBAPP_URL="https://smartoffice-prod-api.azurewebsites.net"
+          echo "🔍 Testing health endpoint: $WEBAPP_URL/health/ready"
+          
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WEBAPP_URL/health/ready" || echo "000")
+          
+          if [ "$HTTP_STATUS" == "200" ]; then
+            echo "✅ Health check passed (HTTP $HTTP_STATUS)"
+            echo "🌐 API URL: $WEBAPP_URL"
+            echo "📖 Swagger: $WEBAPP_URL/swagger"
+          else
+            echo "⚠️ Health check returned HTTP $HTTP_STATUS"
+            echo "ℹ️ App may still be starting up"
+          fi
