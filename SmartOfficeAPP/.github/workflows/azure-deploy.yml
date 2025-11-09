@@ -31,9 +31,8 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: 'smartoffice-prod-api'
-  AZURE_WEBAPP_PACKAGE_PATH: './SmartOfficeAPP'
   DOTNET_VERSION: '9.0.x'
-  DOTNET_CORE_VERSION: '9.0'
+  WORKING_DIRECTORY: './SmartOfficeAPP/SmartOfficeAPP'
 
 # ?? Permissions pour publish profile (pas besoin de id-token)
 permissions:
@@ -60,35 +59,34 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: ?? Restore dependencies
-      run: |
-        cd SmartOfficeAPP
-        dotnet restore SmartOfficeAPP.csproj
+      run: dotnet restore
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ??? Build
       run: |
-        cd SmartOfficeAPP
         dotnet build SmartOfficeAPP.csproj \
           --configuration Release \
           --no-restore \
           /p:TreatWarningsAsErrors=false
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Run Tests
       run: |
-        cd SmartOfficeAPP
         dotnet test SmartOfficeAPP.csproj \
           --configuration Release \
           --no-build \
           --verbosity normal \
           --logger "trx;LogFileName=test-results.trx" || true
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Publish Application
       run: |
-        cd SmartOfficeAPP
         dotnet publish SmartOfficeAPP.csproj \
           --configuration Release \
           --output ${{github.workspace}}/publish \
           --no-build \
           /p:UseAppHost=false
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Upload artifact for deployment
       uses: actions/upload-artifact@v4
@@ -142,8 +140,8 @@ jobs:
         dotnet tool install --global dotnet-ef --version 9.* || dotnet tool update --global dotnet-ef --version 9.*
         
         echo "?? Running database migrations..."
-        cd SmartOfficeAPP
         dotnet ef database update --connection "$CONNECTION_STRING" --no-build || echo "?? Migration failed or already applied"
+      working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Health Check
       if: success()
