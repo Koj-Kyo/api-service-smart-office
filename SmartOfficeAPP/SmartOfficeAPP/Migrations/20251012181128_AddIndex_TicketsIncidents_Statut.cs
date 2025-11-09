@@ -11,34 +11,47 @@ namespace SmartOfficeAPP.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "AssignedToId",
-                table: "TicketsIncidents");
+            // ✅ Vérifier et supprimer les colonnes SEULEMENT si elles existent
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'AssignedToId') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""AssignedToId"";
+                    END IF;
+                    
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'CreatedAt') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""CreatedAt"";
+                    END IF;
+                    
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'CreatedById') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""CreatedById"";
+                    END IF;
+                    
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'Priority') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""Priority"";
+                    END IF;
+                    
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'Status') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""Status"";
+                    END IF;
+                    
+                    IF EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'TicketsIncidents' AND column_name = 'Title') THEN
+                        ALTER TABLE ""TicketsIncidents"" DROP COLUMN ""Title"";
+                    END IF;
+                END $$;
+            ");
 
-            migrationBuilder.DropColumn(
-                name: "CreatedAt",
-                table: "TicketsIncidents");
-
-            migrationBuilder.DropColumn(
-                name: "CreatedById",
-                table: "TicketsIncidents");
-
-            migrationBuilder.DropColumn(
-                name: "Priority",
-                table: "TicketsIncidents");
-
-            migrationBuilder.DropColumn(
-                name: "Status",
-                table: "TicketsIncidents");
-
-            migrationBuilder.DropColumn(
-                name: "Title",
-                table: "TicketsIncidents");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TicketsIncidents_Statut",
-                table: "TicketsIncidents",
-                column: "Statut");
+            // ✅ Créer l'index seulement s'il n'existe pas
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_TicketsIncidents_Statut"" 
+                ON ""TicketsIncidents"" (""Statut"");
+            ");
         }
 
         /// <inheritdoc />

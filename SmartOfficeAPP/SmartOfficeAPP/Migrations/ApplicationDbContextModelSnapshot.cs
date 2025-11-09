@@ -188,7 +188,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasIndex("PeripheriqueLogiqueId");
 
-                    b.ToTable("Commandes");
+                    b.ToTable("Commandes", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.DeviceLog", b =>
@@ -242,7 +242,7 @@ namespace SmartOfficeAPP.Migrations
                     b.HasIndex("DeviceId", "Timestamp")
                         .HasDatabaseName("IX_DeviceLogs_DeviceId_Timestamp");
 
-                    b.ToTable("DeviceLogs");
+                    b.ToTable("DeviceLogs", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.DeviceMetrics", b =>
@@ -289,7 +289,7 @@ namespace SmartOfficeAPP.Migrations
                     b.HasIndex("IotDeviceId", "Timestamp")
                         .HasDatabaseName("IX_DeviceMetrics_IotDeviceId_Timestamp");
 
-                    b.ToTable("DeviceMetrics");
+                    b.ToTable("DeviceMetrics", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.DevicePeripheral", b =>
@@ -364,7 +364,7 @@ namespace SmartOfficeAPP.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_DevicePeripherals_IotDeviceId_Name");
 
-                    b.ToTable("DevicePeripherals");
+                    b.ToTable("DevicePeripherals", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.DroitAcces", b =>
@@ -402,7 +402,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("DroitsAcces");
+                    b.ToTable("DroitsAcces", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.Identity.ApplicationUser", b =>
@@ -525,7 +525,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("TicketsIncidents");
+                    b.ToTable("TicketsIncidents", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.JournalAudit", b =>
@@ -553,7 +553,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("JournalAudits");
+                    b.ToTable("JournalAudits", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.Notification", b =>
@@ -584,7 +584,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.PeripheriqueLogique", b =>
@@ -617,7 +617,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("PeripheriquesLogiques");
+                    b.ToTable("PeripheriquesLogiques", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.RapportUsage", b =>
@@ -655,7 +655,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasIndex("ZoneId");
 
-                    b.ToTable("RapportsUsage");
+                    b.ToTable("RapportsUsage", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.RfidEvent", b =>
@@ -701,7 +701,7 @@ namespace SmartOfficeAPP.Migrations
                     b.HasIndex("IotDeviceId", "Timestamp")
                         .HasDatabaseName("IX_RfidEvents_IotDeviceId_Timestamp");
 
-                    b.ToTable("RfidEvents");
+                    b.ToTable("RfidEvents", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.SmokeAlarmEvent", b =>
@@ -749,7 +749,7 @@ namespace SmartOfficeAPP.Migrations
                     b.HasIndex("IotDeviceId", "IsActive")
                         .HasDatabaseName("IX_SmokeAlarmEvents_IotDeviceId_IsActive");
 
-                    b.ToTable("SmokeAlarmEvents");
+                    b.ToTable("SmokeAlarmEvents", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.Telemetrie", b =>
@@ -781,7 +781,7 @@ namespace SmartOfficeAPP.Migrations
                     b.HasIndex("PeripheriqueLogiqueId", "Horodatage")
                         .HasDatabaseName("IX_Telemetries_PeripheriqueLogiqueId_Horodatage");
 
-                    b.ToTable("Telemetries");
+                    b.ToTable("Telemetries", (string)null);
                 });
 
             modelBuilder.Entity("SmartOfficeAPP.Models.Zone", b =>
@@ -799,7 +799,7 @@ namespace SmartOfficeAPP.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Zones");
+                    b.ToTable("Zones", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
