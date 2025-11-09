@@ -35,9 +35,8 @@ env:
   DOTNET_VERSION: '9.0.x'
   DOTNET_CORE_VERSION: '9.0'
 
-# Permissions pour Azure login avec OIDC (sécurisé)
+# ?? Permissions pour publish profile (pas besoin de id-token)
 permissions:
-  id-token: write
   contents: read
   actions: read
 
@@ -125,18 +124,13 @@ jobs:
         name: smartoffice-api-${{ github.sha }}
         path: ${{github.workspace}}/publish
 
-    - name: ?? Azure Login (Managed Identity - OIDC)
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
+    # ?? Utilisation du Publish Profile au lieu de OIDC
     - name: ?? Deploy to Azure App Service
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{github.workspace}}/publish
 
     - name: ?? Run Entity Framework Migrations
@@ -181,13 +175,8 @@ jobs:
         echo "?? URL API       : $WEBAPP_URL"
         echo "?? Swagger UI    : $WEBAPP_URL/swagger"
         echo "?? Health Check  : $WEBAPP_URL/health/ready"
-        echo "?? Azure Portal  : https://portal.azure.com/#@/resource/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/smartoffice-prod-rg"
+        echo "?? Azure Portal  : https://portal.azure.com"
         echo "???????????????????????????????????????????????????"
-
-    - name: ? Logout from Azure
-      if: always()
-      run: |
-        az logout || true
 
   # =========================================
   # Job 3 : Notification
