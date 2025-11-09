@@ -66,8 +66,7 @@ jobs:
       run: |
         dotnet build SmartOfficeAPP.csproj \
           --configuration Release \
-          --no-restore \
-          /p:TreatWarningsAsErrors=false
+          --no-restore
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Run Tests
@@ -84,7 +83,6 @@ jobs:
         dotnet publish SmartOfficeAPP.csproj \
           --configuration Release \
           --output ${{github.workspace}}/publish \
-          --no-build \
           /p:UseAppHost=false
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
@@ -140,7 +138,7 @@ jobs:
         dotnet tool install --global dotnet-ef --version 9.* || dotnet tool update --global dotnet-ef --version 9.*
         
         echo "?? Running database migrations..."
-        dotnet ef database update --connection "$CONNECTION_STRING" --no-build || echo "?? Migration failed or already applied"
+        dotnet ef database update --connection "$CONNECTION_STRING" || echo "?? Migration failed or already applied"
       working-directory: ${{ env.WORKING_DIRECTORY }}
 
     - name: ?? Health Check
