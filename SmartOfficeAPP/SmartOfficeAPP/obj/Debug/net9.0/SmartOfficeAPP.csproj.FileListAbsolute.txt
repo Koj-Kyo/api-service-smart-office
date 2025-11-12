@@ -168,3 +168,4 @@ D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\refint\SmartO
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOfficeAPP.pdb
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\SmartOfficeAPP.genruntimeconfig.cache
 D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\ref\SmartOfficeAPP.dll
+D:\Memoire\ApiSmart\SmartOfficeAPP\SmartOfficeAPP\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

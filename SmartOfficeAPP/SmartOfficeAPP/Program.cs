@@ -175,7 +175,7 @@ builder.Services.AddCors(opt =>
         .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000")
         .AllowCredentials());
 
-    // ✅ Politique pour application mobile MAUI
+    // ✅ Politique pour application mobile MAUI et appareils physiques
  opt.AddPolicy("AllowMobileApp", p => p
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -207,6 +207,18 @@ builder.Services.AddCors(opt =>
   if (origin.StartsWith("capacitor://")) return true;
   if (origin.StartsWith("ionic://")) return true;
     
+            // ✅ Autoriser toutes les adresses IP privées (réseau local)
+            // Classe A: 10.0.0.0 à 10.255.255.255
+            if (origin.StartsWith("http://10.")) return true;
+            if (origin.StartsWith("https://10.")) return true;
+            
+            // Classe B: 172.16.0.0 à 172.31.255.255
+            if (System.Text.RegularExpressions.Regex.IsMatch(origin, @"^https?://172\.(1[6-9]|2[0-9]|3[0-1])\.")) return true;
+            
+            // Classe C: 192.168.0.0 à 192.168.255.255
+            if (origin.StartsWith("http://192.168.")) return true;
+            if (origin.StartsWith("https://192.168.")) return true;
+            
     // Votre domaine de production
     if (origin.Contains("smartoffice") || origin.Contains("brainoffice")) return true;
             

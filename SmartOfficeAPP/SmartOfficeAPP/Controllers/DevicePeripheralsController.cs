@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using SmartOfficeAPP.DTOs;
 using SmartOfficeAPP.Services.IServices;
 
@@ -156,6 +157,125 @@ public class DevicePeripheralsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erreur lors de la synchronisation du device {DeviceId}", iotDeviceId);
+            return StatusCode(500, new { message = "Erreur interne du serveur." });
+        }
+    }
+
+    // =============================
+    // ? NOUVEAUX: Endpoints enrichis pour app mobile
+    // =============================
+
+    /// <summary>
+    /// GET: api/DevicePeripherals/enriched
+    /// ?? MOBILE: Récupère tous les périphériques enrichis (DB + IoT Hub + Zone)
+    /// Support: ?fresh=true pour bypass cache
+    /// </summary>
+    [HttpGet("enriched")]
+    [AllowAnonymous] // Accessible à tous les utilisateurs authentifiés (pas seulement Admin)
+    [Authorize]
+    [OutputCache(PolicyName = "DeviceData")]
+    public async Task<ActionResult<IEnumerable<DevicePeripheralEnrichedDto>>> GetAllEnriched()
+    {
+        try
+        {
+            var peripherals = await _service.GetAllEnrichedAsync();
+            return Ok(peripherals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des périphériques enrichis");
+            return StatusCode(500, new { message = "Erreur interne du serveur." });
+        }
+    }
+
+    /// <summary>
+    /// GET: api/DevicePeripherals/enriched/{id}
+    /// ?? MOBILE: Récupère un périphérique enrichi par ID
+    /// </summary>
+    [HttpGet("enriched/{id}")]
+    [AllowAnonymous]
+    [Authorize]
+    [OutputCache(PolicyName = "DeviceData")]
+    public async Task<ActionResult<DevicePeripheralEnrichedDto>> GetEnrichedById(int id)
+    {
+        try
+        {
+            var peripheral = await _service.GetEnrichedByIdAsync(id);
+            if (peripheral == null)
+                return NotFound(new { message = $"Périphérique {id} introuvable." });
+
+            return Ok(peripheral);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération du périphérique enrichi {Id}", id);
+            return StatusCode(500, new { message = "Erreur interne du serveur." });
+        }
+    }
+
+    /// <summary>
+    /// GET: api/DevicePeripherals/enriched/device/{iotDeviceId}
+    /// ?? MOBILE: Récupère tous les périphériques enrichis d'un device IoT Hub
+    /// </summary>
+    [HttpGet("enriched/device/{iotDeviceId}")]
+    [AllowAnonymous]
+    [Authorize]
+    [OutputCache(PolicyName = "DeviceData")]
+    public async Task<ActionResult<IEnumerable<DevicePeripheralEnrichedDto>>> GetEnrichedByDevice(string iotDeviceId)
+    {
+        try
+        {
+            var peripherals = await _service.GetEnrichedByIotDeviceIdAsync(iotDeviceId);
+            return Ok(peripherals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des périphériques enrichis pour {DeviceId}", iotDeviceId);
+            return StatusCode(500, new { message = "Erreur interne du serveur." });
+        }
+    }
+
+    /// <summary>
+    /// GET: api/DevicePeripherals/enriched/zone/{zoneId}
+    /// ?? MOBILE: Récupère tous les périphériques enrichis d'une zone
+    /// </summary>
+    [HttpGet("enriched/zone/{zoneId}")]
+    [AllowAnonymous]
+    [Authorize]
+    [OutputCache(PolicyName = "DeviceData")]
+    public async Task<ActionResult<IEnumerable<DevicePeripheralEnrichedDto>>> GetEnrichedByZone(int zoneId)
+    {
+        try
+        {
+            var peripherals = await _service.GetEnrichedByZoneIdAsync(zoneId);
+            return Ok(peripherals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des périphériques enrichis pour la zone {ZoneId}", zoneId);
+            return StatusCode(500, new { message = "Erreur interne du serveur." });
+        }
+    }
+
+    /// <summary>
+    /// GET: api/DevicePeripherals/stats
+    /// ?? MOBILE: Récupère les statistiques agrégées des périphériques
+    /// Retourne: totalDevices, activeDevicesCount, zonesCount, countsByType, actionableDevicesCount, etc.
+    /// </summary>
+    [HttpGet("stats")]
+    [AllowAnonymous]
+    [Authorize]
+    [OutputCache(PolicyName = "DeviceData")]
+    public async Task<ActionResult<DevicePeripheralsStatsDto>> GetStats()
+    {
+        try
+        {
+            var stats = await _service.GetStatsAsync();
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors du calcul des statistiques");
             return StatusCode(500, new { message = "Erreur interne du serveur." });
         }
     }

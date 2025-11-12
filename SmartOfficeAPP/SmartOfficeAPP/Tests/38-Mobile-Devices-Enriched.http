@@ -1,0 +1,240 @@
+### ===========================================
+### ?? TESTS ENDPOINTS MOBILE - DEVICE PERIPHERALS ENRICHIS
+### ===========================================
+### Pré-requis: 
+### 1. Authentification (voir 01-Authentication.http)
+### 2. Device IoT Hub avec périphériques configurés
+### ===========================================
+
+@baseUrl = https://localhost:7144
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhMjFiNjM1Mi1lOGMyLTQ5ZjctOTY0OS1jZmUzNzlmYjc3OWMiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwidW5pcXVlX25hbWUiOiJqYWtlIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3NjI5MTU4NDcsImV4cCI6MTc2MjkxNjc0NywiaWF0IjoxNzYyOTE1ODQ3LCJpc3MiOiJTbWFydE9mZmljZUFQSSIsImF1ZCI6IlNtYXJ0T2ZmaWNlQ2xpZW50In0.2k25BrATkCEARwNjnljqkA8bc9A74Iupf51A9vH5nRk
+@iotDeviceId = esp32-office-01
+@peripheralId = 1
+@zoneId = 1
+
+### ===========================================
+### 1?? RÉCUPÉRER TOUS LES PÉRIPHÉRIQUES ENRICHIS
+### Retourne: Liste complète avec DB + IoT Hub + Zone
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/enriched
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### 2?? RÉCUPÉRER UN PÉRIPHÉRIQUE ENRICHI PAR ID
+### Retourne: Détails complets d'un périphérique
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/enriched/5
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### 3?? RÉCUPÉRER LES PÉRIPHÉRIQUES D'UN DEVICE IOT HUB
+### Retourne: Tous les périphériques d'un ESP32 spécifique
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/enriched/device/mon-esp32
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### 4?? RÉCUPÉRER LES PÉRIPHÉRIQUES D'UNE ZONE
+### Retourne: Tous les périphériques dans une pièce/zone
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/enriched/zone/3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### 5?? RÉCUPÉRER LES STATISTIQUES AGRÉGÉES
+### Retourne: totalDevices, activeDevicesCount, countsByType, etc.
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/stats
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### 6?? RÉCUPÉRER AVEC BYPASS CACHE (?fresh=true)
+### Force la récupération depuis la source (DB + IoT Hub)
+### ===========================================
+
+GET {{baseUrl}}/api/DevicePeripherals/enriched?fresh=true
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### ===========================================
+### ?? VALIDATION DES DONNÉES REQUISES
+### ===========================================
+### Vérifier que la réponse contient:
+### 
+### ? 1. IDENTITÉ / BASE
+### - id (int)
+### - guid (string, optionnel)
+### - name (string)
+### - type (Lighting | Climate | Security | Media | Cleaner | Door | Sensor | Actuator)
+### - zone (objet ZoneDto)
+### - isActive (bool)
+### - capabilities (array<string>)
+###
+### ? 2. ÉTAT TEMPS RÉEL GÉNÉRIQUE
+### - connectivityStatus (Online | Offline | Degraded)
+### - lastUpdatedUtc (datetime)
+### - healthStatus (OK | Warning | Error | Unknown)
+### - healthMessage (string, optionnel)
+###
+### ? 3. MÉTADONNÉES HARDWARE
+### - iotDeviceId (string)
+### - gpio (int)
+### - unit (string, optionnel)
+### - notes (string, optionnel)
+### - installedAt (datetime, optionnel)
+###
+### ? 4. ÉTAT SPÉCIFIQUE PAR TYPE (object dynamique)
+### - typeSpecificState (object avec propriétés selon le type)
+###   Exemples:
+###   * Lighting: { brightness, lightColor, colorTemperature, powerConsumptionW, energyTodayWh }
+###   * Climate: { targetTemperature, currentTemperature, climateMode, fanSpeed, humidityPercent }
+###   * Security: { armedState, lastAlarmUtc, batteryPercent }
+###   * Media: { volume, isPlaying, currentMediaTitle, mute }
+###   * Cleaner: { cleanerMode, batteryPercent, docked, progressPercent }
+###   * Door: { isLocked, doorOpen, lockBatteryPercent }
+###
+### ? 5. DONNÉES ÉNERGÉTIQUES
+### - metering (none | estimated | measured)
+### - ratedWatt (float, optionnel)
+### - energyTodayWh (double, optionnel)
+### - currentPowerW (float, optionnel)
+###
+### ? 6. MÉTADONNÉES ADMINISTRATIVES
+### - status (active | error | offline | maintenance)
+### - isActionable (bool)
+### - createdAt (datetime)
+### - updatedAt (datetime, optionnel)
+###
+### ===========================================
+### ?? VALIDATION DES STATISTIQUES
+### ===========================================
+### Vérifier que /stats retourne:
+### 
+### ? AGRÉGATS
+### - totalDevices (int)
+### - activeDevicesCount (int)
+### - offlineDevicesCount (int)
+### - errorDevicesCount (int)
+### - zonesCount (int)
+### - countsByType (object: { "Lighting": 6, "Climate": 2, ... })
+### - actionableDevicesCount (int)
+### - totalCurrentPowerW (double)
+### - totalEnergyTodayWh (double)
+### - generatedAtUtc (datetime)
+###
+### ===========================================
+
+### ===========================================
+### ?? SCÉNARIO DE TEST COMPLET
+### ===========================================
+
+### Étape 1: Authentification
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### Étape 2: Récupérer tous les périphériques enrichis
+# @name getAllEnriched
+GET {{baseUrl}}/api/DevicePeripherals/enriched
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+### Étape 3: Récupérer les stats
+# @name getStats
+GET {{baseUrl}}/api/DevicePeripherals/stats
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+### Étape 4: Récupérer un périphérique spécifique enrichi
+# @name getEnrichedById
+GET {{baseUrl}}/api/DevicePeripherals/enriched/1
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+### Étape 5: Tester avec fresh=true (bypass cache)
+# @name getFreshData
+GET {{baseUrl}}/api/DevicePeripherals/enriched?fresh=true
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+### ===========================================
+### ?? EXEMPLE DE RÉPONSE ATTENDUE
+### ===========================================
+###
+### GET /api/DevicePeripherals/enriched
+### {
+###   "id": 1,
+###   "guid": "550e8400-e29b-41d4-a716-446655440000",
+###   "name": "relay4",
+###   "type": "Lighting",
+###   "zone": {
+###     "id": 1,
+###     "name": "Bureau",
+###     "description": "Bureau principal"
+###   },
+###   "zoneId": 1,
+###   "isActive": true,
+###   "capabilities": ["State", "Brightness", "Color", "Energy"],
+###   "connectivityStatus": "Online",
+###   "lastUpdatedUtc": "2025-01-15T10:30:00Z",
+###   "healthStatus": "OK",
+###   "healthMessage": null,
+###   "iotDeviceId": "esp32-office-01",
+###   "gpio": 33,
+###   "unit": "W",
+###   "notes": "Éclairage principal bureau",
+###   "installedAt": "2025-01-01T00:00:00Z",
+###   "typeSpecificState": {
+###     "brightness": 75,
+###     "lightColor": "#FF5733",
+###     "colorTemperature": 3000,
+###     "powerConsumptionW": 12.5,
+###     "energyTodayWh": 150.0
+###   },
+###   "metering": "measured",
+###   "ratedWatt": 15.0,
+###   "energyTodayWh": 150.0,
+###   "currentPowerW": 12.5,
+###   "status": "active",
+###   "isActionable": true,
+###   "createdAt": "2025-01-01T00:00:00Z",
+###   "updatedAt": "2025-01-15T10:30:00Z"
+### }
+###
+### ===========================================
+### GET /api/DevicePeripherals/stats
+### {
+###   "totalDevices": 42,
+###   "activeDevicesCount": 38,
+###   "offlineDevicesCount": 3,
+###   "errorDevicesCount": 1,
+###   "zonesCount": 5,
+###   "countsByType": {
+###     "Lighting": 15,
+###     "Climate": 5,
+###     "Security": 8,
+###     "Sensor": 10,
+###     "Actuator": 4
+###   },
+###   "actionableDevicesCount": 24,
+###   "totalCurrentPowerW": 450.75,
+###   "totalEnergyTodayWh": 5420.5,
+###   "generatedAtUtc": "2025-01-15T10:30:00Z"
+### }
+###
+### ===========================================

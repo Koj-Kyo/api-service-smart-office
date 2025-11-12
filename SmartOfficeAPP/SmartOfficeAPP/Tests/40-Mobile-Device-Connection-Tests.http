@@ -1,0 +1,137 @@
+# ============================================
+# Tests de Connexion Mobile - SmartOffice API
+# ============================================
+# 
+# Remplacez 192.168.1.100 par l'adresse IP de votre PC
+# Trouvez votre IP avec: ipconfig (Windows) ou ifconfig (Mac/Linux)
+#
+
+### Variables
+@hostname = 192.168.1.100:5290
+@baseUrl = http://{{hostname}}
+@token = 
+
+### ============================================
+### 1?? Health Check - Test de Connectivité
+### ============================================
+
+### Test simple de connexion
+GET {{baseUrl}}/health/live
+Accept: application/json
+
+### ============================================
+### 2?? Authentification Mobile
+### ============================================
+
+### Login Admin
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartoffice.com",
+  "password": "Admin@123"
+}
+
+### Login User Standard
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "user@smartoffice.com",
+  "password": "User@123"
+}
+
+### ============================================
+### 3?? Test Zones (avec token)
+### ============================================
+
+### Récupérer toutes les zones
+GET {{baseUrl}}/api/Zone
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 4?? Test Devices (avec token)
+### ============================================
+
+### Récupérer tous les périphériques
+GET {{baseUrl}}/api/PeripheriqueLogique
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 5?? Test Dashboard Stats
+### ============================================
+
+### Statistiques du dashboard
+GET {{baseUrl}}/api/Dashboard/stats
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 6?? Test SignalR Connection
+### ============================================
+
+### Note: SignalR nécessite une connexion WebSocket
+### Utilisez ce endpoint pour vérifier que SignalR est disponible
+GET {{baseUrl}}/notificationhub/negotiate
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 7?? Test Device Status
+### ============================================
+
+### Récupérer le statut de tous les devices
+GET {{baseUrl}}/api/DeviceStatus
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 8?? Test Telemetry
+### ============================================
+
+### Récupérer les données de télémétrie
+# Remplacez {peripheriqueId} par un ID réel
+GET {{baseUrl}}/api/Telemetrie/peripherique/{peripheriqueId}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### 9?? Test CORS Preflight (OPTIONS)
+### ============================================
+
+### Test CORS - Doit retourner les headers CORS
+OPTIONS {{baseUrl}}/api/Auth/login
+Origin: http://192.168.1.100:5290
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type,authorization
+
+### ============================================
+### ?? Test User Profile
+### ============================================
+
+### Récupérer le profil de l'utilisateur connecté
+GET {{baseUrl}}/api/Auth/profile
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### ============================================
+### ?? Instructions pour l'App Mobile
+### ============================================
+#
+# 1. Trouvez votre IP avec: ipconfig (Windows)
+#    Exemple: 192.168.1.100
+#
+# 2. Dans votre app mobile MAUI, configurez:
+#    BaseUrl = "http://192.168.1.100:5290"
+#
+# 3. Assurez-vous que:
+#    - Le backend est démarré: dotnet run --launch-profile http
+#    - Le pare-feu autorise le port 5290
+#    - Votre téléphone et PC sont sur le même WiFi
+#
+# 4. Testez d'abord le health check depuis le navigateur mobile:
+#    http://192.168.1.100:5290/health/live
+#
+### ============================================
