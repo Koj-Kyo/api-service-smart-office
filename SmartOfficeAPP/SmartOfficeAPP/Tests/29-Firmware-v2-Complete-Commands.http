@@ -21,8 +21,7 @@ Content-Type: application/json
 }
 
 ###
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MTgwMjEyMCwiZXhwIjoxNzYxODAzMDIwLCJpYXQiOjE3NjE4MDIxMjAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.WDegaE6ZqncEru4b5hc7-b-rAx9TfpctgbngWl8EBkg
-
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MzQ1NjIwMCwiZXhwIjoxNzYzNDU3MTAwLCJpYXQiOjE3NjM0NTYyMDAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.S44JPsNorZlfArhbhFwuCBLL_2e3ZXsyihReCVJ1Uus
 ### ====================================
 ### ÉTAPE 2 : OBTENIR LE STATUT COMPLET DU DEVICE
 ### ====================================

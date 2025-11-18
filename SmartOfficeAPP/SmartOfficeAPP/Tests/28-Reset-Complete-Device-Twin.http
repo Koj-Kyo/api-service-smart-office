@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 ###
-@token = {{login.response.body.accessToken}}
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI3NjQxZTdiMS1lNjBiLTRjODAtODVjMy00NDVmODVmMTg4N2MiLCJlbWFpbCI6ImFkbWluZXJAc21hcnRvZmZpY2UuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc2MzQ1NjM0MCwiZXhwIjoxNzYzNDU3MjQwLCJpYXQiOjE3NjM0NTYzNDAsImlzcyI6IlNtYXJ0T2ZmaWNlQVBJIiwiYXVkIjoiU21hcnRPZmZpY2VDbGllbnQifQ.Cq50KUsjK5GUQHj4EIr8Oc7DKU8DEbEpB3bP8Z4cY-E
 
 ### ====================================
 ### ÉTAPE 2 : VÉRIFIER L'ÉTAT ACTUEL
