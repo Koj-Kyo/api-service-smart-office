@@ -25,9 +25,11 @@ jobs:
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
+        working-directory: ./SmartOfficeAPP/SmartOfficeAPP
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        working-directory: ./SmartOfficeAPP/SmartOfficeAPP
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -52,4 +54,25 @@ jobs:
           app-name: 'smartoffice-api-free'
           slot-name: 'Production'
           package: .
+
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D0A898546C26445E9688104D95AFB8E6 }}
+
+     # ✅ NOUVEAU : Health Check
+      - name: Health Check
+        run: |
+          echo "⏳ Waiting 30s for app to start..."
+          sleep 30
+          
+          WEBAPP_URL="https://smartoffice-prod-api.azurewebsites.net"
+          echo "🔍 Testing health endpoint: $WEBAPP_URL/health/ready"
+          
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WEBAPP_URL/health/ready" || echo "000")
+          
+          if [ "$HTTP_STATUS" == "200" ]; then
+            echo "✅ Health check passed (HTTP $HTTP_STATUS)"
+            echo "🌐 API URL: $WEBAPP_URL"
+            echo "📖 Swagger: $WEBAPP_URL/swagger"
+          else
+            echo "⚠️ Health check returned HTTP $HTTP_STATUS"
+            echo "ℹ️ App may still be starting up"
+          fi
