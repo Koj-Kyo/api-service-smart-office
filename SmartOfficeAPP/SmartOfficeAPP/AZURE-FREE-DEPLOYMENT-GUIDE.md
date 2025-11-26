@@ -465,7 +465,7 @@ Healthy
 ### Étape 6.2 : Tester Swagger
 
 ```
-https://smartoffice-api-free.azurewebsites.net/swagger
+https://smartoffice-api-free-euhzgfb4fzd0ckbh.westeurope-01.azurewebsites.net/swagger
 ```
 
 Vous devriez voir l'interface Swagger avec tous vos endpoints.

@@ -168,11 +168,17 @@ builder.Services.AddAuthentication(options =>
 // CORS avec support SignalR et Application Mobile MAUI
 builder.Services.AddCors(opt =>
 {
-    // ✅ Politique pour applications web (existante)
+    // ✅ Politique pour applications web (existante + Static Web App Azure)
     opt.AddPolicy("AllowFrontend", p => p
      .AllowAnyHeader()
         .AllowAnyMethod()
-        .WithOrigins("https://localhost:7152", "http://localhost:5249", "http://localhost:3000", "https://localhost:3000")
+        .WithOrigins(
+            "https://localhost:7152", 
+            "http://localhost:5249", 
+            "http://localhost:3000", 
+            "https://localhost:3000",
+            "https://mango-bush-03e4a6703.3.azurestaticapps.net" // ✅ Azure Static Web App
+        )
         .AllowCredentials());
 
     // ✅ Politique pour application mobile MAUI et appareils physiques
@@ -221,6 +227,9 @@ builder.Services.AddCors(opt =>
             
     // Votre domaine de production
     if (origin.Contains("smartoffice") || origin.Contains("brainoffice")) return true;
+            
+            // ✅ Azure Static Web Apps
+            if (origin.Contains("azurestaticapps.net")) return true;
             
     return false;
         })
@@ -366,7 +375,9 @@ else
 // Ce middleware intercepte TOUTES les réponses et convertit le JSON en camelCase
 app.UseMiddleware<CamelCaseEnforcerMiddleware>();
 
-app.UseCors("AllowMobileApp");
+// ✅ Activer CORS pour frontend web ET mobile
+app.UseCors("AllowFrontend"); // Pour le frontend web (Static Web App)
+// La politique AllowMobileApp est appliquée via les contrôleurs avec [EnableCors("AllowMobileApp")]
 
 // ✅ Activer OutputCache
 app.UseOutputCache();
