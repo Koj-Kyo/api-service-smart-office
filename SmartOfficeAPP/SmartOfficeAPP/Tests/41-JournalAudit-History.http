@@ -1,0 +1,299 @@
+### ?? Tests API - Journal d'Audit (Historique Utilisateur)
+### Fichier : Tests/41-JournalAudit-History.http
+
+@baseUrl = https://localhost:7152
+# Pour production Azure : https://smartoffice-api-free.azurewebsites.net
+
+### Variables
+@adminToken = {{login-admin.response.body.token}}
+@userToken = {{login-user.response.body.token}}
+
+###############################################################################
+### 1?? AUTHENTIFICATION
+###############################################################################
+
+### 1.1 Login Admin
+# @name login-admin
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "adminer@smartoffice.com",
+  "password": "Admin1234!"
+}
+
+###
+
+### 1.2 Login Utilisateur Standard
+# @name login-user
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "user@smartoffice.com",
+  "password": "User1234!"
+}
+
+###############################################################################
+### 2?? HISTORIQUE UTILISATEUR (MON HISTORIQUE)
+###############################################################################
+
+### 2.1 Récupérer mon historique (limite par défaut : 100)
+GET {{baseUrl}}/api/JournalAudit/my
+Authorization: Bearer {{userToken}}
+
+###
+
+### 2.2 Récupérer mon historique avec limite personnalisée
+GET {{baseUrl}}/api/JournalAudit/my?limit=50
+Authorization: Bearer {{userToken}}
+
+###
+
+### 2.3 Récupérer mon historique avec filtrage par dates
+GET {{baseUrl}}/api/JournalAudit/my?start=2025-01-01&end=2025-12-31
+Authorization: Bearer {{userToken}}
+
+###
+
+### 2.4 Récupérer mon historique des 7 derniers jours
+GET {{baseUrl}}/api/JournalAudit/my?start={{$datetime iso8601 -7 d}}&limit=200
+Authorization: Bearer {{userToken}}
+
+###
+
+### 2.5 Récupérer mon historique des dernières 24h
+GET {{baseUrl}}/api/JournalAudit/my?start={{$datetime iso8601 -1 d}}
+Authorization: Bearer {{userToken}}
+
+###
+
+### ? 2.6 Tentative avec limite invalide (doit échouer)
+GET {{baseUrl}}/api/JournalAudit/my?limit=5000
+Authorization: Bearer {{userToken}}
+
+###
+
+### ? 2.7 Tentative sans authentification (doit échouer)
+GET {{baseUrl}}/api/JournalAudit/my
+
+###############################################################################
+### 3?? HISTORIQUE ADMIN (TOUS LES UTILISATEURS)
+###############################################################################
+
+### 3.1 [ADMIN] Récupérer tout l'historique (limite par défaut : 500)
+GET {{baseUrl}}/api/JournalAudit/all
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 3.2 [ADMIN] Récupérer l'historique avec limite
+GET {{baseUrl}}/api/JournalAudit/all?limit=100
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 3.3 [ADMIN] Récupérer l'historique filtré par dates
+GET {{baseUrl}}/api/JournalAudit/all?start=2025-01-01&end=2025-12-31&limit=1000
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 3.4 [ADMIN] Récupérer l'historique des 7 derniers jours
+GET {{baseUrl}}/api/JournalAudit/all?start={{$datetime iso8601 -7 d}}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 3.5 [ADMIN] Récupérer l'historique d'un utilisateur spécifique
+# Remplacer {userId} par un ID réel
+GET {{baseUrl}}/api/JournalAudit/all?userId=550e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer {{adminToken}}
+
+###
+
+### ? 3.6 [USER] Tentative accès historique complet (doit échouer - Admin uniquement)
+GET {{baseUrl}}/api/JournalAudit/all
+Authorization: Bearer {{userToken}}
+
+###############################################################################
+### 4?? HISTORIQUE D'UN UTILISATEUR SPÉCIFIQUE (ADMIN)
+###############################################################################
+
+### 4.1 [ADMIN] Récupérer l'historique d'un utilisateur par ID
+# Remplacer {userId} par un ID réel
+GET {{baseUrl}}/api/JournalAudit/user/{userId}
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 4.2 [ADMIN] Historique utilisateur avec filtrage par dates
+GET {{baseUrl}}/api/JournalAudit/user/{userId}?start=2025-01-01&end=2025-12-31
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 4.3 [ADMIN] Historique utilisateur limité
+GET {{baseUrl}}/api/JournalAudit/user/{userId}?limit=50
+Authorization: Bearer {{adminToken}}
+
+###
+
+### ? 4.4 [USER] Tentative accès historique d'un autre utilisateur (doit échouer)
+GET {{baseUrl}}/api/JournalAudit/user/{userId}
+Authorization: Bearer {{userToken}}
+
+###############################################################################
+### 5?? STATISTIQUES D'AUDIT (ADMIN)
+###############################################################################
+
+### 5.1 [ADMIN] Récupérer les statistiques (30 derniers jours par défaut)
+GET {{baseUrl}}/api/JournalAudit/stats
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 5.2 [ADMIN] Statistiques sur 7 jours
+GET {{baseUrl}}/api/JournalAudit/stats?days=7
+Authorization: Bearer {{adminToken}}
+
+###
+
+### 5.3 [ADMIN] Statistiques sur 90 jours
+GET {{baseUrl}}/api/JournalAudit/stats?days=90
+Authorization: Bearer {{adminToken}}
+
+###
+
+### ? 5.4 [USER] Tentative accès statistiques (doit échouer - Admin uniquement)
+GET {{baseUrl}}/api/JournalAudit/stats
+Authorization: Bearer {{userToken}}
+
+###############################################################################
+### 6?? SCÉNARIOS DE VALIDATION
+###############################################################################
+
+### 6.1 Scénario complet : Créer une zone puis vérifier dans l'historique
+# Étape 1 : Créer une zone
+# @name create-zone
+POST {{baseUrl}}/api/Zone
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "name": "Zone Test Audit",
+  "description": "Zone créée pour tester l'audit"
+}
+
+###
+
+### 6.2 Étape 2 : Vérifier que l'action apparaît dans mon historique
+GET {{baseUrl}}/api/JournalAudit/my?limit=10
+Authorization: Bearer {{userToken}}
+
+# Rechercher l'action : "POST /api/Zone"
+
+###
+
+### 6.3 [ADMIN] Vérifier l'action dans l'historique complet
+GET {{baseUrl}}/api/JournalAudit/all?limit=10
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+### 7?? TESTS DE VALIDATION
+###############################################################################
+
+### ? Tests à vérifier :
+# 1. Mon historique retourne uniquement MES actions
+# 2. L'historique admin retourne TOUTES les actions
+# 3. Filtrage par dates fonctionne correctement
+# 4. Limite de résultats est respectée
+# 5. Utilisateur standard ne peut pas accéder aux endpoints admin
+# 6. Dates invalides retournent une erreur 400
+# 7. Actions récentes apparaissent en premier (tri DESC)
+# 8. Format camelCase pour tous les champs JSON
+# 9. Statistiques calculent correctement les agrégations
+# 10. Requêtes sans token retournent 401
+
+###############################################################################
+### ?? RÉPONSES ATTENDUES
+###############################################################################
+
+### Exemple de réponse GET /my :
+# [
+#   {
+#     "horodatage": "2025-01-15T14:30:22.123Z",
+#     "action": "POST /api/Zone",
+#     "contexte": "API Request"
+#   },
+#   {
+#     "horodatage": "2025-01-15T14:25:15.456Z",
+#     "action": "GET /api/Devices",
+#     "contexte": "API Request"
+#   }
+# ]
+
+### Exemple de réponse GET /all (Admin) :
+# [
+#   {
+#     "horodatage": "2025-01-15T14:30:22.123Z",
+#     "action": "POST /api/Zone",
+#     "contexte": "API Request",
+#     "userId": "550e8400-e29b-41d4-a716-446655440000",
+#     "userName": "john.doe",
+#     "userEmail": "john@smartoffice.com",
+#     "userFullName": "John Doe"
+#   }
+# ]
+
+### Exemple de réponse GET /stats :
+# {
+#   "totalActions": 1250,
+#   "uniqueUsers": 12,
+#   "periodDays": 30,
+#   "startDate": "2024-12-16T00:00:00Z",
+#   "endDate": "2025-01-15T14:30:22Z",
+#   "topActions": [
+#     { "action": "GET /api/Devices", "count": 450 },
+#     { "action": "POST /api/Commands", "count": 320 }
+#   ],
+#   "actionsByDay": [
+#     { "date": "2025-01-15", "count": 85 },
+#     { "date": "2025-01-14", "count": 72 }
+#   ]
+# }
+
+###############################################################################
+### ?? CONFIGURATION RECOMMANDÉE AZURE
+###############################################################################
+
+# Pour activer la journalisation automatique de TOUTES les actions,
+# ajouter dans Program.cs après builder.Services.AddControllers() :
+#
+# builder.Services.AddControllers(options =>
+# {
+#     options.Filters.Add<SmartOfficeAPP.Filters.JournalAuditFilter>();
+# });
+
+###############################################################################
+### ?? NOTES IMPORTANTES
+###############################################################################
+
+# ? Permissions :
+#   - /my : Tous les utilisateurs authentifiés
+#   - /all : Admin uniquement
+#   - /user/{userId} : Admin uniquement
+#   - /stats : Admin uniquement
+#
+# ? Limites par défaut :
+#   - /my : 100 (max 1000)
+#   - /all : 500 (max 2000)
+#   - /user/{userId} : 200 (max 1000)
+#
+# ? Performance :
+#   - Ajouter un index sur JournalAudit.Horodatage pour requêtes rapides
+#   - Considérer archivage automatique après 365 jours
+#
+# ? RGPD :
+#   - Implémenter suppression d'historique sur demande utilisateur
+#   - Anonymiser données après période de rétention

@@ -24,13 +24,18 @@ public class JournalAuditRepository : IJournalAuditRepository
     /// <inheritdoc/>
     public async Task<IEnumerable<JournalAudit>> GetAllJournalAuditsAsync()
     {
-        return await _context.JournalAudits.ToListAsync();
+        // ✅ Include User pour récupérer les infos utilisateur
+        return await _context.JournalAudits
+            .Include(ja => ja.User)
+            .ToListAsync();
     }
 
     /// <inheritdoc/>
     public async Task<IEnumerable<JournalAudit>> GetJournalAuditsByUserIdAsync(string userId)
     {
+        // ✅ Include User pour récupérer les infos utilisateur
         return await _context.JournalAudits
+            .Include(ja => ja.User)
             .Where(ja => ja.UserId == userId)
             .ToListAsync();
     }
@@ -38,7 +43,9 @@ public class JournalAuditRepository : IJournalAuditRepository
     /// <inheritdoc/>
     public async Task<IEnumerable<JournalAudit>> GetJournalAuditsByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
+        // ✅ Include User pour récupérer les infos utilisateur
         return await _context.JournalAudits
+            .Include(ja => ja.User)
             .Where(ja => ja.Horodatage >= startDate && ja.Horodatage <= endDate)
             .ToListAsync();
     }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SmartOfficeAPP.Models.Identity;
 
 namespace SmartOfficeAPP.Models;
 
@@ -20,4 +21,7 @@ public class JournalAudit
     // Contexte de l'action (ex: "Modification de rôle", "Envoi de commande")
     [Required]
     public string Contexte { get; set; }
+
+    // ✅ Navigation vers l'utilisateur
+    public virtual ApplicationUser? User { get; set; }
 }
